@@ -11,16 +11,16 @@ Car Hub é uma plataforma completa para o mercado automotivo, oferecendo uma exp
 <div align="center">
 
 ### 🏠 Tela Principal, Detalhes & Perfil
-<img src="assets/photos-app/home.png" width="250" alt="Home Screen" />
-<img src="assets/photos-app/details.png" width="250" alt="Details" />
-<img src="assets/photos-app/profile.png" width="250" alt="Profile Screen - Guest" />
+<img width="250"  alt="image" src="https://github.com/user-attachments/assets/fab017cf-f2c6-47d5-a2a6-548cb4918f01" />
+<img  width="250"   alt="image" src="https://github.com/user-attachments/assets/f75de2d0-a6e7-4173-b9eb-1e28d1cb4fc8" />
+<img  width="250"  alt="image" src="https://github.com/user-attachments/assets/8cb6fc83-5e15-4e30-a790-bfe36a20748f" />
 
 *Tela inicial com catálogo de carros, perfil do usuário logado e estado de visitante*
 
 ### 🚗 Estados de Loading
-<img src="assets/photos-app/skeleton-home.png" width="250" alt="Loading State - Home" />
-<img src="assets/photos-app/skeleton-details.png" width="250" alt="Loading State - Details" />
-<img src="assets/photos-app/skeleton-profile.png" width="250" alt="Loading State - Profile" />
+<img width="250" alt="image" src="https://github.com/user-attachments/assets/56ce8aa5-498a-4b9a-9fa3-241e8eebfb37" />
+<img width="250" alt="image" src="https://github.com/user-attachments/assets/05d5a878-9192-40d6-94b2-ef71e1cd2704" />
+<img width="250" alt="image" src="https://github.com/user-attachments/assets/32255d3a-b6de-4691-a11f-c8dc6c32506c" />
 
 *Tela de detalhes com especificações completas e skeletons de loading*
 
