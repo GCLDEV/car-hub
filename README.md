@@ -10,17 +10,17 @@ Car Hub é uma plataforma completa para o mercado automotivo, oferecendo uma exp
 
 <div align="center">
 
-### 🏠 Tela Principal & Perfil
-<img src="assets/photos-app/Screenshot_1761354945.png" width="250" alt="Home Screen" />
-<img src="assets/photos-app/Screenshot_1761354929.png" width="250" alt="Profile Screen - Logged In" />
-<img src="assets/photos-app/Screenshot_1761355052.png" width="250" alt="Profile Screen - Guest" />
+### 🏠 Tela Principal, Detalhes & Perfil
+<img src="assets/photos-app/home.png" width="250" alt="Home Screen" />
+<img src="assets/photos-app/details.png" width="250" alt="Details" />
+<img src="assets/photos-app/profile.png" width="250" alt="Profile Screen - Guest" />
 
 *Tela inicial com catálogo de carros, perfil do usuário logado e estado de visitante*
 
-### 🚗 Detalhes & Estados de Loading
-<img src="assets/photos-app/Screenshot_1761355035.png" width="250" alt="Car Details" />
-<img src="assets/photos-app/Screenshot_1761355039.png" width="250" alt="Loading State - Home" />
-<img src="assets/photos-app/Screenshot_1761355049.png" width="250" alt="Loading State - Details" />
+### 🚗 Estados de Loading
+<img src="assets/photos-app/skeleton-home.png" width="250" alt="Loading State - Home" />
+<img src="assets/photos-app/skeleton-details.png" width="250" alt="Loading State - Details" />
+<img src="assets/photos-app/skeleton-profile.png" width="250" alt="Loading State - Profile" />
 
 *Tela de detalhes com especificações completas e skeletons de loading*
 
