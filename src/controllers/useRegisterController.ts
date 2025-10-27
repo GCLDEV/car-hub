@@ -1,131 +1,85 @@
 import { useState } from 'react'
 import { useRouter } from 'expo-router'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation } from '@tanstack/react-query'
 import Toast from 'react-native-toast-message'
 
 import { useAuthStore } from '@store/authStore'
-
-interface RegisterFormData {
-  name: string
-  email: string
-  password: string
-  confirmPassword: string
-}
+import { registerUser } from '@/services/api/auth'
+import { registerSchema, type RegisterFormData, formatPhoneNumber } from '@/utils/validation'
+import type { RegisterRequest } from '@/types'
 
 export default function useRegisterController() {
   const router = useRouter()
   const { login } = useAuthStore()
-
-  const [form, setForm] = useState<RegisterFormData>({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  })
-  const [loading, setLoading] = useState(false)
+  
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  
+  // Configuração do React Hook Form com Zod
+  const form = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      phone: '',
+      location: '',
+      isDealer: false,
+      acceptTerms: false
+    },
+    mode: 'onChange' // Validação em tempo real
+  })
 
-  const formValue = (field: keyof RegisterFormData) => {
-    return form[field]
-  }
-
-  const changeForm = (value: string, field: keyof RegisterFormData) => {
-    setForm(prev => ({ ...prev, [field]: value }))
-  }
-
-  const validateForm = () => {
-    if (!form.name.trim()) {
-      Toast.show({
-        type: 'error',
-        text1: 'Nome é obrigatório'
-      })
-      return false
-    }
-
-    if (!form.email.trim()) {
-      Toast.show({
-        type: 'error',
-        text1: 'Email é obrigatório'
-      })
-      return false
-    }
-
-    if (!form.password.trim()) {
-      Toast.show({
-        type: 'error',
-        text1: 'Senha é obrigatória'
-      })
-      return false
-    }
-
-    if (form.password !== form.confirmPassword) {
-      Toast.show({
-        type: 'error',
-        text1: 'Senhas não conferem'
-      })
-      return false
-    }
-
-    // Validação básica de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(form.email)) {
-      Toast.show({
-        type: 'error',
-        text1: 'Email inválido'
-      })
-      return false
-    }
-
-    // Validação de senha mínima
-    if (form.password.length < 6) {
-      Toast.show({
-        type: 'error',
-        text1: 'Senha deve ter pelo menos 6 caracteres'
-      })
-      return false
-    }
-
-    return true
-  }
-
-  const handleRegister = async () => {
-    if (!validateForm()) return
-
-    setLoading(true)
-
-    try {
-      // Simular delay da API
-      await new Promise(resolve => setTimeout(resolve, 2000))
-
-      // Por enquanto, vamos simular um registro bem-sucedido
-      const newUser = {
-        id: '2',
-        name: form.name,
-        email: form.email,
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
-      }
-
-      login(newUser, 'mock-jwt-token')
-
+  // Mutation para registro
+  const registerMutation = useMutation({
+    mutationFn: async (data: RegisterRequest) => {
+      return await registerUser(data)
+    },
+    onSuccess: (response) => {
+      // Fazer login automático após registro
+      login(response.user, response.token)
+      
       Toast.show({
         type: 'success',
         text1: 'Conta criada com sucesso!',
-        text2: `Bem-vindo, ${newUser.name}!`
+        text2: `Bem-vindo, ${response.user.name}!`
       })
-
+      
       // Navegar para a home
       router.replace('/(tabs)/home')
-
-    } catch (error: any) {
+    },
+    onError: (error: Error) => {
       Toast.show({
         type: 'error',
         text1: 'Erro ao criar conta',
-        text2: error?.message || 'Tente novamente'
+        text2: error.message || 'Tente novamente'
       })
-    } finally {
-      setLoading(false)
     }
-  }
+  })
+
+  const handleRegister = form.handleSubmit(async (data) => {
+    console.log('🚀 handleRegister chamado com dados:', data)
+    try {
+      // Transformar dados do formulário para o formato da API
+      const registerData: RegisterRequest = {
+        name: data.name.trim(),
+        email: data.email.toLowerCase().trim(),
+        password: data.password,
+        phone: data.phone || '',
+        location: data.location || '',
+        isDealer: data.isDealer || false
+      }
+      
+      console.log('📤 Enviando dados para API:', registerData)
+      await registerMutation.mutateAsync(registerData)
+    } catch (error) {
+      // Erro já tratado no onError da mutation
+      console.error('❌ Erro no registro:', error)
+    }
+  })
 
   const handleLogin = () => {
     router.push('/auth/login')
@@ -139,16 +93,54 @@ export default function useRegisterController() {
     setShowConfirmPassword(prev => !prev)
   }
 
+  // Formatação automática do telefone
+  const handlePhoneChange = (value: string) => {
+    const formatted = formatPhoneNumber(value)
+    form.setValue('phone', formatted, { shouldValidate: true })
+  }
+
+  // Validação de email em tempo real
+  const validateEmailAvailability = async (email: string) => {
+    // TODO: Implementar verificação de email disponível
+    // Por enquanto, retorna true
+    return true
+  }
+
   return {
-    form,
-    loading,
+    // React Hook Form
+    control: form.control,
+    handleSubmit: form.handleSubmit,
+    errors: form.formState.errors,
+    
+    // Estados locais
+    loading: registerMutation.isPending,
     showPassword,
     showConfirmPassword,
-    formValue,
-    changeForm,
-    handleRegister,
+    
+    // Ações
+    onSubmit: () => {
+      console.log('🔥 onSubmit chamado!')
+      console.log('📋 Valores do formulário:', form.getValues())
+      console.log('❌ Erros de validação:', form.formState.errors)
+      console.log('✅ Formulário válido:', form.formState.isValid)
+      handleRegister()
+    },
     handleLogin,
     toggleShowPassword,
-    toggleShowConfirmPassword
+    toggleShowConfirmPassword,
+    
+    // Utilitários (compatibilidade com versão antiga)
+    form,
+    formState: form.formState,
+    handleRegister,
+    handlePhoneChange,
+    validateEmailAvailability,
+    getFieldError: (fieldName: keyof RegisterFormData) => {
+      return form.formState.errors[fieldName]?.message
+    },
+    isFieldInvalid: (fieldName: keyof RegisterFormData) => {
+      return !!form.formState.errors[fieldName]
+    },
+    canSubmit: form.formState.isValid && !registerMutation.isPending
   }
 }

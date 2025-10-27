@@ -8,7 +8,9 @@ import {
   Lock, 
   User,
   Car,
-  MapPin
+  MapPin,
+  Phone,
+  Check
 } from 'phosphor-react-native'
 
 import { VStack } from '@components/ui/vstack'
@@ -16,6 +18,7 @@ import { HStack } from '@components/ui/hstack'
 import { Text } from '@components/ui/text'
 import { Box } from '@components/ui/box'
 import { Center } from '@components/ui/center'
+import { Checkbox } from '@components/ui/checkbox'
 
 import AuthInput from '@components/ui/AuthInput'
 import AuthButton from '@components/ui/AuthButton'
@@ -25,13 +28,12 @@ import useRegisterController from '@controllers/useRegisterController'
 
 export default function RegisterScreen() {
   const {
-    form,
+    control,
     loading,
     showPassword,
     showConfirmPassword,
-    formValue,
-    changeForm,
-    handleRegister,
+    errors,
+    onSubmit,
     handleLogin,
     toggleShowPassword,
     toggleShowConfirmPassword
@@ -83,28 +85,30 @@ export default function RegisterScreen() {
             <VStack space="lg" className="mb-8">
               <AuthInput
                 label="Full Name"
-                value={formValue('name')}
-                onChangeText={(text: string) => changeForm(text, 'name')}
+                name="name"
+                control={control}
                 placeholder="Enter your full name"
                 icon={<User size={20} color={colors.neutral[400]} />}
                 autoCapitalize="words"
+                error={errors.name}
               />
 
               <AuthInput
                 label="Email Address"
-                value={formValue('email')}
-                onChangeText={(text: string) => changeForm(text, 'email')}
+                name="email"
+                control={control}
                 placeholder="your@email.com"
                 icon={<Envelope size={20} color={colors.neutral[400]} />}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                error={errors.email}
               />
 
               <AuthInput
                 label="Password"
-                value={formValue('password')}
-                onChangeText={(text: string) => changeForm(text, 'password')}
+                name="password"
+                control={control}
                 placeholder="Create a password"
                 icon={<Lock size={20} color={colors.neutral[400]} />}
                 secureTextEntry={!showPassword}
@@ -116,12 +120,13 @@ export default function RegisterScreen() {
                   )
                 }
                 onRightIconPress={toggleShowPassword}
+                error={errors.password}
               />
 
               <AuthInput
                 label="Confirm Password"
-                value={formValue('confirmPassword')}
-                onChangeText={(text: string) => changeForm(text, 'confirmPassword')}
+                name="confirmPassword"
+                control={control}
                 placeholder="Confirm your password"
                 icon={<Lock size={20} color={colors.neutral[400]} />}
                 secureTextEntry={!showConfirmPassword}
@@ -133,13 +138,14 @@ export default function RegisterScreen() {
                   )
                 }
                 onRightIconPress={toggleShowConfirmPassword}
+                error={errors.confirmPassword}
               />
             </VStack>
 
             {/* Sign Up Button */}
             <AuthButton
               title="Sign Up"
-              onPress={handleRegister}
+              onPress={() => onSubmit()}
               loading={loading}
               loadingText="Creating Account..."
               className="mb-8"
