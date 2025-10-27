@@ -26,12 +26,11 @@ import useLoginController from '@controllers/useLoginController'
 
 export default function LoginScreen() {
   const {
-    form,
+    control,
     loading,
     showPassword,
-    formValue,
-    changeForm,
-    handleLogin,
+    errors,
+    onSubmit,
     handleForgotPassword,
     handleRegister,
     toggleShowPassword
@@ -83,19 +82,20 @@ export default function LoginScreen() {
             <VStack space="lg" className="mb-8">
               <AuthInput
                 label="Email Address"
-                value={formValue('email')}
-                onChangeText={(text: string) => changeForm(text, 'email')}
+                name="email"
+                control={control}
                 placeholder="your@email.com"
                 icon={<Envelope size={20} color={colors.neutral[400]} />}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                error={errors.email}
               />
 
               <AuthInput
                 label="Password"
-                value={formValue('password')}
-                onChangeText={(text: string) => changeForm(text, 'password')}
+                name="password"
+                control={control}
                 placeholder="Enter your password"
                 icon={<Lock size={20} color={colors.neutral[400]} />}
                 secureTextEntry={!showPassword}
@@ -107,6 +107,7 @@ export default function LoginScreen() {
                   )
                 }
                 onRightIconPress={toggleShowPassword}
+                error={errors.password}
               />
 
               {/* Forgot Password */}
@@ -125,7 +126,7 @@ export default function LoginScreen() {
             {/* Sign In Button */}
             <AuthButton
               title="Sign In"
-              onPress={handleLogin}
+              onPress={() => onSubmit()}
               loading={loading}
               loadingText="Signing In..."
               className="mb-8"
