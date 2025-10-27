@@ -1,0 +1,128 @@
+import { z } from 'zod'
+
+// Schema para validação de registro (versão simplificada)
+export const registerSchema = z.object({
+  name: z
+    .string()
+    .min(2, 'Nome deve ter pelo menos 2 caracteres')
+    .max(50, 'Nome deve ter no máximo 50 caracteres')
+    .regex(/^[a-zA-ZÀ-ÿ\s]+$/, 'Nome deve conter apenas letras'),
+  
+  email: z
+    .string()
+    .email('Email inválido')
+    .min(1, 'Email é obrigatório'),
+  
+  password: z
+    .string()
+    .min(6, 'Senha deve ter pelo menos 6 caracteres')
+    .max(50, 'Senha deve ter no máximo 50 caracteres'),
+  
+  confirmPassword: z
+    .string()
+    .min(1, 'Confirmação de senha é obrigatória'),
+  
+  // Campos opcionais para compatibilidade
+  phone: z.string().optional(),
+  location: z.string().optional(),
+  isDealer: z.boolean().optional(),
+  acceptTerms: z.boolean().optional()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Senhas não coincidem',
+  path: ['confirmPassword']
+})
+
+// Schema para validação de login
+export const loginSchema = z.object({
+  email: z
+    .string()
+    .email('Email inválido')
+    .min(1, 'Email é obrigatório'),
+  
+  password: z
+    .string()
+    .min(1, 'Senha é obrigatória')
+})
+
+// Schema para esqueceu senha
+export const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .email('Email inválido')
+    .min(1, 'Email é obrigatório')
+})
+
+// Schema para redefinir senha
+export const resetPasswordSchema = z.object({
+  code: z
+    .string()
+    .min(1, 'Código é obrigatório'),
+  
+  password: z
+    .string()
+    .min(6, 'Senha deve ter pelo menos 6 caracteres')
+    .max(50, 'Senha deve ter no máximo 50 caracteres')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Senha deve conter ao menos 1 letra minúscula, 1 maiúscula e 1 número'),
+  
+  confirmPassword: z
+    .string()
+    .min(1, 'Confirmação de senha é obrigatória')
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Senhas não coincidem',
+  path: ['confirmPassword']
+})
+
+// Tipos derivados dos schemas
+export type RegisterFormData = z.infer<typeof registerSchema>
+export type LoginFormData = z.infer<typeof loginSchema>
+export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>
+export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>
+
+// Utilitários para formatação
+export const formatPhoneNumber = (value: string): string => {
+  // Remove tudo que não for dígito
+  const numbers = value.replace(/\D/g, '')
+  
+  // Aplica máscara (11) 99999-9999
+  if (numbers.length <= 2) {
+    return `(${numbers}`
+  } else if (numbers.length <= 7) {
+    return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`
+  } else {
+    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`
+  }
+}
+
+export const validateCPF = (cpf: string): boolean => {
+  // Remove caracteres não numéricos
+  const numbers = cpf.replace(/\D/g, '')
+  
+  // Verifica se tem 11 dígitos
+  if (numbers.length !== 11) return false
+  
+  // Verifica se todos os dígitos são iguais
+  if (/^(\d)\1{10}$/.test(numbers)) return false
+  
+  // Validação do CPF
+  let sum = 0
+  let remainder: number
+  
+  for (let i = 1; i <= 9; i++) {
+    sum += parseInt(numbers.substring(i - 1, i)) * (11 - i)
+  }
+  
+  remainder = (sum * 10) % 11
+  if (remainder === 10 || remainder === 11) remainder = 0
+  if (remainder !== parseInt(numbers.substring(9, 10))) return false
+  
+  sum = 0
+  for (let i = 1; i <= 10; i++) {
+    sum += parseInt(numbers.substring(i - 1, i)) * (12 - i)
+  }
+  
+  remainder = (sum * 10) % 11
+  if (remainder === 10 || remainder === 11) remainder = 0
+  if (remainder !== parseInt(numbers.substring(10, 11))) return false
+  
+  return true
+}
