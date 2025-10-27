@@ -6,6 +6,7 @@ import {
 } from '../mockData'
 import api from './client'
 import type { CreateListingFormData } from '@/utils/validation'
+import { uploadMultipleImages } from './upload'
 
 // ========================================
 // 🎭 MOCK DATA API - REMOVIDO APIs EXTERNAS
@@ -29,7 +30,16 @@ export async function searchCars(query: string, filters?: CarFilters): Promise<C
 // Criar novo carro no Strapi
 export async function createCar(data: CreateListingFormData): Promise<Car> {
   try {
-    // Transformar dados do form para o formato do Strapi
+    // Passo 1: Fazer upload das imagens se existirem
+    let imageIds: number[] = []
+    if (data.images && data.images.length > 0) {
+      console.log('📤 Fazendo upload de', data.images.length, 'imagens...')
+      const imageResults = await uploadMultipleImages(data.images)
+      imageIds = imageResults.map(img => img.id)
+      console.log('✅ Upload concluído. IDs das imagens:', imageIds)
+    }
+
+    // Passo 2: Transformar dados do form para o formato do Strapi
     const carData = {
       data: {
         title: data.title,
@@ -48,7 +58,9 @@ export async function createCar(data: CreateListingFormData): Promise<Car> {
         doors: Number(data.doors),
         seats: Number(data.seats),
         status: 'available',
-        features: data.features || []
+        features: data.features || [],
+        // Associar as imagens enviadas
+        images: imageIds
       }
     }
 
@@ -70,7 +82,9 @@ export async function createCar(data: CreateListingFormData): Promise<Car> {
       description: strapiCar.description,
       location: strapiCar.location,
       cityState: strapiCar.cityState || strapiCar.location,
-      images: [], // TODO: Implementar upload de imagens
+      images: strapiCar.images ? 
+        strapiCar.images.map((img: any) => `http://192.168.0.8:1337${img.url}`) : 
+        [], // URLs completas das imagens do Strapi
       specs: {
         engine: strapiCar.engine,
         doors: strapiCar.doors,

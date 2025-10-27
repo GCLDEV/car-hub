@@ -23,6 +23,7 @@ import { Center } from '@components/ui/center'
 import AuthInput from '@components/ui/AuthInput'
 import AuthSelect from '@components/ui/AuthSelect'
 import AuthButton from '@components/ui/AuthButton'
+import ImageUploader from '@components/ui/ImageUploader'
 
 import { colors } from '@theme/colors'
 import useCreateListingController from '@controllers/useCreateListingController'
@@ -41,8 +42,13 @@ export default function CreateListingScreen() {
     carColors,
     availableModels,
     onSubmit,
-    generateTitle
+    generateTitle,
+    watch,
+    setValue
   } = useCreateListingController()
+
+  // Watch images para o componente ImageUploader
+  const watchedImages = watch('images')
 
   const handleBack = () => {
     router.back()
@@ -163,6 +169,36 @@ export default function CreateListingScreen() {
                 />
               </VStack>
 
+              {/* Imagens */}
+              <VStack space="md">
+                <Text 
+                  className="text-lg font-semibold"
+                  style={{ color: colors.neutral[200] }}
+                >
+                  Fotos do Veículo
+                </Text>
+
+                <ImageUploader
+                  images={watchedImages || []}
+                  onImagesChange={(images) => {
+                    setValue('images', images, { shouldValidate: true })
+                  }}
+                  multiple={true}
+                  maxImages={10}
+                  label="Adicionar fotos"
+                  placeholder="Adicione fotos do seu veículo"
+                  required={true}
+                  error={errors.images?.message}
+                />
+
+                <Text 
+                  className="text-xs"
+                  style={{ color: colors.neutral[500] }}
+                >
+                  Adicione pelo menos uma foto do seu veículo. Máximo de 10 fotos.
+                </Text>
+              </VStack>
+
               {/* Características */}
               <VStack space="md">
                 <Text 
@@ -275,7 +311,7 @@ export default function CreateListingScreen() {
               title="Criar Anúncio"
               onPress={() => onSubmit()}
               loading={loading}
-              loadingText="Criando anúncio..."
+              loadingText={watchedImages?.length > 0 ? "Enviando fotos..." : "Criando anúncio..."}
               className="mb-8"
               variant="primary"
             />

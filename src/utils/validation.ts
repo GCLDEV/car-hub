@@ -154,7 +154,12 @@ export const createListingSchema = z.object({
   
   features: z
     .array(z.string())
-    .default([])
+    .default([]),
+  
+  images: z
+    .array(z.string().url('URL da imagem inválida'))
+    .min(1, 'Pelo menos uma imagem é obrigatória')
+    .max(10, 'Máximo de 10 imagens permitido')
 })
 
 // Tipos derivados dos schemas

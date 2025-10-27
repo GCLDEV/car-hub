@@ -37,7 +37,8 @@ export default function useCreateListingController() {
       doors: '4',
       seats: '5',
       engine: '',
-      features: []
+      features: [],
+      images: []
     },
     mode: 'onChange'
   })
@@ -51,7 +52,7 @@ export default function useCreateListingController() {
       Toast.show({
         type: 'success',
         text1: 'Anúncio criado com sucesso!',
-        text2: 'Seu veículo foi listado no marketplace'
+        text2: 'Seu veículo e fotos foram listados no marketplace'
       })
       
       // Navegar para a home
@@ -117,6 +118,8 @@ export default function useCreateListingController() {
     control: form.control,
     handleSubmit: form.handleSubmit,
     errors: form.formState.errors,
+    watch: form.watch,
+    setValue: form.setValue,
     
     // Estados locais
     loading: createListingMutation.isPending,
