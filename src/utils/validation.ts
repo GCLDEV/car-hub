@@ -72,11 +72,97 @@ export const resetPasswordSchema = z.object({
   path: ['confirmPassword']
 })
 
+// Schema para criar listagem de veículo
+export const createListingSchema = z.object({
+  title: z
+    .string()
+    .min(10, 'Título deve ter pelo menos 10 caracteres')
+    .max(100, 'Título deve ter no máximo 100 caracteres'),
+  
+  brand: z
+    .string()
+    .min(1, 'Marca é obrigatória'),
+  
+  model: z
+    .string()
+    .min(1, 'Modelo é obrigatório'),
+  
+  year: z
+    .string()
+    .min(1, 'Ano é obrigatório')
+    .refine(val => {
+      const num = Number(val)
+      return !isNaN(num) && num >= 1990 && num <= new Date().getFullYear() + 1
+    }, 'Ano deve ser um número entre 1990 e ' + (new Date().getFullYear() + 1)),
+  
+  price: z
+    .string()
+    .min(1, 'Preço é obrigatório')
+    .refine(val => {
+      const num = Number(val.replace(/\D/g, ''))
+      return !isNaN(num) && num >= 1000 && num <= 1000000
+    }, 'Preço deve estar entre R$ 1.000 e R$ 1.000.000'),
+  
+  km: z
+    .string()
+    .min(1, 'Quilometragem é obrigatória')
+    .refine(val => {
+      const num = Number(val.replace(/\D/g, ''))
+      return !isNaN(num) && num >= 0 && num <= 500000
+    }, 'Quilometragem deve estar entre 0 e 500.000 km'),
+  
+  fuelType: z
+    .string()
+    .min(1, 'Tipo de combustível é obrigatório'),
+  
+  transmission: z
+    .string()
+    .min(1, 'Tipo de câmbio é obrigatório'),
+  
+  color: z
+    .string()
+    .min(1, 'Cor é obrigatória'),
+  
+  description: z
+    .string()
+    .min(50, 'Descrição deve ter pelo menos 50 caracteres')
+    .max(1000, 'Descrição deve ter no máximo 1000 caracteres'),
+  
+  location: z
+    .string()
+    .min(1, 'Localização é obrigatória'),
+  
+  doors: z
+    .string()
+    .min(1, 'Número de portas é obrigatório')
+    .refine(val => {
+      const num = Number(val)
+      return !isNaN(num) && num >= 2 && num <= 5
+    }, 'Número de portas deve estar entre 2 e 5'),
+  
+  seats: z
+    .string()
+    .min(1, 'Número de assentos é obrigatório')
+    .refine(val => {
+      const num = Number(val)
+      return !isNaN(num) && num >= 2 && num <= 8
+    }, 'Número de assentos deve estar entre 2 e 8'),
+  
+  engine: z
+    .string()
+    .min(1, 'Motor é obrigatório'),
+  
+  features: z
+    .array(z.string())
+    .default([])
+})
+
 // Tipos derivados dos schemas
 export type RegisterFormData = z.infer<typeof registerSchema>
 export type LoginFormData = z.infer<typeof loginSchema>
 export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>
 export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>
+export type CreateListingFormData = z.infer<typeof createListingSchema>
 
 // Utilitários para formatação
 export const formatPhoneNumber = (value: string): string => {
