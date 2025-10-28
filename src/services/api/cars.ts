@@ -21,6 +21,7 @@ function transformStrapiCar(strapiCar: any): Car {
     km: strapiCar.km,
     fuelType: strapiCar.fuelType,
     transmission: strapiCar.transmission,
+    category: strapiCar.category,
     color: strapiCar.color,
     description: strapiCar.description,
     location: strapiCar.location,
@@ -58,6 +59,7 @@ function generateCacheKey(filters?: CarFilters): string {
   if (!filters) return 'cars-all'
   
   const keyParts: string[] = ['cars']
+  if (filters.category) keyParts.push(`cat-${filters.category}`)
   if (filters.brand) keyParts.push(`brand-${filters.brand}`)
   if (filters.model) keyParts.push(`model-${filters.model}`)
   if (filters.fuelType) keyParts.push(`fuel-${filters.fuelType}`)
@@ -92,23 +94,27 @@ export async function getCarsList(filters?: CarFilters): Promise<CarSearchResult
     const params: any = {
       'populate[images]': true,
       'populate[seller]': true,
-      'sort': 'createdAt:desc'
+      'sort': 'createdAt:desc',
+      'pagination[pageSize]': 25  // Default page size
     }
 
     // Add filters if provided
     if (filters) {
-      if (filters.brand) params.brand = filters.brand
-      if (filters.model) params.model = filters.model
-      if (filters.yearFrom) params.yearFrom = filters.yearFrom
-      if (filters.yearTo) params.yearTo = filters.yearTo
-      if (filters.priceFrom) params.priceFrom = filters.priceFrom
-      if (filters.priceTo) params.priceTo = filters.priceTo
-      if (filters.fuelType) params.fuelType = filters.fuelType
-      if (filters.transmission) params.transmission = filters.transmission
-      if (filters.location) params.location = filters.location
+      if (filters.category) {
+        params['filters[category][$eq]'] = filters.category
+      }
+      if (filters.brand) params['filters[brand][$eq]'] = filters.brand
+      if (filters.model) params['filters[model][$eq]'] = filters.model
+      if (filters.yearFrom) params['filters[year][$gte]'] = filters.yearFrom
+      if (filters.yearTo) params['filters[year][$lte]'] = filters.yearTo
+      if (filters.priceFrom) params['filters[price][$gte]'] = filters.priceFrom
+      if (filters.priceTo) params['filters[price][$lte]'] = filters.priceTo
+      if (filters.fuelType) params['filters[fuelType][$eq]'] = filters.fuelType
+      if (filters.transmission) params['filters[transmission][$eq]'] = filters.transmission
+      if (filters.location) params['filters[location][$containsi]'] = filters.location
       if (filters.page) {
         params['pagination[page]'] = filters.page
-        params['pagination[pageSize]'] = 10
+        params['pagination[pageSize]'] = 25  // Consistent page size
       }
     }
 
@@ -335,6 +341,7 @@ export async function createCar(data: CreateListingFormData): Promise<Car> {
     const strapiCar = response.data.data
     const car: Car = {
       id: strapiCar.id.toString(),
+      category: strapiCar.category,
       title: strapiCar.title,
       brand: strapiCar.brand,
       model: strapiCar.model,

@@ -7,10 +7,9 @@ import { Text } from '@components/ui/text'
 import { Pressable } from '@components/ui/pressable'
 import { 
   Car, 
-  Motorcycle, 
-  Truck, 
   Jeep, 
-  Bicycle,
+  Lightning,
+  Baseball,
   GridFour
 } from 'phosphor-react-native'
 
@@ -48,22 +47,22 @@ const categories: CategoryItem[] = [
     count: 85
   },
   {
-    id: 'truck',
-    name: 'Pickup',
-    icon: <Truck size={24} color={colors.neutral[300]} weight="fill" />,
+    id: 'sport',
+    name: 'Sport',
+    icon: <Car size={24} color={colors.neutral[300]} weight="fill" />,
     count: 45
   },
   {
-    id: 'motorcycle',
-    name: 'Moto',
-    icon: <Motorcycle size={24} color={colors.neutral[300]} weight="fill" />,
-    count: 67
+    id: 'eletricos',
+    name: 'Elétricos',
+    icon: <Lightning size={24} color={colors.neutral[300]} weight="fill" />,
+    count: 32
   },
   {
-    id: 'bicycle',
-    name: 'Bike',
-    icon: <Bicycle size={24} color={colors.neutral[300]} weight="fill" />,
-    count: 23
+    id: 'hatch',
+    name: 'Hatch',
+    icon: <Baseball size={24} color={colors.neutral[300]} weight="fill" />,
+    count: 78
   }
 ]
 
@@ -79,12 +78,12 @@ function renderCategoryIcon(categoryId: string, isSelected: boolean) {
       return <Car size={iconSize} color={iconColor} weight={iconWeight} />
     case 'suv':
       return <Jeep size={iconSize} color={iconColor} weight={iconWeight} />
-    case 'truck':
-      return <Truck size={iconSize} color={iconColor} weight={iconWeight} />
-    case 'motorcycle':
-      return <Motorcycle size={iconSize} color={iconColor} weight={iconWeight} />
-    case 'bicycle':
-      return <Bicycle size={iconSize} color={iconColor} weight={iconWeight} />
+    case 'sport':
+      return <Car size={iconSize} color={iconColor} weight={iconWeight} />
+    case 'eletricos':
+      return <Lightning size={iconSize} color={iconColor} weight={iconWeight} />
+    case 'hatch':
+      return <Baseball size={iconSize} color={iconColor} weight={iconWeight} />
     default:
       return <GridFour size={iconSize} color={iconColor} weight={iconWeight} />
   }

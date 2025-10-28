@@ -8,6 +8,7 @@ export interface Car {
   km: number
   fuelType: string
   transmission: string
+  category: string
   color: string
   description: string
   images: string[]
