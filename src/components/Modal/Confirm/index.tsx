@@ -38,7 +38,7 @@ export default function ModalConfirm(props: ModalConfirmProps) {
                     variant={modal?.isDestructive ? 'solid' : 'solid'} 
                     className="mb-4"
                     style={{ 
-                        backgroundColor: modal?.isDestructive ? colors.error[500] : colors.primary[500] 
+                        backgroundColor: modal?.isDestructive ? colors.error[500] : colors.accent[500] 
                     }}
                 >
                     <ButtonText style={{ color: colors.neutral[50] }}>

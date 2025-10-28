@@ -6,6 +6,7 @@ import { useMutation } from '@tanstack/react-query'
 import Toast from 'react-native-toast-message'
 
 import { useAuthStore } from '@store/authStore'
+import { useModalStore } from '@store/modalStore'
 import { createListingSchema, type CreateListingFormData } from '@/utils/validation'
 import { carBrands, carModelsByBrand } from '@/constants/carBrands'
 import { fuelTypes, transmissionTypes, carColors } from '@/constants/fuelTypes'
@@ -15,6 +16,7 @@ import type { Car } from '@/types/car'
 export default function useCreateListingController() {
   const router = useRouter()
   const { user, isAuthenticated, token } = useAuthStore()
+  const { setModal } = useModalStore()
   
   const [selectedBrand, setSelectedBrand] = useState<string>('')
   const [availableModels, setAvailableModels] = useState<string[]>([])
@@ -74,6 +76,22 @@ export default function useCreateListingController() {
       console.error('❌ Erro ao criar listagem:', error)
     }
   })
+
+  // Verificar autenticação ao carregar a tela
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // Se não estiver logado, mostra modal perguntando se quer fazer login
+      setModal({
+        type: 'confirm',
+        title: 'Você precisa estar logado para criar um anúncio. Deseja fazer login agora?',
+        confirmText: 'Fazer login',
+        cancelText: 'Voltar',
+        action: () => {
+          router.push('/auth/login')
+        }
+      })
+    }
+  }, [isAuthenticated, setModal, router])
 
   // Monitorar mudanças na marca para atualizar modelos
   const watchedBrand = form.watch('brand')

@@ -8,6 +8,7 @@ import { useFavoritesStore } from '@store/favoritesStore'
 import { useFiltersStore } from '@store/filtersStore'
 import { useOfflineCacheStore } from '@store/offlineCacheStore'
 import useNetworkController from './useNetworkController'
+import useAuthGuard from '@hooks/useAuthGuard'
 import { Car } from '@/types/car'
 
 export default function useHomeController() {
@@ -16,6 +17,7 @@ export default function useHomeController() {
   const { filters, setFilter } = useFiltersStore()
   const { addToOfflineQueue } = useOfflineCacheStore()
   const { isOnline, isConnected, hasOfflineQueue } = useNetworkController()
+  const { checkAuth } = useAuthGuard()
 
   const [refreshing, setRefreshing] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -57,35 +59,38 @@ export default function useHomeController() {
   }
 
   function handleFavoritePress(carId: string): void {
-    const isFav = favorites.includes(carId)
-    
-    if (isFav) {
-      removeFavorite(carId)
-      Toast.show({ 
-        type: 'info', 
-        text1: 'Removed from favorites' 
-      })
-    } else {
-      addFavorite(carId)
-      Toast.show({ 
-        type: 'success', 
-        text1: 'Added to favorites' 
-      })
-    }
-
-    // Add to offline queue if not online
-    if (!isOnline) {
-      addToOfflineQueue({
-        type: isFav ? 'unfavorite' : 'favorite',
-        data: { carId }
-      })
+    // Verifica autenticação antes de executar ação
+    checkAuth(() => {
+      const isFav = favorites.includes(carId)
       
-      Toast.show({
-        type: 'info',
-        text1: 'Action saved',
-        text2: 'Will sync when back online'
-      })
-    }
+      if (isFav) {
+        removeFavorite(carId)
+        Toast.show({ 
+          type: 'info', 
+          text1: 'Removido dos favoritos' 
+        })
+      } else {
+        addFavorite(carId)
+        Toast.show({ 
+          type: 'success', 
+          text1: 'Adicionado aos favoritos' 
+        })
+      }
+
+      // Add to offline queue if not online
+      if (!isOnline) {
+        addToOfflineQueue({
+          type: isFav ? 'unfavorite' : 'favorite',
+          data: { carId }
+        })
+        
+        Toast.show({
+          type: 'info',
+          text1: 'Ação salva',
+          text2: 'Sincronizará quando voltar online'
+        })
+      }
+    })
   }
 
   function isFavorite(carId: string): boolean {
@@ -97,7 +102,9 @@ export default function useHomeController() {
   }
 
   function navigateToCreateListing(): void {
-    router.push('../create-listing' as any)
+    checkAuth(() => {
+      router.push('../create-listing' as any)
+    })
   }
 
   function handleCategorySelect(category: string): void {
