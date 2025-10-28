@@ -10,7 +10,8 @@ import {
   Motorcycle, 
   Truck, 
   Jeep, 
-  Bicycle 
+  Bicycle,
+  GridFour
 } from 'phosphor-react-native'
 
 import { colors } from '@theme/colors'
@@ -28,6 +29,12 @@ interface CarCategoriesProps {
 }
 
 const categories: CategoryItem[] = [
+  {
+    id: 'all',
+    name: 'All',
+    icon: <GridFour size={24} color={colors.neutral[300]} weight="fill" />,
+    count: 340
+  },
   {
     id: 'sedan',
     name: 'Sedan',
@@ -66,6 +73,8 @@ function renderCategoryIcon(categoryId: string, isSelected: boolean) {
   const iconWeight = 'fill' as const
 
   switch (categoryId) {
+    case 'all':
+      return <GridFour size={iconSize} color={iconColor} weight={iconWeight} />
     case 'sedan':
       return <Car size={iconSize} color={iconColor} weight={iconWeight} />
     case 'suv':
@@ -77,13 +86,13 @@ function renderCategoryIcon(categoryId: string, isSelected: boolean) {
     case 'bicycle':
       return <Bicycle size={iconSize} color={iconColor} weight={iconWeight} />
     default:
-      return <Car size={iconSize} color={iconColor} weight={iconWeight} />
+      return <GridFour size={iconSize} color={iconColor} weight={iconWeight} />
   }
 }
 
 export default function CarCategories({ 
   onCategoryPress, 
-  selectedCategory = 'sedan' 
+  selectedCategory = 'all' 
 }: CarCategoriesProps) {
   return (
     <VStack space="md" className="py-4">

@@ -18,7 +18,7 @@ export default function useHomeController() {
   const { isOnline, isConnected, hasOfflineQueue } = useNetworkController()
 
   const [refreshing, setRefreshing] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState('sedan')
+  const [selectedCategory, setSelectedCategory] = useState('all')
 
   const {
     data,
@@ -102,7 +102,13 @@ export default function useHomeController() {
 
   function handleCategorySelect(category: string): void {
     setSelectedCategory(category)
-    setFilter('category', category)
+    
+    // If "all" is selected, clear category filter, otherwise set the specific category
+    if (category === 'all') {
+      setFilter('category', undefined)
+    } else {
+      setFilter('category', category)
+    }
   }
 
   return {
