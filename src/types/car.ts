@@ -52,6 +52,7 @@ export interface Seller {
 }
 
 export interface CarFilters {
+  q?: string // General search query
   brand?: string
   model?: string
   category?: string

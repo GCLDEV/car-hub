@@ -151,6 +151,89 @@ export async function getCarsList(filters?: CarFilters): Promise<CarSearchResult
   }
 }
 
+
+
+// Busca avançada com endpoint customizado do Strapi
+export async function searchCarsAdvanced(filters?: CarFilters): Promise<CarSearchResult> {
+  const networkState = useNetworkStore.getState()
+  const cacheStore = useOfflineCacheStore.getState()
+  const cacheKey = generateCacheKey(filters)
+
+  // Try to get from cache first if offline or as fallback
+  const cachedData = cacheStore.getCachedCars(cacheKey)
+  
+  // If offline, return cached data or throw error
+  if (!networkState.isConnected || !networkState.isInternetReachable) {
+    if (cachedData) {
+      return cachedData.data
+    }
+    throw new Error('No internet connection and no cached data available')
+  }
+
+  try {
+    // Build query parameters for custom search endpoint
+    const params: any = {}
+
+    if (filters) {
+      // General search query
+      if (filters.q) params.q = filters.q
+      
+      // Specific filters
+      if (filters.brand) params.brand = filters.brand
+      if (filters.model) params.model = filters.model
+      if (filters.category) params.category = filters.category
+      if (filters.fuelType) params.fuelType = filters.fuelType
+      if (filters.transmission) params.transmission = filters.transmission
+      if (filters.color) params.color = filters.color
+      if (filters.location) params.location = filters.location
+      
+      // Range filters
+      if (filters.yearFrom) params.yearFrom = filters.yearFrom
+      if (filters.yearTo) params.yearTo = filters.yearTo
+      if (filters.priceFrom) params.priceFrom = filters.priceFrom
+      if (filters.priceTo) params.priceTo = filters.priceTo
+      if (filters.kmFrom) params.kmFrom = filters.kmFrom
+      if (filters.kmTo) params.kmTo = filters.kmTo
+      
+      // Sorting and pagination
+      if (filters.sortBy) params.sortBy = filters.sortBy
+      if (filters.page) params.page = filters.page
+      if (filters.limit) params.pageSize = filters.limit
+    }
+
+    const response = await api.get('/cars/search', { params })
+    
+    const cars = response.data.data.map(transformStrapiCar)
+    const pagination = response.data.meta.pagination
+
+    const result: CarSearchResult = {
+      results: cars,
+      pagination: {
+        page: pagination.page,
+        limit: pagination.pageSize,
+        total: pagination.total,
+        totalPages: pagination.pageCount,
+        hasNext: pagination.page < pagination.pageCount,
+        hasPrev: pagination.page > 1
+      }
+    }
+
+    // Cache the result for offline access
+    cacheStore.setCachedCars(result, cacheKey)
+
+    return result
+  } catch (error) {
+    // If API fails but we have cached data, return it
+    if (cachedData) {
+      console.warn('Advanced search API failed, returning cached data:', error)
+      return cachedData.data
+    }
+    
+    // Otherwise, throw the error
+    throw error
+  }
+}
+
 // Buscar carro por ID da API Strapi (com cache offline)
 export async function getCarById(id: string): Promise<Car | null> {
   const networkState = useNetworkStore.getState()
