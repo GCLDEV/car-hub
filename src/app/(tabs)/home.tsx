@@ -73,6 +73,14 @@ export default function HomeScreen() {
     })
   }
 
+  function navigateToSettings() {
+    Toast.show({
+      type: 'info',
+      text1: 'Configurações em desenvolvimento',
+      text2: 'As configurações estarão disponíveis em breve!'
+    })
+  }
+
   if (loading && cars.length === 0) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.neutral[900] }}>
@@ -84,10 +92,11 @@ export default function HomeScreen() {
             notificationCount={3}
             onNotificationPress={handleNotificationPress}
             onLocationPress={handleLocationPress}
+            onSettingsPress={navigateToSettings}
             onSearchPress={navigateToSearch}
             onCreatePress={navigateToCreateListing}
           />
-          
+
           {/* Skeleton apenas da barra de pesquisa para baixo */}
           <HomeContentSkeleton />
         </VStack>
@@ -97,8 +106,8 @@ export default function HomeScreen() {
 
   if (error) {
     return (
-      <ErrorState 
-        message={error} 
+      <ErrorState
+        message={error}
         onRetry={handleRefresh}
       />
     )
@@ -109,28 +118,30 @@ export default function HomeScreen() {
       <VStack className="flex-1">
         {/* Header moderno */}
         <HomeHeader
+
           userName="Jimmy"
           userLocation="New York City, USA"
           notificationCount={3}
           onNotificationPress={handleNotificationPress}
           onLocationPress={handleLocationPress}
+          onSettingsPress={navigateToSettings}
           onSearchPress={navigateToSearch}
           onCreatePress={navigateToCreateListing}
         />
 
         {/* Network Status Banner */}
-        <NetworkStatusBanner 
+        <NetworkStatusBanner
           isOnline={isOnline}
           isConnected={isConnected}
           hasOfflineQueue={hasOfflineQueue}
         />
-        
+
         {/* Categorias */}
-        <CarCategories 
+        <CarCategories
           onCategoryPress={handleCategorySelect}
           selectedCategory={selectedCategory}
         />
-        
+
         {/* Seção Popular New Cars */}
         <VStack space="md" className="flex-1">
           <HStack className="justify-between items-center px-4">

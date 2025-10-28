@@ -8,7 +8,7 @@ import Toast from 'react-native-toast-message'
 import { useAuthStore } from '@store/authStore'
 import { useModalStore } from '@store/modalStore'
 import { createListingSchema, type CreateListingFormData } from '@/utils/validation'
-import { carBrands, carModelsByBrand } from '@/constants/carBrands'
+import { carBrands } from '@/constants/carBrands'
 import { fuelTypes, transmissionTypes, carColors } from '@/constants/fuelTypes'
 import { createCar } from '@/services/api/cars'
 import type { Car } from '@/types/car'
@@ -18,11 +18,8 @@ export default function useCreateListingController() {
   const { user, isAuthenticated, token } = useAuthStore()
   const { setModal } = useModalStore()
   
-  const [selectedBrand, setSelectedBrand] = useState<string>('')
-  const [availableModels, setAvailableModels] = useState<string[]>([])
-  
   // Configuração do React Hook Form com Zod
-  const form = useForm<CreateListingFormData>({
+  const form = useForm({
     resolver: zodResolver(createListingSchema),
     defaultValues: {
       title: '',
@@ -39,7 +36,7 @@ export default function useCreateListingController() {
       doors: '4',
       seats: '5',
       engine: '',
-      features: [],
+      features: [] as string[],
       images: []
     },
     mode: 'onChange'
@@ -93,19 +90,7 @@ export default function useCreateListingController() {
     }
   }, [isAuthenticated, setModal, router])
 
-  // Monitorar mudanças na marca para atualizar modelos
-  const watchedBrand = form.watch('brand')
-  
-  useEffect(() => {
-    if (watchedBrand && watchedBrand !== selectedBrand) {
-      setSelectedBrand(watchedBrand)
-      setAvailableModels(carModelsByBrand[watchedBrand] || [])
-      // Reset model when brand changes
-      if (form.getValues('model')) {
-        form.setValue('model', '', { shouldValidate: true })
-      }
-    }
-  }, [watchedBrand, selectedBrand, form])
+
 
   // Gerar título automático baseado nos dados preenchidos
   const generateTitle = () => {
@@ -141,8 +126,6 @@ export default function useCreateListingController() {
     
     // Estados locais
     loading: createListingMutation.isPending,
-    selectedBrand,
-    availableModels,
     
     // Dados para selects
     carBrands,

@@ -40,7 +40,6 @@ export default function CreateListingScreen() {
     fuelTypes,
     transmissionTypes,
     carColors,
-    availableModels,
     onSubmit,
     generateTitle,
     watch,
@@ -100,46 +99,42 @@ export default function CreateListingScreen() {
                 className="text-base text-center"
                 style={{ color: colors.neutral[400] }}
               >
-                Preencha as informações do seu carro
+                Fill in your car information
               </Text>
             </VStack>
 
             {/* Form */}
             <VStack space="lg" className="mb-8">
               
-              {/* Informações Básicas */}
+              {/* Basic Information */}
               <VStack space="md">
                 <Text 
                   className="text-lg font-semibold"
                   style={{ color: colors.neutral[200] }}
                 >
-                  Informações Básicas
+                  Basic Information
                 </Text>
 
-                <AuthSelect
-                  label="Marca"
+                <AuthInput
+                  label="Brand"
                   name="brand"
                   control={control}
-                  placeholder="Selecione a marca"
+                  placeholder="Toyota, Honda, Ford..."
                   icon={<Car size={20} color={colors.neutral[400]} />}
-                  options={carBrands.map(brand => ({ label: brand, value: brand }))}
                   error={errors.brand}
                 />
 
-                {availableModels.length > 0 && (
-                  <AuthSelect
-                    label="Modelo"
-                    name="model"
-                    control={control}
-                    placeholder="Selecione o modelo"
-                    icon={<Car size={20} color={colors.neutral[400]} />}
-                    options={availableModels.map(model => ({ label: model, value: model }))}
-                    error={errors.model}
-                  />
-                )}
+                <AuthInput
+                  label="Model"
+                  name="model"
+                  control={control}
+                  placeholder="Corolla, Civic, Focus..."
+                  icon={<Car size={20} color={colors.neutral[400]} />}
+                  error={errors.model}
+                />
 
                 <AuthInput
-                  label="Ano"
+                  label="Year"
                   name="year"
                   control={control}
                   placeholder="2020"
@@ -149,7 +144,7 @@ export default function CreateListingScreen() {
                 />
 
                 <AuthInput
-                  label="Quilometragem (km)"
+                  label="Mileage (km)"
                   name="km"
                   control={control}
                   placeholder="50000"
@@ -159,7 +154,7 @@ export default function CreateListingScreen() {
                 />
 
                 <AuthInput
-                  label="Preço (R$)"
+                  label="Price (R$)"
                   name="price"
                   control={control}
                   placeholder="50000"
@@ -175,7 +170,7 @@ export default function CreateListingScreen() {
                   className="text-lg font-semibold"
                   style={{ color: colors.neutral[200] }}
                 >
-                  Fotos do Veículo
+                  Vehicle Photos
                 </Text>
 
                 <ImageUploader
@@ -185,8 +180,8 @@ export default function CreateListingScreen() {
                   }}
                   multiple={true}
                   maxImages={10}
-                  label="Adicionar fotos"
-                  placeholder="Adicione fotos do seu veículo"
+                  label="Add photos"
+                  placeholder="Add photos of your vehicle"
                   required={true}
                   error={errors.images?.message}
                 />
@@ -195,7 +190,7 @@ export default function CreateListingScreen() {
                   className="text-xs"
                   style={{ color: colors.neutral[500] }}
                 >
-                  Adicione pelo menos uma foto do seu veículo. Máximo de 10 fotos.
+                  Add at least one photo of your vehicle. Maximum 10 photos.
                 </Text>
               </VStack>
 
@@ -205,41 +200,41 @@ export default function CreateListingScreen() {
                   className="text-lg font-semibold"
                   style={{ color: colors.neutral[200] }}
                 >
-                  Características
+                  Features
                 </Text>
 
                 <AuthSelect
-                  label="Combustível"
+                  label="Fuel Type"
                   name="fuelType"
                   control={control}
-                  placeholder="Tipo de combustível"
+                  placeholder="Select fuel type"
                   icon={<Engine size={20} color={colors.neutral[400]} />}
                   options={fuelTypes.map(fuel => ({ label: fuel, value: fuel }))}
                   error={errors.fuelType}
                 />
 
                 <AuthSelect
-                  label="Câmbio"
+                  label="Transmission"
                   name="transmission"
                   control={control}
-                  placeholder="Tipo de câmbio"
+                  placeholder="Select transmission type"
                   icon={<GearSix size={20} color={colors.neutral[400]} />}
                   options={transmissionTypes.map(trans => ({ label: trans, value: trans }))}
                   error={errors.transmission}
                 />
 
                 <AuthSelect
-                  label="Cor"
+                  label="Color"
                   name="color"
                   control={control}
-                  placeholder="Cor do veículo"
+                  placeholder="Select vehicle color"
                   icon={<Palette size={20} color={colors.neutral[400]} />}
                   options={carColors.map(color => ({ label: color, value: color }))}
                   error={errors.color}
                 />
 
                 <AuthInput
-                  label="Motor"
+                  label="Engine"
                   name="engine"
                   control={control}
                   placeholder="1.0, 1.6, 2.0..."
@@ -248,7 +243,7 @@ export default function CreateListingScreen() {
                 />
 
                 <AuthInput
-                  label="Número de Portas"
+                  label="Number of Doors"
                   name="doors"
                   control={control}
                   placeholder="4"
@@ -258,7 +253,7 @@ export default function CreateListingScreen() {
                 />
 
                 <AuthInput
-                  label="Número de Lugares"
+                  label="Number of Seats"
                   name="seats"
                   control={control}
                   placeholder="5"
@@ -274,20 +269,20 @@ export default function CreateListingScreen() {
                   className="text-lg font-semibold"
                   style={{ color: colors.neutral[200] }}
                 >
-                  Detalhes
+                  Details
                 </Text>
 
                 <AuthInput
-                  label="Título do Anúncio"
+                  label="Ad Title"
                   name="title"
                   control={control}
-                  placeholder="Ex: Civic 2020 automático baixa km"
+                  placeholder="Ex: 2020 Civic automatic low mileage"
                   icon={<FileText size={20} color={colors.neutral[400]} />}
                   error={errors.title}
                 />
 
                 <AuthInput
-                  label="Localização"
+                  label="Location"
                   name="location"
                   control={control}
                   placeholder="São Paulo, SP"
@@ -296,10 +291,10 @@ export default function CreateListingScreen() {
                 />
 
                 <AuthInput
-                  label="Descrição"
+                  label="Description"
                   name="description"
                   control={control}
-                  placeholder="Descreva o estado do veículo, opcionais, histórico..."
+                  placeholder="Describe vehicle condition, options, history..."
                   icon={<FileText size={20} color={colors.neutral[400]} />}
                   error={errors.description}
                 />
@@ -308,10 +303,10 @@ export default function CreateListingScreen() {
 
             {/* Create Button */}
             <AuthButton
-              title="Criar Anúncio"
+              title="Create Listing"
               onPress={() => onSubmit()}
               loading={loading}
-              loadingText={watchedImages?.length > 0 ? "Enviando fotos..." : "Criando anúncio..."}
+              loadingText={watchedImages?.length > 0 ? "Uploading photos..." : "Creating listing..."}
               className="mb-8"
               variant="primary"
             />

@@ -6,12 +6,13 @@ import { Text } from '@components/ui/text'
 import { Pressable } from '@components/ui/pressable'
 import { Avatar, AvatarFallbackText, AvatarImage } from '@components/ui/avatar'
 import { Badge, BadgeText } from '@components/ui/badge'
-import { 
-  Bell, 
-  MagnifyingGlass, 
+import {
+  Bell,
+  MagnifyingGlass,
   Plus,
   MapPin,
-  User
+  User,
+  Gear
 } from 'phosphor-react-native'
 
 import { colors } from '@theme/colors'
@@ -24,6 +25,7 @@ interface HomeHeaderProps {
   onLocationPress: () => void
   onSearchPress: () => void
   onCreatePress: () => void
+  onSettingsPress: () => void
 }
 
 export default function HomeHeader({
@@ -33,7 +35,8 @@ export default function HomeHeader({
   onNotificationPress,
   onLocationPress,
   onSearchPress,
-  onCreatePress
+  onCreatePress,
+  onSettingsPress
 }: HomeHeaderProps) {
   return (
     <VStack space="lg" className="px-4 pt-4 pb-6" style={{ backgroundColor: colors.neutral[900] }}>
@@ -49,28 +52,45 @@ export default function HomeHeader({
             {userLocation}
           </Text>
         </Pressable>
-        
-        {/* Notifications */}
-        <Pressable
-          onPress={onNotificationPress}
-          className="relative"
-        >
-          <Box className="w-10 h-10 bg-gray-800 rounded-full justify-center items-center">
-            <Bell size={20} color={colors.neutral[300]} weight="regular" />
-          </Box>
-          
-          {notificationCount > 0 && (
-            <Box className="absolute -top-1 -right-1">
-              <Badge className="bg-red-500 w-5 h-5 rounded-full justify-center items-center min-w-0 p-0">
-                <BadgeText className="text-white text-xs font-bold">
-                  {notificationCount > 9 ? '9+' : notificationCount}
-                </BadgeText>
-              </Badge>
-            </Box>
-          )}
-        </Pressable>
+
+        <HStack space='md'>
+          {/* Notifications */}
+          <Pressable
+            onPress={onNotificationPress}
+            className="relative"
+            style={{
+              backgroundColor: colors.neutral[800],
+              borderRadius: 12,
+              padding: 12
+            }}
+          >
+            <Bell size={20} color={colors.neutral[300]} weight="bold" />
+            <Badge
+              className="absolute -top-1 -right-1"
+              style={{
+                backgroundColor: colors.error[500],
+                minWidth: 18,
+                height: 18
+              }}
+            >
+              <BadgeText className="text-white text-xs">{'3'}</BadgeText>
+            </Badge>
+          </Pressable>
+
+          {/* Settings */}
+          <Pressable
+            onPress={onSettingsPress}
+            style={{
+              backgroundColor: colors.neutral[800],
+              borderRadius: 12,
+              padding: 12
+            }}
+          >
+            <Gear size={20} color={colors.neutral[300]} weight="bold" />
+          </Pressable>
+        </HStack>
       </HStack>
-      
+
       {/* Greeting */}
       <VStack space="xs">
         <Text className="text-white text-base">
@@ -80,7 +100,7 @@ export default function HomeHeader({
           Get Your Dream Car Today!
         </Text>
       </VStack>
-      
+
       {/* Action buttons */}
       <HStack space="md" className="items-center">
         {/* Search */}
@@ -94,7 +114,7 @@ export default function HomeHeader({
             Search cars...
           </Text>
         </Pressable>
-        
+
         {/* Add button */}
         <Pressable
           onPress={onCreatePress}
