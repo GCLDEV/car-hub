@@ -1,30 +1,159 @@
 import { Car, CarFilters, CarSearchResult } from '@/types/car'
-import { 
-  getMockCarsList, 
-  getMockCarById, 
-  searchMockCars 
-} from '../mockData'
 import api from './client'
 import type { CreateListingFormData } from '@/utils/validation'
 import { uploadMultipleImages } from './upload'
 
 // ========================================
-// 🎭 MOCK DATA API - REMOVIDO APIs EXTERNAS
+// 🚀 STRAPI API INTEGRATION
 // ========================================
 
-// Buscar lista de carros
+// Transform Strapi car response to app Car format
+function transformStrapiCar(strapiCar: any): Car {
+  return {
+    id: strapiCar.id.toString(),
+    title: strapiCar.title,
+    brand: strapiCar.brand,
+    model: strapiCar.model,
+    year: strapiCar.year,
+    price: typeof strapiCar.price === 'string' ? parseInt(strapiCar.price) : strapiCar.price,
+    km: strapiCar.km,
+    fuelType: strapiCar.fuelType,
+    transmission: strapiCar.transmission,
+    color: strapiCar.color,
+    description: strapiCar.description,
+    location: strapiCar.location,
+    cityState: strapiCar.cityState || strapiCar.location,
+    images: strapiCar.images?.map((img: any) => 
+      img.url?.startsWith('http') ? img.url : `http://192.168.0.8:1337${img.url}`
+    ) || [
+      // Placeholder images for cars without photos
+      'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=80',
+      'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=80'
+    ],
+    specs: {
+      engine: strapiCar.engine || '',
+      doors: strapiCar.doors || 4,
+      seats: strapiCar.seats || 5,
+      features: strapiCar.features || []
+    },
+    seller: {
+      id: strapiCar.seller?.id?.toString() || '1',
+      name: strapiCar.seller?.username || 'Vendedor Autorizado',
+      phone: strapiCar.seller?.phone || '(11) 99999-9999',
+      location: strapiCar.location,
+      isDealer: false,
+      verifiedPhone: true
+    },
+    status: strapiCar.status || 'available',
+    views: strapiCar.views || 0,
+    createdAt: strapiCar.createdAt,
+    updatedAt: strapiCar.updatedAt
+  }
+}
+
+// Buscar lista de carros da API Strapi
 export async function getCarsList(filters?: CarFilters): Promise<CarSearchResult> {
-  return await getMockCarsList(filters)
+  // Build query parameters for Strapi
+  const params: any = {
+    'populate[images]': true,
+    'populate[seller]': true,
+    'sort': 'createdAt:desc'
+  }
+
+  // Add filters if provided
+  if (filters) {
+    if (filters.brand) params.brand = filters.brand
+    if (filters.model) params.model = filters.model
+    if (filters.yearFrom) params.yearFrom = filters.yearFrom
+    if (filters.yearTo) params.yearTo = filters.yearTo
+    if (filters.priceFrom) params.priceFrom = filters.priceFrom
+    if (filters.priceTo) params.priceTo = filters.priceTo
+    if (filters.fuelType) params.fuelType = filters.fuelType
+    if (filters.transmission) params.transmission = filters.transmission
+    if (filters.location) params.location = filters.location
+    if (filters.page) {
+      params['pagination[page]'] = filters.page
+      params['pagination[pageSize]'] = 10
+    }
+  }
+
+  const response = await api.get('/cars', { params })
+  
+  const cars = response.data.data.map(transformStrapiCar)
+  const pagination = response.data.meta.pagination
+
+  return {
+    results: cars,
+    pagination: {
+      page: pagination.page,
+      limit: pagination.pageSize,
+      total: pagination.total,
+      totalPages: pagination.pageCount,
+      hasNext: pagination.page < pagination.pageCount,
+      hasPrev: pagination.page > 1
+    }
+  }
 }
 
-// Buscar carro por ID
+// Buscar carro por ID da API Strapi
 export async function getCarById(id: string): Promise<Car | null> {
-  return await getMockCarById(id)
+  const response = await api.get(`/cars/${id}`, {
+    params: {
+      'populate[images]': true,
+      'populate[seller]': true
+    }
+  })
+  
+  return transformStrapiCar(response.data.data)
 }
 
-// Buscar carros por texto
+// Buscar carros por texto (search)
 export async function searchCars(query: string, filters?: CarFilters): Promise<CarSearchResult> {
-  return await searchMockCars(query, filters)
+  const params: any = {
+    'populate[images]': true,
+    'populate[seller]': true,
+    'sort': 'createdAt:desc',
+    // Search in title, brand, and model
+    '$or': [
+      { title: { '$containsi': query } },
+      { brand: { '$containsi': query } },
+      { model: { '$containsi': query } }
+    ]
+  }
+
+  // Add additional filters
+  if (filters) {
+    if (filters.brand) params.brand = filters.brand
+    if (filters.model) params.model = filters.model
+    if (filters.yearFrom) params.yearFrom = filters.yearFrom
+    if (filters.yearTo) params.yearTo = filters.yearTo
+    if (filters.priceFrom) params.priceFrom = filters.priceFrom
+    if (filters.priceTo) params.priceTo = filters.priceTo
+    if (filters.fuelType) params.fuelType = filters.fuelType
+    if (filters.transmission) params.transmission = filters.transmission
+    if (filters.location) params.location = filters.location
+    if (filters.page) {
+      params['pagination[page]'] = filters.page
+      params['pagination[pageSize]'] = 10
+    }
+  }
+
+  const response = await api.get('/cars', { params })
+  
+  const cars = response.data.data.map(transformStrapiCar)
+  const pagination = response.data.meta.pagination
+
+  return {
+    results: cars,
+    pagination: {
+      page: pagination.page,
+      limit: pagination.pageSize,
+      total: pagination.total,
+      totalPages: pagination.pageCount,
+      hasNext: pagination.page < pagination.pageCount,
+      hasPrev: pagination.page > 1
+    }
+  }
 }
 
 // Criar novo carro no Strapi
@@ -111,15 +240,21 @@ export async function createCar(data: CreateListingFormData): Promise<Car> {
   }
 }
 
-// Função para testar conectividade (sempre retorna sucesso com mock)
+// Função para testar conectividade com a API Strapi
 export async function testAPI() {
+  const response = await api.get('/cars', {
+    params: {
+      'pagination[pageSize]': 1
+    }
+  })
+  
   return {
     success: true,
-    message: 'Mock API funcionando perfeitamente!',
+    message: 'Strapi API conectada com sucesso!',
     timestamp: new Date().toISOString(),
     data: {
-      carsCount: 10,
-      version: '1.0.0-mock'
+      carsCount: response.data.meta.pagination.total,
+      version: '1.0.0-strapi'
     }
   }
 }

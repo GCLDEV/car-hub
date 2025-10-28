@@ -81,6 +81,7 @@ export default function useHomeController() {
   }
 
   function handleCategorySelect(category: string): void {
+    setSelectedCategory(category)
     setFilter('category', category)
   }
 
@@ -97,6 +98,6 @@ export default function useHomeController() {
     navigateToSearch,
     navigateToCreateListing,
     handleCategorySelect,
-    selectedCategory: filters.category
+    selectedCategory
   }
 }

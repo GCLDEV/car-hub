@@ -3,6 +3,7 @@ import { create } from 'zustand'
 export interface CarFilters {
   brand?: string
   model?: string
+  category?: string
   yearFrom?: number
   yearTo?: number
   priceFrom?: number

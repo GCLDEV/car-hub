@@ -1,10 +1,10 @@
 // ========================================
-// 🎭 MOCK API EXPORTS - SEM APIs EXTERNAS
+// 🚀 STRAPI API EXPORTS
 // ========================================
 
-// Exportar apenas funções mock
+// Exportar funções da API real
 export * from './cars'
 export * from './auth'
 
-// Cliente HTTP removido
+// Cliente HTTP
 export { default as api } from './client'

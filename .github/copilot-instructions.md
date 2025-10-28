@@ -6,7 +6,7 @@ Este é um aplicativo de compra e venda de carros usando React Native com Expo G
 
 **Controller Pattern**: Screens in `src/app/` contain only UI logic. Business logic is centralized in `src/controllers/` to avoid Expo Router conflicts. Each screen imports its corresponding controller hook.
 
-**Mock Data System**: All API calls use mock data from `src/services/mockData.ts`. The `src/services/api/` layer provides a consistent interface that can be easily swapped for real APIs later.
+**Real API Integration**: All API calls connect directly to Strapi v5 backend. The `src/services/api/` layer provides the interface to the real API without fallback to mock data.
 
 **Component Structure**: Gluestack UI base components are in `src/components/ui/[component]/` while custom UI components are directly in `src/components/ui/`. Never create index.ts files for re-exports.
 
@@ -75,25 +75,22 @@ setModal({
 })
 ```
 
-### Mock API System
-All API calls use comprehensive mock data from `src/services/mockData.ts`:
+### Strapi API Integration
+All API calls connect directly to Strapi v5 backend at `http://your-ip-address/api`:
 ```typescript
 // src/services/api/cars.ts
 export async function getCarsList(filters?: CarFilters): Promise<CarSearchResult> {
-  return await getMockCarsList(filters)
+  const response = await api.get('/cars', { params })
+  const cars = response.data.data.map(transformStrapiCar)
+  return { results: cars, pagination: response.data.meta.pagination }
 }
 
-// src/services/mockData.ts - 10 diverse cars with realistic data
-export const mockCars: Car[] = [
-  {
-    id: 'car-1',
-    title: 'Toyota Corolla 2022',
-    price: 95000,
-    images: ['https://images.unsplash.com/...'],
-    location: 'São Paulo, SP',
-    // Complete car data with seller info, specs, etc.
-  }
-]
+// Real data from Strapi with 5+ Brazilian cars:
+// Toyota Corolla 2022 XEi - R$ 95.000 - São Paulo, SP
+// Honda Civic 2021 Sport - R$ 125.000 - Rio de Janeiro, RJ
+// Volkswagen Jetta 2020 - R$ 89.000 - Belo Horizonte, MG
+// Hyundai HB20S 2023 - R$ 78.000 - Brasília, DF
+// Ford EcoSport 2019 - R$ 65.000 - Curitiba, PR
 ```
 
 ### Component Architecture
@@ -149,7 +146,7 @@ npx expo export --platform web --output-dir dist
 
 ### Key Files for AI Understanding
 
-**Core Data Flow**: `src/services/mockData.ts` → `src/services/api/cars.ts` → `src/controllers/useHomeController.ts` → `src/app/(tabs)/home.tsx`
+**Core Data Flow**: `Strapi API` → `src/services/api/cars.ts` → `src/controllers/useHomeController.ts` → `src/app/(tabs)/home.tsx`
 
 **Modal System**: `src/store/modalStore.ts` + `src/components/Modal/` components for app-wide confirmations and info displays
 
@@ -217,13 +214,12 @@ const styles = StyleSheet.create({
 - Hardcode colors/spacing (use tokens)
 - Use emojis for icons
 - Use StyleSheet (use className)
-- Use external APIs (use mock data)
 - Use **npm** commands (always use Yarn)
 
 ## Integration Points
 
-**Authentication**: Mock auth system in `src/services/api/auth.ts` with realistic user data
-**Car Listings**: Mock cars with Brazilian locations, realistic pricing, Unsplash images
+**Authentication**: Strapi JWT auth system with user registration and login
+**Car Listings**: Real Strapi API with Brazilian cars, realistic pricing, placeholder images
 **Favorites**: Persisted Zustand store with AsyncStorage
 **Filters**: Global filter state shared between search and home screens
 **Modals**: Centralized modal system for confirmations and info displays
