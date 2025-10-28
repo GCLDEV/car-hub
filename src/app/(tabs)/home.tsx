@@ -128,9 +128,6 @@ export default function HomeScreen() {
             <Text className="text-white text-lg font-bold">
               Popular New Cars
             </Text>
-            <Text style={{ color: colors.accent[500] }} className="text-sm font-semibold">
-              See All
-            </Text>
           </HStack>
 
           {/* Lista de carros */}
