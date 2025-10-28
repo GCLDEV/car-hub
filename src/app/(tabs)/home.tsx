@@ -12,6 +12,7 @@ import CarCard from '@components/ui/CarCard'
 import HomeHeader from '@components/ui/HomeHeader'
 import CarCategories from '@components/ui/CarCategories'
 import { HomeContentSkeleton } from '@components/ui/CarSkeletons'
+import NetworkStatusBanner from '@components/ui/NetworkStatusBanner'
 
 import { colors } from '@theme/colors'
 import useHomeController from '@controllers/useHomeController'
@@ -38,7 +39,10 @@ export default function HomeScreen() {
     navigateToSearch,
     navigateToCreateListing,
     handleCategorySelect,
-    selectedCategory
+    selectedCategory,
+    isOnline,
+    isConnected,
+    hasOfflineQueue
   } = useHomeController()
 
   function renderCarItem({ item }: { item: Car }) {
@@ -103,6 +107,13 @@ export default function HomeScreen() {
           onLocationPress={handleLocationPress}
           onSearchPress={navigateToSearch}
           onCreatePress={navigateToCreateListing}
+        />
+
+        {/* Network Status Banner */}
+        <NetworkStatusBanner 
+          isOnline={isOnline}
+          isConnected={isConnected}
+          hasOfflineQueue={hasOfflineQueue}
         />
         
         {/* Categorias */}

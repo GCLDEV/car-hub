@@ -2,6 +2,8 @@ import { Car, CarFilters, CarSearchResult } from '@/types/car'
 import api from './client'
 import type { CreateListingFormData } from '@/utils/validation'
 import { uploadMultipleImages } from './upload'
+import { useNetworkStore } from '@store/networkStore'
+import { useOfflineCacheStore } from '@store/offlineCacheStore'
 
 // ========================================
 // 🚀 STRAPI API INTEGRATION
@@ -51,108 +53,242 @@ function transformStrapiCar(strapiCar: any): Car {
   }
 }
 
-// Buscar lista de carros da API Strapi
+// Generate cache key for filters
+function generateCacheKey(filters?: CarFilters): string {
+  if (!filters) return 'cars-all'
+  
+  const keyParts: string[] = ['cars']
+  if (filters.brand) keyParts.push(`brand-${filters.brand}`)
+  if (filters.model) keyParts.push(`model-${filters.model}`)
+  if (filters.fuelType) keyParts.push(`fuel-${filters.fuelType}`)
+  if (filters.transmission) keyParts.push(`trans-${filters.transmission}`)
+  if (filters.location) keyParts.push(`loc-${filters.location}`)
+  if (filters.priceFrom || filters.priceTo) {
+    keyParts.push(`price-${filters.priceFrom || 0}-${filters.priceTo || 999999}`)
+  }
+  
+  return keyParts.join('-')
+}
+
+// Buscar lista de carros da API Strapi (com cache offline)
 export async function getCarsList(filters?: CarFilters): Promise<CarSearchResult> {
-  // Build query parameters for Strapi
-  const params: any = {
-    'populate[images]': true,
-    'populate[seller]': true,
-    'sort': 'createdAt:desc'
-  }
+  const networkState = useNetworkStore.getState()
+  const cacheStore = useOfflineCacheStore.getState()
+  const cacheKey = generateCacheKey(filters)
 
-  // Add filters if provided
-  if (filters) {
-    if (filters.brand) params.brand = filters.brand
-    if (filters.model) params.model = filters.model
-    if (filters.yearFrom) params.yearFrom = filters.yearFrom
-    if (filters.yearTo) params.yearTo = filters.yearTo
-    if (filters.priceFrom) params.priceFrom = filters.priceFrom
-    if (filters.priceTo) params.priceTo = filters.priceTo
-    if (filters.fuelType) params.fuelType = filters.fuelType
-    if (filters.transmission) params.transmission = filters.transmission
-    if (filters.location) params.location = filters.location
-    if (filters.page) {
-      params['pagination[page]'] = filters.page
-      params['pagination[pageSize]'] = 10
-    }
-  }
-
-  const response = await api.get('/cars', { params })
+  // Try to get from cache first if offline or as fallback
+  const cachedData = cacheStore.getCachedCars(cacheKey)
   
-  const cars = response.data.data.map(transformStrapiCar)
-  const pagination = response.data.meta.pagination
-
-  return {
-    results: cars,
-    pagination: {
-      page: pagination.page,
-      limit: pagination.pageSize,
-      total: pagination.total,
-      totalPages: pagination.pageCount,
-      hasNext: pagination.page < pagination.pageCount,
-      hasPrev: pagination.page > 1
+  // If offline, return cached data or throw error
+  if (!networkState.isConnected || !networkState.isInternetReachable) {
+    if (cachedData) {
+      return cachedData.data
     }
+    throw new Error('No internet connection and no cached data available')
   }
-}
 
-// Buscar carro por ID da API Strapi
-export async function getCarById(id: string): Promise<Car | null> {
-  const response = await api.get(`/cars/${id}`, {
-    params: {
+  try {
+    // Build query parameters for Strapi
+    const params: any = {
       'populate[images]': true,
-      'populate[seller]': true
+      'populate[seller]': true,
+      'sort': 'createdAt:desc'
     }
-  })
-  
-  return transformStrapiCar(response.data.data)
+
+    // Add filters if provided
+    if (filters) {
+      if (filters.brand) params.brand = filters.brand
+      if (filters.model) params.model = filters.model
+      if (filters.yearFrom) params.yearFrom = filters.yearFrom
+      if (filters.yearTo) params.yearTo = filters.yearTo
+      if (filters.priceFrom) params.priceFrom = filters.priceFrom
+      if (filters.priceTo) params.priceTo = filters.priceTo
+      if (filters.fuelType) params.fuelType = filters.fuelType
+      if (filters.transmission) params.transmission = filters.transmission
+      if (filters.location) params.location = filters.location
+      if (filters.page) {
+        params['pagination[page]'] = filters.page
+        params['pagination[pageSize]'] = 10
+      }
+    }
+
+    const response = await api.get('/cars', { params })
+    
+    const cars = response.data.data.map(transformStrapiCar)
+    const pagination = response.data.meta.pagination
+
+    const result: CarSearchResult = {
+      results: cars,
+      pagination: {
+        page: pagination.page,
+        limit: pagination.pageSize,
+        total: pagination.total,
+        totalPages: pagination.pageCount,
+        hasNext: pagination.page < pagination.pageCount,
+        hasPrev: pagination.page > 1
+      }
+    }
+
+    // Cache the result for offline access
+    cacheStore.setCachedCars(result, cacheKey)
+
+    return result
+  } catch (error) {
+    // If API fails but we have cached data, return it
+    if (cachedData) {
+      console.warn('API failed, returning cached data:', error)
+      return cachedData.data
+    }
+    
+    // Otherwise, throw the error
+    throw error
+  }
 }
 
-// Buscar carros por texto (search)
-export async function searchCars(query: string, filters?: CarFilters): Promise<CarSearchResult> {
-  const params: any = {
-    'populate[images]': true,
-    'populate[seller]': true,
-    'sort': 'createdAt:desc',
-    // Search in title, brand, and model
-    '$or': [
-      { title: { '$containsi': query } },
-      { brand: { '$containsi': query } },
-      { model: { '$containsi': query } }
-    ]
-  }
+// Buscar carro por ID da API Strapi (com cache offline)
+export async function getCarById(id: string): Promise<Car | null> {
+  const networkState = useNetworkStore.getState()
+  const cacheStore = useOfflineCacheStore.getState()
 
-  // Add additional filters
-  if (filters) {
-    if (filters.brand) params.brand = filters.brand
-    if (filters.model) params.model = filters.model
-    if (filters.yearFrom) params.yearFrom = filters.yearFrom
-    if (filters.yearTo) params.yearTo = filters.yearTo
-    if (filters.priceFrom) params.priceFrom = filters.priceFrom
-    if (filters.priceTo) params.priceTo = filters.priceTo
-    if (filters.fuelType) params.fuelType = filters.fuelType
-    if (filters.transmission) params.transmission = filters.transmission
-    if (filters.location) params.location = filters.location
-    if (filters.page) {
-      params['pagination[page]'] = filters.page
-      params['pagination[pageSize]'] = 10
-    }
-  }
-
-  const response = await api.get('/cars', { params })
+  // Try to get from cache first if offline
+  const cachedCar = cacheStore.getCachedCarDetail(id)
   
-  const cars = response.data.data.map(transformStrapiCar)
-  const pagination = response.data.meta.pagination
-
-  return {
-    results: cars,
-    pagination: {
-      page: pagination.page,
-      limit: pagination.pageSize,
-      total: pagination.total,
-      totalPages: pagination.pageCount,
-      hasNext: pagination.page < pagination.pageCount,
-      hasPrev: pagination.page > 1
+  // If offline, return cached data or throw error
+  if (!networkState.isConnected || !networkState.isInternetReachable) {
+    if (cachedCar) {
+      return cachedCar
     }
+    throw new Error('No internet connection and no cached car data available')
+  }
+
+  try {
+    const response = await api.get(`/cars/${id}`, {
+      params: {
+        'populate[images]': true,
+        'populate[seller]': true
+      }
+    })
+    
+    const car = transformStrapiCar(response.data.data)
+    
+    // Cache the car details for offline access
+    cacheStore.setCachedCarDetail(id, car)
+    
+    return car
+  } catch (error) {
+    // If API fails but we have cached data, return it
+    if (cachedCar) {
+      console.warn('API failed, returning cached car data:', error)
+      return cachedCar
+    }
+    
+    // Otherwise, throw the error
+    throw error
+  }
+}
+
+// Buscar carros por texto (search) - com cache offline
+export async function searchCars(query: string, filters?: CarFilters): Promise<CarSearchResult> {
+  const networkState = useNetworkStore.getState()
+  const cacheStore = useOfflineCacheStore.getState()
+  
+  // Generate cache key for search
+  const searchFilters = { ...filters, search: query }
+  const cacheKey = generateCacheKey(searchFilters)
+  
+  // Try to get from cache first if offline
+  const cachedData = cacheStore.getCachedCars(cacheKey)
+  
+  // If offline, return cached data or perform local search
+  if (!networkState.isConnected || !networkState.isInternetReachable) {
+    if (cachedData) {
+      return cachedData.data
+    }
+    
+    // Try to search in all cached cars as fallback
+    const allCachedData = cacheStore.getCachedCars('cars-all')
+    if (allCachedData) {
+      const filteredResults = allCachedData.data.results.filter(car => 
+        car.title.toLowerCase().includes(query.toLowerCase()) ||
+        car.brand.toLowerCase().includes(query.toLowerCase()) ||
+        car.model.toLowerCase().includes(query.toLowerCase())
+      )
+      
+      return {
+        results: filteredResults,
+        pagination: {
+          page: 1,
+          limit: filteredResults.length,
+          total: filteredResults.length,
+          totalPages: 1,
+          hasNext: false,
+          hasPrev: false
+        }
+      }
+    }
+    
+    throw new Error('No internet connection and no cached search data available')
+  }
+
+  try {
+    const params: any = {
+      'populate[images]': true,
+      'populate[seller]': true,
+      'sort': 'createdAt:desc',
+      // Search in title, brand, and model
+      '$or': [
+        { title: { '$containsi': query } },
+        { brand: { '$containsi': query } },
+        { model: { '$containsi': query } }
+      ]
+    }
+
+    // Add additional filters
+    if (filters) {
+      if (filters.brand) params.brand = filters.brand
+      if (filters.model) params.model = filters.model
+      if (filters.yearFrom) params.yearFrom = filters.yearFrom
+      if (filters.yearTo) params.yearTo = filters.yearTo
+      if (filters.priceFrom) params.priceFrom = filters.priceFrom
+      if (filters.priceTo) params.priceTo = filters.priceTo
+      if (filters.fuelType) params.fuelType = filters.fuelType
+      if (filters.transmission) params.transmission = filters.transmission
+      if (filters.location) params.location = filters.location
+      if (filters.page) {
+        params['pagination[page]'] = filters.page
+        params['pagination[pageSize]'] = 10
+      }
+    }
+
+    const response = await api.get('/cars', { params })
+    
+    const cars = response.data.data.map(transformStrapiCar)
+    const pagination = response.data.meta.pagination
+
+    const result: CarSearchResult = {
+      results: cars,
+      pagination: {
+        page: pagination.page,
+        limit: pagination.pageSize,
+        total: pagination.total,
+        totalPages: pagination.pageCount,
+        hasNext: pagination.page < pagination.pageCount,
+        hasPrev: pagination.page > 1
+      }
+    }
+
+    // Cache the search result
+    cacheStore.setCachedCars(result, cacheKey)
+
+    return result
+  } catch (error) {
+    // If API fails but we have cached data, return it
+    if (cachedData) {
+      console.warn('Search API failed, returning cached data:', error)
+      return cachedData.data
+    }
+    
+    throw error
   }
 }
 

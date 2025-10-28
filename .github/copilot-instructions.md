@@ -18,7 +18,7 @@ Este é um aplicativo de compra e venda de carros usando React Native com Expo G
 - **UI**: Gluestack UI v2 + Tailwind CSS (className prop)
 - **Icons**: Phosphor React Native (never emojis)
 - **State**: Zustand stores with persistence
-- **Data**: React Query + Mock API system
+- **Data**: React Query + Offline-First API system
 - **Types**: Strict TypeScript (never `any`, use `unknown`)
 
 ## Path Aliases & Imports
@@ -223,3 +223,4 @@ const styles = StyleSheet.create({
 **Favorites**: Persisted Zustand store with AsyncStorage
 **Filters**: Global filter state shared between search and home screens
 **Modals**: Centralized modal system for confirmations and info displays
+**Offline-First**: Network detection, data caching, and offline queue for actions

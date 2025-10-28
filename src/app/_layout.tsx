@@ -13,13 +13,34 @@ import '../../global.css'
 import ModalController from '@components/Modal/Controller'
 import { View } from 'react-native'
 
-// Criar query client
+// Criar query client com configuração offline-first
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 2,
+      retry: (failureCount, error) => {
+        // Don't retry if offline
+        if (error?.message?.includes('No internet connection')) {
+          return false
+        }
+        // Retry up to 3 times for other errors
+        return failureCount < 3
+      },
       staleTime: 5 * 60 * 1000, // 5 minutos
-      gcTime: 10 * 60 * 1000, // 10 minutos (era cacheTime nas versões antigas)
+      gcTime: 30 * 60 * 1000, // 30 minutos - longer cache for offline
+      networkMode: 'offlineFirst', // Keep trying even when offline
+      refetchOnWindowFocus: false,
+      refetchOnMount: true,
+      refetchOnReconnect: true, // Refetch when network comes back
+    },
+    mutations: {
+      retry: (failureCount, error) => {
+        // Don't retry mutations if offline - add to queue instead
+        if (error?.message?.includes('No internet connection')) {
+          return false
+        }
+        return failureCount < 2
+      },
+      networkMode: 'online', // Only run mutations when online
     },
   },
 })

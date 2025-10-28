@@ -6,12 +6,16 @@ import Toast from 'react-native-toast-message'
 import { getCarsList, testAPI } from '@services/api'
 import { useFavoritesStore } from '@store/favoritesStore'
 import { useFiltersStore } from '@store/filtersStore'
+import { useOfflineCacheStore } from '@store/offlineCacheStore'
+import useNetworkController from './useNetworkController'
 import { Car } from '@/types/car'
 
 export default function useHomeController() {
   const router = useRouter()
   const { favorites, addFavorite, removeFavorite } = useFavoritesStore()
   const { filters, setFilter } = useFiltersStore()
+  const { addToOfflineQueue } = useOfflineCacheStore()
+  const { isOnline, isConnected, hasOfflineQueue } = useNetworkController()
 
   const [refreshing, setRefreshing] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('sedan')
@@ -53,7 +57,9 @@ export default function useHomeController() {
   }
 
   function handleFavoritePress(carId: string): void {
-    if (favorites.includes(carId)) {
+    const isFav = favorites.includes(carId)
+    
+    if (isFav) {
       removeFavorite(carId)
       Toast.show({ 
         type: 'info', 
@@ -64,6 +70,20 @@ export default function useHomeController() {
       Toast.show({ 
         type: 'success', 
         text1: 'Added to favorites' 
+      })
+    }
+
+    // Add to offline queue if not online
+    if (!isOnline) {
+      addToOfflineQueue({
+        type: isFav ? 'unfavorite' : 'favorite',
+        data: { carId }
+      })
+      
+      Toast.show({
+        type: 'info',
+        text1: 'Action saved',
+        text2: 'Will sync when back online'
       })
     }
   }
@@ -98,6 +118,10 @@ export default function useHomeController() {
     navigateToSearch,
     navigateToCreateListing,
     handleCategorySelect,
-    selectedCategory
+    selectedCategory,
+    // Offline state
+    isOnline,
+    isConnected,
+    hasOfflineQueue
   }
 }
