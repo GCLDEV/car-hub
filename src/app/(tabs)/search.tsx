@@ -1,6 +1,7 @@
 import React from 'react'
 import { FlatList, RefreshControl } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import Toast from 'react-native-toast-message'
 
 import { VStack } from '@components/ui/vstack'
 
@@ -11,11 +12,11 @@ import LoadingState from '@components/ui/LoadingState'
 import ErrorState from '@components/ui/ErrorState'
 import EmptyState from '@components/ui/EmptyState'
 
+import { useModalStore } from '@store/modalStore'
+import { useFiltersStore } from '@store/filtersStore'
 import { colors } from '@theme/colors'
 import { Car } from '@/types/car'
 import useSearchController from '@controllers/useSearchController'
-import { useModalStore } from '@/store/modalStore'
-import Toast from 'react-native-toast-message'
 
 
 
@@ -34,8 +35,12 @@ export default function SearchScreen() {
     handleLoadMore,
     handleCarPress,
     applyFilters,
-    clearSearch
+    clearSearch,
+    showSearchModal,
+    popularSearches
   } = useSearchController()
+  
+  const { filters, setFilters } = useFiltersStore()
 
   function renderCarItem({ item }: { item: Car }) {
     return (
@@ -51,36 +56,41 @@ export default function SearchScreen() {
   }
 
   function handleFilterPress() {
-    // setModal({
-    //   type: 'options',
-    //   title: 'Filtros de Busca',
-    //   options: [
-    //     { 
-    //       title: '💰 Faixa de Preço', 
-    //       action: () => {}, // TODO: Implementar filtro por preço
-    //       variant: 'primary' 
-    //     },
-    //     { 
-    //       title: '🚗 Marca', 
-    //       action: () => {}, // TODO: Implementar filtro por marca
-    //       variant: 'secondary' 
-    //     },
-    //     { 
-    //       title: '📅 Ano', 
-    //       action: () => {}, // TODO: Implementar filtro por ano
-    //       variant: 'secondary' 
-    //     },
-    //     { 
-    //       title: '⛽ Combustível', 
-    //       action: () => {}, // TODO: Implementar filtro por combustível
-    //       variant: 'secondary' 
-    //     }
-    //   ]
-    // })
-    Toast.show({
-      type: 'info',
-      text1: 'Filtros em desenvolvimento',
-      text2: 'Esta funcionalidade estará disponível em breve!'
+    const { setModal } = useModalStore.getState()
+    
+    setModal({
+      type: 'filters',
+      title: 'Search Filters',
+      filtersData: filters, // Passar filtros atuais
+      onApplyFilters: (appliedFilters) => {
+        // Converter os filtros para o formato correto do store
+        const filtersToApply = {
+          brand: appliedFilters.brand,
+          yearFrom: appliedFilters.yearMin,
+          yearTo: appliedFilters.yearMax,
+          priceFrom: appliedFilters.priceMin,
+          priceTo: appliedFilters.priceMax,
+          fuelType: appliedFilters.fuelType,
+          transmission: appliedFilters.transmission,
+          kmTo: appliedFilters.maxKm
+        }
+        
+        // Aplicar os filtros no store
+        setFilters(filtersToApply)
+        
+        // Mostrar feedback
+        const filterCount = Object.values(filtersToApply).filter(v => v !== undefined).length
+        Toast.show({
+          type: 'success',
+          text1: 'Filters applied',
+          text2: filterCount > 0 ? `${filterCount} filters active` : 'All filters cleared'
+        })
+        
+        // Re-executar busca com novos filtros se já tinha query
+        if (searchQuery.trim()) {
+          setTimeout(applyFilters, 100) // Small delay to allow filters to be set
+        }
+      }
     })
   }
 

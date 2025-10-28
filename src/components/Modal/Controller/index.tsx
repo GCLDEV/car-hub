@@ -4,6 +4,8 @@ import { BackHandler } from 'react-native'
 import ModalConfirm from '../Confirm'
 import ModalInfo from '../Info'
 import ModalOptions from '../Options'
+import ModalSearch from '../Search'
+import ModalFilters from '../Filters'
 
 interface ModalControllerProps {}
 
@@ -34,6 +36,8 @@ export default function ModalController(props: ModalControllerProps) {
       {modal?.type === 'confirm' && <ModalConfirm />}
       {modal?.type === 'info' && <ModalInfo />}
       {modal?.type === 'options' && <ModalOptions />}
+      {modal?.type === 'search' && <ModalSearch />}
+      {modal?.type === 'filters' && <ModalFilters />}
     </>
   )
 }

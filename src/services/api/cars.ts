@@ -347,9 +347,12 @@ export async function searchCars(query: string, filters?: CarFilters): Promise<C
         params['pagination[page]'] = filters.page
         params['pagination[pageSize]'] = 10
       }
+      
+      // Debug log to check what's being sent
+      console.log('Search params being sent:', params)
     }
 
-    const response = await api.get('/cars', { params })
+    const response = await api.get('/cars/search', { params })
     
     const cars = response.data.data.map(transformStrapiCar)
     const pagination = response.data.meta.pagination

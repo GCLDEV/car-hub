@@ -6,16 +6,25 @@ import Toast from 'react-native-toast-message'
 import { searchCars } from '@services/api/cars'
 import { useFavoritesStore } from '@store/favoritesStore'
 import { useFiltersStore } from '@store/filtersStore'
+import { useModalStore } from '@store/modalStore'
 import { useDebounce } from '@hooks/useDebounce'
 
 export default function useSearchController() {
   const router = useRouter()
   // Favorites are now handled directly by the FavoriteButton component
   const { filters } = useFiltersStore()
+  const { setModal } = useModalStore()
   
   const [searchQuery, setSearchQuery] = useState('')
   const [hasSearched, setHasSearched] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  
+  // Sugestões populares de busca
+  const popularSearches = [
+    'Toyota Corolla', 'Honda Civic', 'Volkswagen Jetta', 
+    'BMW X1', 'Mercedes C180', 'Audi A3',
+    'Ford EcoSport', 'Hyundai HB20', 'Chevrolet Onix'
+  ]
   
   const debouncedSearchQuery = useDebounce(searchQuery, 500) // Aumentar debounce para evitar muitas requisições
 
@@ -83,17 +92,68 @@ export default function useSearchController() {
 
   // Favorites are now handled directly by the FavoriteButton component
 
+  function showSearchModal(modalData: {
+    query: string
+    resultsCount: number
+    hasError?: boolean
+    isEmpty?: boolean
+  }) {
+    setModal({
+      type: 'search',
+      searchData: {
+        query: modalData.query,
+        resultsCount: modalData.resultsCount,
+        suggestions: popularSearches,
+        hasError: modalData.hasError || false,
+        isEmpty: modalData.isEmpty || false
+      },
+      onSuggestionSelect: (suggestion: string) => {
+        setSearchQuery(suggestion)
+        setHasSearched(true)
+      }
+    })
+  }
+
   async function applyFilters() {
     if (!searchQuery.trim()) {
-      Toast.show({
-        type: 'error',
-        text1: 'Digite algo para buscar'
+      showSearchModal({
+        query: '',
+        resultsCount: 0,
+        hasError: false,
+        isEmpty: true
       })
       return
     }
     
     setHasSearched(true)
-    await refetch()
+    try {
+      await refetch()
+      
+      // Após a busca, verificar os resultados e mostrar modal se necessário
+      const currentResults = searchResults
+      if (currentResults.length === 0) {
+        showSearchModal({
+          query: searchQuery,
+          resultsCount: 0,
+          hasError: false,
+          isEmpty: true
+        })
+      } else {
+        // Mostrar toast de sucesso em vez do modal quando há resultados
+        Toast.show({
+          type: 'success',
+          text1: `${currentResults.length} cars found`,
+          text2: `Showing results for "${searchQuery}"`
+        })
+      }
+    } catch (error) {
+      showSearchModal({
+        query: searchQuery,
+        resultsCount: 0,
+        hasError: true,
+        isEmpty: false
+      })
+    }
   }
 
   function clearSearch() {
@@ -121,6 +181,8 @@ export default function useSearchController() {
     handleLoadMore,
     handleCarPress,
     applyFilters,
-    clearSearch
+    clearSearch,
+    showSearchModal,
+    popularSearches
   }
 }

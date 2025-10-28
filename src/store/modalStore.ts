@@ -42,13 +42,46 @@ import { devtools } from 'zustand/middleware';
  *   ]
  * });
  * 
+ * // Modal de busca com resultados
+ * setModal({
+ *   type: 'search',
+ *   searchData: {
+ *     query: 'Toyota Corolla',
+ *     resultsCount: 5,
+ *     suggestions: ['Honda Civic', 'Nissan Sentra', 'Volkswagen Jetta'],
+ *     hasError: false,
+ *     isEmpty: false
+ *   },
+ *   onSuggestionSelect: (suggestion) => handleSuggestion(suggestion)
+ * });
+ *
+ * // Modal de busca sem resultados
+ * setModal({
+ *   type: 'search',
+ *   searchData: {
+ *     query: 'Lamborghini',
+ *     resultsCount: 0,
+ *     suggestions: ['BMW', 'Mercedes', 'Audi'],
+ *     hasError: false,
+ *     isEmpty: true
+ *   },
+ *   onSuggestionSelect: (suggestion) => handleSuggestion(suggestion)
+ * });
+ *
+ * // Modal de filtros de busca
+ * setModal({
+ *   type: 'filters',
+ *   title: 'Search Filters',
+ *   onApplyFilters: (filters) => handleApplyFilters(filters)
+ * });
+ *
  * // Outros tipos de modal
  * setModal({ type: 'info', title: 'Informação importante' });
  */
 
 // Tipos para o estado do modal
 export interface ModalState {
-  type?: 'confirm' | 'info' | 'options' | string;
+  type?: 'confirm' | 'info' | 'options' | 'search' | 'filters' | string;
   title?: string;
   action?: () => void;
   // Opções para customizar o modal de confirmação
@@ -61,6 +94,18 @@ export interface ModalState {
     action: () => void;
     variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'white' | 'outline';
   }>;
+  // Opções para modal de busca
+  searchData?: {
+    query: string;
+    resultsCount: number;
+    suggestions: string[];
+    hasError: boolean;
+    isEmpty: boolean;
+  };
+  onSuggestionSelect?: (suggestion: string) => void;
+  // Opções para modal de filtros
+  filtersData?: any;
+  onApplyFilters?: (filters: any) => void;
 }
 
 // Interface da store de modal
