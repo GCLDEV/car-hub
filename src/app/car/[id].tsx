@@ -1,6 +1,7 @@
 import React from 'react'
 import { ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import Toast from 'react-native-toast-message'
 
 import { VStack } from '@components/ui/vstack'
 import { HStack } from '@components/ui/hstack'
@@ -100,15 +101,27 @@ export default function CarDetailsScreen() {
   }
 
   const handleCall = () => {
-    // TODO: Implementar ligação para vendedor
+    Toast.show({
+      type: 'info',
+      text1: 'Funcionalidade em desenvolvimento',
+      text2: 'A ligação direta estará disponível em breve!'
+    })
   }
 
   const handleChat = () => {
-    // TODO: Implementar chat com vendedor
+    Toast.show({
+      type: 'info',
+      text1: 'Chat em desenvolvimento',
+      text2: 'O chat com vendedores estará disponível em breve!'
+    })
   }
 
   const handleTestDrive = () => {
-    // TODO: Implementar agendamento de test drive
+    Toast.show({
+      type: 'info',
+      text1: 'Test Drive em desenvolvimento',
+      text2: 'O agendamento de test drive estará disponível em breve!'
+    })
   }
 
   return (
@@ -160,28 +173,35 @@ export default function CarDetailsScreen() {
       >
         <VStack className="flex-1">
           {/* Galeria de Imagens */}
-          <CarImageGallery images={carImages} />
+          <CarImageGallery images={car.images || []} />
           
           {/* Descrição */}
           <CarDescription 
             title={car.title}
-            description={car.description || `Este ${car.title} é uma excelente opção para quem busca conforto, economia e tecnologia. Equipado com motor potente e transmissão ${car.transmission || 'manual'}, oferece uma condução suave e eficiente. Ideal para uso urbano e viagens longas. Veículo em excelente estado de conservação.`}
-            brand={car.title?.split(' ')[0] || 'Honda'}
-            model={car.title?.split(' ')[1] || 'Civic'}
-            year={car.year || 2020}
+            description={car.description}
+            brand={car.brand}
+            model={car.model}
+            year={car.year}
           />
           
           {/* Preço e Rating */}
           <CarPriceRating 
-            price={car.price || 85000}
-            rating={9.5}
+            price={car.price}
+            rating={4.5} 
             isFavorite={isFavorite}
             onFavoritePress={toggleFavorite}
           />
           
           {/* Especificações */}
           <Box className="px-4">
-            <CarSpecsGrid {...carSpecsData} />
+            <CarSpecsGrid 
+              year={car.year}
+              km={car.km}
+              fuelType={car.fuelType}
+              transmission={car.transmission}
+              engine={car.specs?.engine}
+              color={car.color}
+            />
           </Box>
           
           {/* Botões de Ação */}

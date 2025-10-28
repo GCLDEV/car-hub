@@ -124,6 +124,7 @@ interface ProfileMenuProps {
   favoriteCount: number
   onMyListings: () => void
   onFavorites: () => void
+  onViews: () => void
   onSettings: () => void
   onNotifications: () => void
   onPrivacy: () => void
@@ -137,6 +138,7 @@ export default function ProfileMenu({
   favoriteCount,
   onMyListings,
   onFavorites,
+  onViews,
   onSettings,
   onNotifications,
   onPrivacy,
@@ -167,7 +169,7 @@ export default function ProfileMenu({
       title: 'Views',
       subtitle: 'Analytics of your listings',
       value: '1.2k',
-      onPress: () => {}
+      onPress: onViews
     }
   ]
 

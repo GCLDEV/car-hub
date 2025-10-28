@@ -66,17 +66,17 @@ export default function CarSpecsGrid({
         <SpecItem
           icon={<Engine size={20} color={colors.neutral[300]} weight="fill" />}
           label="ENGINE"
-          value={`${transmission}/Liter`}
+          value={engine || 'N/A'}
         />
         <SpecItem
           icon={<GasPump size={20} color={colors.neutral[300]} weight="fill" />}
           label="FUEL"
-          value={engine}
+          value={fuelType}
         />
         <SpecItem
           icon={<Speedometer size={20} color={colors.neutral[300]} weight="fill" />}
-          label="POWER"
-          value="720 Hp"
+          label="TRANSMISSION"
+          value={transmission}
         />
       </HStack>
       

@@ -6,12 +6,14 @@ import Toast from 'react-native-toast-message'
 
 import { getCarById } from '@services/api/cars'
 import { useFavoritesStore } from '@store/favoritesStore'
+import useAuthGuard from '@hooks/useAuthGuard'
 
 export default function useCarDetailsController() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   
   const { favorites, addFavorite, removeFavorite } = useFavoritesStore()
+  const { checkAuth } = useAuthGuard()
   
   const { 
     data: car, 
@@ -21,8 +23,6 @@ export default function useCarDetailsController() {
   } = useQuery({
     queryKey: ['car', id],
     queryFn: async () => {
-      // Simular delay para visualizar skeleton (remover em produção)
-      await new Promise(resolve => setTimeout(resolve, 2500))
       return await getCarById(id!)
     },
     enabled: !!id
@@ -35,27 +35,30 @@ export default function useCarDetailsController() {
   function toggleFavorite() {
     if (!id) return
     
-    if (isFavorite) {
-      removeFavorite(id)
-      Toast.show({ 
-        type: 'info', 
-        text1: 'Removed from favorites' 
-      })
-    } else {
-      addFavorite(id)
-      Toast.show({ 
-        type: 'success', 
-        text1: 'Added to favorites' 
-      })
-    }
+    checkAuth(() => {
+      if (isFavorite) {
+        removeFavorite(id)
+        Toast.show({ 
+          type: 'info', 
+          text1: 'Removido dos favoritos' 
+        })
+      } else {
+        addFavorite(id)
+        Toast.show({ 
+          type: 'success', 
+          text1: 'Adicionado aos favoritos' 
+        })
+      }
+    })
   }
 
   async function handleContact() {
     if (!car) return
     
-    // Simular contato - abrir WhatsApp
-    const phoneNumber = '5511999999999' // Número simulado
-    const message = `Olá! Tenho interesse no ${car.title} por ${car.price}. Podemos conversar?`
+    // Contato real com vendedor via WhatsApp
+    const phoneNumber = car.seller?.phone || '5511999999999'
+    const formattedPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(car.price)
+    const message = `Olá! Tenho interesse no ${car.title} por ${formattedPrice}. Podemos conversar?`
     const whatsappUrl = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`
     
     try {
@@ -80,10 +83,10 @@ export default function useCarDetailsController() {
     if (!car) return
     
     try {
+      const formattedPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(car.price)
       await Share.share({
-        message: `Confira este ${car.title} por ${car.price}! 🚗`,
-        title: car.title,
-        url: `https://app.exemplo.com/car/${id}` // URL simulada
+        message: `Confira este ${car.title} por ${formattedPrice}! 🚗\n\n📍 ${car.location}\n⚡ ${car.fuelType} • ${car.transmission}\n\nVeja mais detalhes no app Car Hub!`,
+        title: `${car.title} - Car Hub`,
       })
     } catch (error) {
       Toast.show({ 

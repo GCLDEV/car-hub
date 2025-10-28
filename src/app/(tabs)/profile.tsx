@@ -18,7 +18,7 @@ import { useRouter } from 'expo-router'
 import { colors } from '@theme/colors'
 
 export default function ProfileScreen() {
-  const {
+const {
     user,
     isAuthenticated,
     userListings,
@@ -30,7 +30,11 @@ export default function ProfileScreen() {
     navigateToCreateListing,
     navigateToMyListings,
     navigateToFavorites,
-    navigateToSettings
+    navigateToViews,
+    navigateToSettings,
+    navigateToNotifications,
+    navigateToPrivacy,
+    navigateToHelp
   } = useProfileController()
 
   const { setModal } = useModalStore()
@@ -124,10 +128,11 @@ export default function ProfileScreen() {
           favoriteCount={favoriteCount}
           onMyListings={navigateToMyListings}
           onFavorites={navigateToFavorites}
+          onViews={navigateToViews}
           onSettings={navigateToSettings}
-          onNotifications={() => {}}
-          onPrivacy={() => {}}
-          onHelp={() => {}}
+          onNotifications={navigateToNotifications}
+          onPrivacy={navigateToPrivacy}
+          onHelp={navigateToHelp}
           onLogout={handleLogout}
         />
 

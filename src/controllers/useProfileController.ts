@@ -51,17 +51,58 @@ export default function useProfileController() {
   }
 
   function navigateToMyListings() {
-    router.push('/my-listings' as any)
+    Toast.show({
+      type: 'info',
+      text1: 'Meus anúncios em desenvolvimento',
+      text2: 'Esta funcionalidade estará disponível em breve!'
+    })
   }
 
   function navigateToFavorites() {
-    router.push('/(tabs)/favorites' as any)
+    Toast.show({
+      type: 'info', 
+      text1: 'Favoritos em desenvolvimento',
+      text2: 'Seus carros favoritos estarão disponíveis em breve!'
+    })
+  }
+
+  function navigateToViews() {
+    Toast.show({
+      type: 'info',
+      text1: 'Visualizações em desenvolvimento', 
+      text2: 'Estatísticas de visualizações em breve!'
+    })
   }
 
   function navigateToSettings() {
     Toast.show({
       type: 'info',
-      text1: 'Settings under development'
+      text1: 'Configurações em desenvolvimento',
+      text2: 'As configurações estarão disponíveis em breve!'
+    })
+  }
+
+  function navigateToHelp() {
+    Toast.show({
+      type: 'info',
+      text1: 'Ajuda em desenvolvimento',
+      text2: 'Central de ajuda estará disponível em breve!'
+    })
+  }
+
+  function navigateToNotifications() {
+    Toast.show({
+      type: 'info',
+      text1: 'Notificações em desenvolvimento',
+      text2: 'Sistema de notificações estará disponível em breve!'
+    })
+  }
+
+  function navigateToPrivacy() {
+    Toast.show({
+      type: 'info', 
+      text1: 'Privacidade em desenvolvimento',
+      text2: 'Controles de privacidade estarão disponíveis em breve!'
     })
   }
 
@@ -77,6 +118,10 @@ export default function useProfileController() {
     navigateToCreateListing,
     navigateToMyListings,
     navigateToFavorites,
-    navigateToSettings
+    navigateToViews,
+    navigateToSettings,
+    navigateToNotifications,
+    navigateToPrivacy,
+    navigateToHelp
   }
 }

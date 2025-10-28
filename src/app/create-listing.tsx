@@ -1,5 +1,5 @@
 import React from 'react'
-import { ScrollView, KeyboardAvoidingView, Platform, Pressable } from 'react-native'
+import { ScrollView, KeyboardAvoidingView, Platform, Pressable, View } from 'react-native'
 import { SafeAreaView } from '@components/ui/safe-area-view'
 import { 
   Car, 
@@ -55,7 +55,7 @@ export default function CreateListingScreen() {
   }
 
   return (
-    <SafeAreaView 
+    <View 
       className="flex-1"
       style={{ backgroundColor: colors.neutral[900] }}
     >
@@ -318,6 +318,6 @@ export default function CreateListingScreen() {
           </VStack>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   )
 }

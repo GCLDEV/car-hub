@@ -15,6 +15,7 @@ import { colors } from '@theme/colors'
 import { Car } from '@/types/car'
 import useSearchController from '@controllers/useSearchController'
 import { useModalStore } from '@/store/modalStore'
+import Toast from 'react-native-toast-message'
 
 
 
@@ -54,31 +55,36 @@ export default function SearchScreen() {
   }
 
   function handleFilterPress() {
-    setModal({
-      type: 'options',
-      title: 'Filtros de Busca',
-      options: [
-        { 
-          title: '💰 Faixa de Preço', 
-          action: () => {}, // TODO: Implementar filtro por preço
-          variant: 'primary' 
-        },
-        { 
-          title: '🚗 Marca', 
-          action: () => {}, // TODO: Implementar filtro por marca
-          variant: 'secondary' 
-        },
-        { 
-          title: '📅 Ano', 
-          action: () => {}, // TODO: Implementar filtro por ano
-          variant: 'secondary' 
-        },
-        { 
-          title: '⛽ Combustível', 
-          action: () => {}, // TODO: Implementar filtro por combustível
-          variant: 'secondary' 
-        }
-      ]
+    // setModal({
+    //   type: 'options',
+    //   title: 'Filtros de Busca',
+    //   options: [
+    //     { 
+    //       title: '💰 Faixa de Preço', 
+    //       action: () => {}, // TODO: Implementar filtro por preço
+    //       variant: 'primary' 
+    //     },
+    //     { 
+    //       title: '🚗 Marca', 
+    //       action: () => {}, // TODO: Implementar filtro por marca
+    //       variant: 'secondary' 
+    //     },
+    //     { 
+    //       title: '📅 Ano', 
+    //       action: () => {}, // TODO: Implementar filtro por ano
+    //       variant: 'secondary' 
+    //     },
+    //     { 
+    //       title: '⛽ Combustível', 
+    //       action: () => {}, // TODO: Implementar filtro por combustível
+    //       variant: 'secondary' 
+    //     }
+    //   ]
+    // })
+    Toast.show({
+      type: 'info',
+      text1: 'Filtros em desenvolvimento',
+      text2: 'Esta funcionalidade estará disponível em breve!'
     })
   }
 

@@ -17,6 +17,7 @@ import NetworkStatusBanner from '@components/ui/NetworkStatusBanner'
 import { colors } from '@theme/colors'
 import useHomeController from '@controllers/useHomeController'
 import { Car } from '@/types/car'
+import Toast from 'react-native-toast-message'
 
 interface CarItemProps {
   car: Car
@@ -57,11 +58,19 @@ export default function HomeScreen() {
   }
 
   function handleNotificationPress() {
-    // TODO: Implementar notificações
+    Toast.show({
+      type: 'info',
+      text1: 'Notificações em desenvolvimento',
+      text2: 'Sistema de notificações estará disponível em breve!'
+    })
   }
 
   function handleLocationPress() {
-    // TODO: Implementar seleção de localização
+    Toast.show({
+      type: 'info',
+      text1: 'Seleção de localização em desenvolvimento',
+      text2: 'Filtro por localização estará disponível em breve!'
+    })
   }
 
   if (loading && cars.length === 0) {
