@@ -27,15 +27,33 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       token: null,
       
-      login: (user: User, token: string) => {
+      login: async (user: User, token: string) => {
         set({ 
           user, 
           isAuthenticated: true,
           token 
         })
+        
+        // Sync favorites after successful login
+        try {
+          const { useFavoritesStore } = await import('./favoritesStore')
+          const favoritesStore = useFavoritesStore.getState()
+          await favoritesStore.syncFavorites()
+        } catch (error) {
+          console.warn('Failed to sync favorites after login:', error)
+        }
       },
       
       logout: () => {
+        // Clear favorites before logout
+        try {
+          const { useFavoritesStore } = require('./favoritesStore')
+          const favoritesStore = useFavoritesStore.getState()
+          favoritesStore.clearFavorites()
+        } catch (error) {
+          console.warn('Failed to clear favorites on logout:', error)
+        }
+        
         set({ 
           user: null, 
           isAuthenticated: false,

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Car, CarSearchResult } from '@/types/car'
+import type { FavoritesResult } from '@/services/api/favorites'
 
 interface CachedData {
   data: CarSearchResult
@@ -13,6 +14,9 @@ interface OfflineCacheState {
   // Cached cars data
   cachedCars: CachedData | null
   cachedCarDetails: Record<string, { car: Car; timestamp: string }>
+  
+  // Cached favorites data
+  cachedFavorites: { data: FavoritesResult; timestamp: string } | null
   
   // Offline queue for actions
   offlineQueue: Array<{
@@ -28,6 +32,10 @@ interface OfflineCacheState {
   getCachedCars: (cacheKey: string) => CachedData | null
   setCachedCarDetail: (carId: string, car: Car) => void
   getCachedCarDetail: (carId: string) => Car | null
+  
+  // Favorites cache management
+  setCachedFavorites: (data: FavoritesResult) => void
+  getCachedFavorites: () => FavoritesResult | null
   
   // Offline queue management
   addToOfflineQueue: (action: {
@@ -57,6 +65,7 @@ export const useOfflineCacheStore = create<OfflineCacheState>()(
       // Initial state
       cachedCars: null,
       cachedCarDetails: {},
+      cachedFavorites: null,
       offlineQueue: [],
 
       // Cache cars list
@@ -113,6 +122,31 @@ export const useOfflineCacheStore = create<OfflineCacheState>()(
         return cached.car
       },
 
+      // Cache favorites
+      setCachedFavorites: (data: FavoritesResult) => {
+        set({
+          cachedFavorites: {
+            data,
+            timestamp: new Date().toISOString()
+          }
+        })
+      },
+
+      // Get cached favorites
+      getCachedFavorites: (): FavoritesResult | null => {
+        const cached = get().cachedFavorites
+        if (!cached) {
+          return null
+        }
+        
+        // Check if cache is still valid
+        if (!get().isCacheValid(cached.timestamp)) {
+          return null
+        }
+        
+        return cached.data
+      },
+
       // Add action to offline queue
       addToOfflineQueue: (action) => {
         const newAction = {
@@ -153,11 +187,16 @@ export const useOfflineCacheStore = create<OfflineCacheState>()(
 
       // Clear expired cache
       clearExpiredCache: () => {
-        const { cachedCars, cachedCarDetails, isCacheValid } = get()
+        const { cachedCars, cachedCarDetails, cachedFavorites, isCacheValid } = get()
         
         // Clear expired cars list cache
         if (cachedCars && !isCacheValid(cachedCars.timestamp)) {
           set({ cachedCars: null })
+        }
+        
+        // Clear expired favorites cache
+        if (cachedFavorites && !isCacheValid(cachedFavorites.timestamp)) {
+          set({ cachedFavorites: null })
         }
         
         // Clear expired car details cache
@@ -178,6 +217,7 @@ export const useOfflineCacheStore = create<OfflineCacheState>()(
       partialize: (state) => ({
         cachedCars: state.cachedCars,
         cachedCarDetails: state.cachedCarDetails,
+        cachedFavorites: state.cachedFavorites,
         offlineQueue: state.offlineQueue
       })
     }

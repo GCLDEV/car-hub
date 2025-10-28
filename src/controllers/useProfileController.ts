@@ -6,6 +6,7 @@ import { useAuthStore } from '@store/authStore'
 import { useFavoritesStore } from '@store/favoritesStore'
 import { useUserListingsStore } from '@store/userListingsStore'
 import { useModalStore } from '@store/modalStore'
+import useAuthGuard from '@hooks/useAuthGuard'
 
 export default function useProfileController() {
   const router = useRouter()
@@ -14,6 +15,7 @@ export default function useProfileController() {
   const { favorites } = useFavoritesStore()
   const { listings: userListings, fetchUserListings, loading } = useUserListingsStore()
   const { setModal } = useModalStore()
+  const { checkAuth } = useAuthGuard()
 
   useEffect(() => {
     if (isAuthenticated && user?.id) {
@@ -59,10 +61,8 @@ export default function useProfileController() {
   }
 
   function navigateToFavorites() {
-    Toast.show({
-      type: 'info', 
-      text1: 'Favoritos em desenvolvimento',
-      text2: 'Seus carros favoritos estarão disponíveis em breve!'
+    checkAuth(() => {
+      router.push('/favorites' as any)
     })
   }
 

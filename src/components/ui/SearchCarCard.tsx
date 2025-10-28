@@ -5,9 +5,8 @@ import { HStack } from '@components/ui/hstack'
 import { Box } from '@components/ui/box'
 import { Text } from '@components/ui/text'
 import { Image } from '@components/ui/image'
+import FavoriteButton from './FavoriteButton'
 import { 
-  Heart, 
-  HeartStraight, 
   MapPin,
   Calendar,
   Gauge,
@@ -21,15 +20,11 @@ import { formatPrice, formatKm } from '@utils/formatters'
 interface SearchCarCardProps {
   car: Car
   onPress: () => void
-  onFavoritePress: () => void
-  isFavorite: boolean
 }
 
 export default function SearchCarCard({ 
   car, 
-  onPress, 
-  onFavoritePress, 
-  isFavorite 
+  onPress
 }: SearchCarCardProps) {
   return (
     <Pressable
@@ -102,17 +97,7 @@ export default function SearchCarCard({
 
         {/* Botão de favorito */}
         <Box className="justify-start items-end">
-          <Pressable
-            onPress={onFavoritePress}
-            className="w-10 h-10 rounded-full justify-center items-center"
-            style={{ backgroundColor: colors.neutral[700] }}
-          >
-            {isFavorite ? (
-              <Heart size={18} color={colors.accent[500]} weight="fill" />
-            ) : (
-              <HeartStraight size={18} color={colors.neutral[400]} weight="regular" />
-            )}
-          </Pressable>
+          <FavoriteButton carId={car.id} size="sm" />
         </Box>
       </HStack>
     </Pressable>

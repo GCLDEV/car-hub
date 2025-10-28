@@ -10,7 +10,7 @@ import { useDebounce } from '@hooks/useDebounce'
 
 export default function useSearchController() {
   const router = useRouter()
-  const { favorites, addFavorite, removeFavorite } = useFavoritesStore()
+  // Favorites are now handled directly by the FavoriteButton component
   const { filters } = useFiltersStore()
   
   const [searchQuery, setSearchQuery] = useState('')
@@ -81,25 +81,7 @@ export default function useSearchController() {
     router.push(`/car/${carId}` as any)
   }
 
-  function handleFavoritePress(carId: string) {
-    if (favorites.includes(carId)) {
-      removeFavorite(carId)
-      Toast.show({
-        type: 'info',
-        text1: 'Removed from favorites'
-      })
-    } else {
-      addFavorite(carId)
-      Toast.show({
-        type: 'success',
-        text1: 'Added to favorites'
-      })
-    }
-  }
-
-  function isFavorite(carId: string): boolean {
-    return favorites.includes(carId)
-  }
+  // Favorites are now handled directly by the FavoriteButton component
 
   async function applyFilters() {
     if (!searchQuery.trim()) {
@@ -129,7 +111,7 @@ export default function useSearchController() {
 
   return {
     searchQuery,
-    setSearchQuery: handleSearchChange,
+    setSearchQuery,
     searchResults,
     loading,
     error: error?.message,
@@ -138,8 +120,6 @@ export default function useSearchController() {
     handleRefresh,
     handleLoadMore,
     handleCarPress,
-    handleFavoritePress,
-    isFavorite,
     applyFilters,
     clearSearch
   }

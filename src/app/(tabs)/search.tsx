@@ -33,8 +33,6 @@ export default function SearchScreen() {
     handleRefresh,
     handleLoadMore,
     handleCarPress,
-    handleFavoritePress,
-    isFavorite,
     applyFilters,
     clearSearch
   } = useSearchController()
@@ -44,8 +42,6 @@ export default function SearchScreen() {
       <SearchCarCard
         car={item}
         onPress={() => handleCarPress(item.id)}
-        onFavoritePress={() => handleFavoritePress(item.id)}
-        isFavorite={isFavorite(item.id)}
       />
     )
   }

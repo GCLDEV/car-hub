@@ -13,7 +13,7 @@ import { Car } from '@/types/car'
 
 export default function useHomeController() {
   const router = useRouter()
-  const { favorites, addFavorite, removeFavorite } = useFavoritesStore()
+  // Favorites are now handled directly by the FavoriteButton component
   const { filters, setFilter } = useFiltersStore()
   const { addToOfflineQueue } = useOfflineCacheStore()
   const { isOnline, isConnected, hasOfflineQueue } = useNetworkController()
@@ -58,44 +58,7 @@ export default function useHomeController() {
     router.push(`/car/${carId}` as any)
   }
 
-  function handleFavoritePress(carId: string): void {
-    // Verifica autenticação antes de executar ação
-    checkAuth(() => {
-      const isFav = favorites.includes(carId)
-      
-      if (isFav) {
-        removeFavorite(carId)
-        Toast.show({ 
-          type: 'info', 
-          text1: 'Removido dos favoritos' 
-        })
-      } else {
-        addFavorite(carId)
-        Toast.show({ 
-          type: 'success', 
-          text1: 'Adicionado aos favoritos' 
-        })
-      }
-
-      // Add to offline queue if not online
-      if (!isOnline) {
-        addToOfflineQueue({
-          type: isFav ? 'unfavorite' : 'favorite',
-          data: { carId }
-        })
-        
-        Toast.show({
-          type: 'info',
-          text1: 'Ação salva',
-          text2: 'Sincronizará quando voltar online'
-        })
-      }
-    })
-  }
-
-  function isFavorite(carId: string): boolean {
-    return favorites.includes(carId)
-  }
+  // Favorites are now handled directly by the FavoriteButton component
 
   function navigateToSearch(): void {
     router.push('./search')
@@ -126,8 +89,6 @@ export default function useHomeController() {
     handleRefresh,
     handleLoadMore,
     handleCarPress,
-    handleFavoritePress,
-    isFavorite,
     navigateToSearch,
     navigateToCreateListing,
     handleCategorySelect,

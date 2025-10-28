@@ -35,8 +35,6 @@ export default function HomeScreen() {
     handleRefresh,
     handleLoadMore,
     handleCarPress,
-    handleFavoritePress,
-    isFavorite,
     navigateToSearch,
     navigateToCreateListing,
     handleCategorySelect,
@@ -51,8 +49,6 @@ export default function HomeScreen() {
       <CarCard
         car={item}
         onPress={() => handleCarPress(item.id)}
-        onFavoritePress={() => handleFavoritePress(item.id)}
-        isFavorite={isFavorite(item.id)}
       />
     )
   }

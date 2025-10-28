@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Stack, useRouter } from 'expo-router'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { GluestackUIProvider } from '@components/ui/gluestack-ui-provider'
@@ -7,6 +7,8 @@ import { StatusBar } from 'expo-status-bar'
 import Toast from 'react-native-toast-message'
 
 import GlobalHeader from '@components/ui/GlobalHeader'
+import { useAuthStore } from '@store/authStore'
+import { useFavoritesStore } from '@store/favoritesStore'
 import { colors } from '@theme/colors'
 
 import '../../global.css'
@@ -47,6 +49,15 @@ const queryClient = new QueryClient({
 
 export default function RootLayout() {
   const router = useRouter()
+  const { isAuthenticated } = useAuthStore()
+  const { syncFavorites } = useFavoritesStore()
+
+  // Sync favorites on app startup if authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      syncFavorites().catch(console.warn)
+    }
+  }, [isAuthenticated, syncFavorites])
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

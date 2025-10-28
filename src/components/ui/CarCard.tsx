@@ -6,9 +6,8 @@ import { Box } from '@components/ui/box'
 import { Text } from '@components/ui/text'
 import { Image } from '@components/ui/image'
 import { Badge, BadgeText } from '@components/ui/badge'
+import FavoriteButton from './FavoriteButton'
 import { 
-  Heart, 
-  HeartStraight, 
   MapPin,
   CaretRight,
   Lightning,
@@ -23,11 +22,9 @@ import { formatPrice, formatKm } from '@utils/formatters'
 interface CarCardProps {
   car: Car
   onPress: () => void
-  onFavoritePress: () => void
-  isFavorite: boolean
 }
 
-export default function CarCard({ car, onPress, onFavoritePress, isFavorite }: CarCardProps) {
+export default function CarCard({ car, onPress }: CarCardProps) {
   return (
     <Pressable
       onPress={onPress}
@@ -62,16 +59,9 @@ export default function CarCard({ car, onPress, onFavoritePress, isFavorite }: C
         <Box className="absolute inset-0 bg-black/30 rounded-t-3xl" />
         
         {/* Botão de favorito */}
-        <Pressable
-          onPress={onFavoritePress}
-          className="absolute top-4 right-4 w-11 h-11 bg-black/60 rounded-full justify-center items-center"
-        >
-          {isFavorite ? (
-            <Heart size={20} color={colors.accent[500]} weight="fill" />
-          ) : (
-            <HeartStraight size={20} color={colors.neutral[50]} weight="regular" />
-          )}
-        </Pressable>
+        <Box className="absolute top-4 right-4">
+          <FavoriteButton carId={car.id} size="md" />
+        </Box>
         
         {/* Badge de destaque */}
         <Box className="absolute top-4 left-4">
