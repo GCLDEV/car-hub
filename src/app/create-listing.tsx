@@ -37,6 +37,7 @@ export default function CreateListingScreen() {
     loading,
     errors,
     carBrands,
+    carCategories,
     fuelTypes,
     transmissionTypes,
     carColors,
@@ -133,6 +134,16 @@ export default function CreateListingScreen() {
                   error={errors.model}
                 />
 
+                <AuthSelect
+                  label="Category"
+                  name="category"
+                  control={control}
+                  placeholder="Select vehicle category"
+                  icon={<Car size={20} color={colors.neutral[400]} />}
+                  options={carCategories.map(category => ({ label: category, value: category }))}
+                  error={errors.category}
+                />
+
                 <AuthInput
                   label="Year"
                   name="year"
@@ -144,10 +155,10 @@ export default function CreateListingScreen() {
                 />
 
                 <AuthInput
-                  label="Mileage (km)"
+                  label="Mileage (km) - Optional"
                   name="km"
                   control={control}
-                  placeholder="50000"
+                  placeholder="50000 (opcional)"
                   icon={<Gauge size={20} color={colors.neutral[400]} />}
                   keyboardType="numeric"
                   error={errors.km}
@@ -204,59 +215,59 @@ export default function CreateListingScreen() {
                 </Text>
 
                 <AuthSelect
-                  label="Fuel Type"
+                  label="Fuel Type - Optional"
                   name="fuelType"
                   control={control}
-                  placeholder="Select fuel type"
+                  placeholder="Select fuel type (opcional)"
                   icon={<Engine size={20} color={colors.neutral[400]} />}
                   options={fuelTypes.map(fuel => ({ label: fuel, value: fuel }))}
                   error={errors.fuelType}
                 />
 
                 <AuthSelect
-                  label="Transmission"
+                  label="Transmission - Optional"
                   name="transmission"
                   control={control}
-                  placeholder="Select transmission type"
+                  placeholder="Select transmission type (opcional)"
                   icon={<GearSix size={20} color={colors.neutral[400]} />}
                   options={transmissionTypes.map(trans => ({ label: trans, value: trans }))}
                   error={errors.transmission}
                 />
 
                 <AuthSelect
-                  label="Color"
+                  label="Color - Optional"
                   name="color"
                   control={control}
-                  placeholder="Select vehicle color"
+                  placeholder="Select vehicle color (opcional)"
                   icon={<Palette size={20} color={colors.neutral[400]} />}
                   options={carColors.map(color => ({ label: color, value: color }))}
                   error={errors.color}
                 />
 
                 <AuthInput
-                  label="Engine"
+                  label="Engine - Optional"
                   name="engine"
                   control={control}
-                  placeholder="1.0, 1.6, 2.0..."
+                  placeholder="1.0, 1.6, 2.0... (opcional)"
                   icon={<Engine size={20} color={colors.neutral[400]} />}
                   error={errors.engine}
                 />
 
                 <AuthInput
-                  label="Number of Doors"
+                  label="Number of Doors - Optional"
                   name="doors"
                   control={control}
-                  placeholder="4"
+                  placeholder="4 (opcional)"
                   icon={<Car size={20} color={colors.neutral[400]} />}
                   keyboardType="numeric"
                   error={errors.doors}
                 />
 
                 <AuthInput
-                  label="Number of Seats"
+                  label="Number of Seats - Optional"
                   name="seats"
                   control={control}
-                  placeholder="5"
+                  placeholder="5 (opcional)"
                   icon={<Car size={20} color={colors.neutral[400]} />}
                   keyboardType="numeric"
                   error={errors.seats}
@@ -291,10 +302,10 @@ export default function CreateListingScreen() {
                 />
 
                 <AuthInput
-                  label="Description"
+                  label="Description - Optional"
                   name="description"
                   control={control}
-                  placeholder="Describe vehicle condition, options, history..."
+                  placeholder="Describe vehicle condition, options... (opcional)"
                   icon={<FileText size={20} color={colors.neutral[400]} />}
                   error={errors.description}
                 />

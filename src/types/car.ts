@@ -5,12 +5,12 @@ export interface Car {
   model: string
   year: number
   price: number
-  km: number
-  fuelType: string
-  transmission: string
+  km?: number
+  fuelType?: string
+  transmission?: string
   category: string
-  color: string
-  description: string
+  color?: string
+  description?: string
   images: string[]
   location: string
   cityState: string
@@ -23,9 +23,9 @@ export interface Car {
 }
 
 export interface CarSpecs {
-  engine: string
-  doors: number
-  seats: number
+  engine?: string
+  doors?: number
+  seats?: number
   horsepower?: number
   torque?: string
   acceleration?: string

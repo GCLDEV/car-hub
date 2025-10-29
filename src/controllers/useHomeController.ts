@@ -7,6 +7,7 @@ import { getCarsList, testAPI } from '@services/api'
 import { useFavoritesStore } from '@store/favoritesStore'
 import { useFiltersStore } from '@store/filtersStore'
 import { useOfflineCacheStore } from '@store/offlineCacheStore'
+import { useOptimizedCarQuery } from '@hooks/useOptimizedCarQuery'
 import useNetworkController from './useNetworkController'
 import useAuthGuard from '@hooks/useAuthGuard'
 import { Car } from '@/types/car'
@@ -38,6 +39,26 @@ export default function useHomeController() {
       return lastPage.pagination.hasNext ? lastPage.pagination.page + 1 : undefined
     },
     initialPageParam: 1,
+    
+    // ✨ Configurações otimizadas para performance + real-time
+    staleTime: 2 * 60 * 1000,        // 2 minutos cache
+    gcTime: 10 * 60 * 1000,          // 10 minutos em memória
+    refetchOnWindowFocus: true,       // Atualiza quando volta ao app
+    refetchOnMount: true,             // Busca dados frescos ao montar
+    
+    // Polling inteligente baseado na hora
+    refetchInterval: () => {
+      const hour = new Date().getHours()
+      // Horário comercial (9h-18h): mais movimento
+      if (hour >= 9 && hour <= 18) {
+        return 3 * 60 * 1000  // 3 minutos
+      }
+      // Fora do horário: menos movimento
+      return 10 * 60 * 1000   // 10 minutos
+    },
+    
+    // Só polling quando app está ativo
+    refetchIntervalInBackground: false,
   })
 
   const cars = data?.pages.flatMap(page => page.results) ?? []

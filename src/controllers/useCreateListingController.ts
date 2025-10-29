@@ -2,13 +2,16 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'expo-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import Toast from 'react-native-toast-message'
 
 import { useAuthStore } from '@store/authStore'
 import { useModalStore } from '@store/modalStore'
+import { useUserListingsStore } from '@store/userListingsStore'
+import { useInvalidateCars } from '@hooks/useOptimizedCarQuery'
 import { createListingSchema, type CreateListingFormData } from '@/utils/validation'
 import { carBrands } from '@/constants/carBrands'
+import { carCategories } from '@/constants/carCategories'
 import { fuelTypes, transmissionTypes, carColors } from '@/constants/fuelTypes'
 import { createCar } from '@/services/api/cars'
 import type { Car } from '@/types/car'
@@ -17,6 +20,9 @@ export default function useCreateListingController() {
   const router = useRouter()
   const { user, isAuthenticated, token } = useAuthStore()
   const { setModal } = useModalStore()
+  const { fetchUserListings } = useUserListingsStore()
+  const queryClient = useQueryClient()
+  const { invalidateAllCars, addCarToCache } = useInvalidateCars()
   
   // Configuração do React Hook Form com Zod
   const form = useForm({
@@ -25,6 +31,7 @@ export default function useCreateListingController() {
       title: '',
       brand: '',
       model: '',
+      category: '',
       year: new Date().getFullYear().toString(),
       price: '',
       km: '',
@@ -33,8 +40,8 @@ export default function useCreateListingController() {
       color: '',
       description: '',
       location: '',
-      doors: '4',
-      seats: '5',
+      doors: '',
+      seats: '',
       engine: '',
       features: [] as string[],
       images: []
@@ -54,7 +61,16 @@ export default function useCreateListingController() {
         text2: 'Seu veículo e fotos foram listados no marketplace'
       })
       
-      // Navegar para a home
+      // ⚡ Update otimizado: Adiciona o carro ao cache instantaneamente
+      addCarToCache(response)
+      
+      // 🔄 Invalidar cache para garantir consistência
+      invalidateAllCars()
+      
+      // 📱 Atualizar listagens do usuário (Profile)
+      fetchUserListings(user?.id || '')
+      
+      // 🏠 Navegar para a home (onde o carro já estará visível!)
       router.replace('/(tabs)/home')
     },
     onError: (error: Error) => {
@@ -129,6 +145,7 @@ export default function useCreateListingController() {
     
     // Dados para selects
     carBrands,
+    carCategories,
     fuelTypes,
     transmissionTypes,
     carColors,

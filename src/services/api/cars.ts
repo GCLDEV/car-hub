@@ -26,13 +26,18 @@ function transformStrapiCar(strapiCar: any): Car {
     description: strapiCar.description,
     location: strapiCar.location,
     cityState: strapiCar.cityState || strapiCar.location,
-    images: strapiCar.images?.map((img: any) => 
-      img.url?.startsWith('http') ? img.url : `http://192.168.0.8:1337${img.url}`
-    ) || [
-      // Placeholder images for cars without photos
-      'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=80',
-      'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=80'
-    ],
+    images: strapiCar.images?.map((img: any) => {
+      // Se já tem URL completa (S3), usar diretamente
+      if (img.url?.startsWith('http')) {
+        return img.url;
+      }
+      // Se é URL relativa do Strapi, construir URL completa
+      if (img.url) {
+        return `http://192.168.0.8:1337${img.url}`;
+      }
+      // Fallback para placeholder apenas se não houver imagem
+      return null;
+    }).filter(Boolean) || [],
     specs: {
       engine: strapiCar.engine || '',
       doors: strapiCar.doors || 4,
@@ -390,10 +395,8 @@ export async function createCar(data: CreateListingFormData): Promise<Car> {
     // Passo 1: Fazer upload das imagens se existirem
     let imageIds: number[] = []
     if (data.images && data.images.length > 0) {
-      console.log('📤 Fazendo upload de', data.images.length, 'imagens...')
       const imageResults = await uploadMultipleImages(data.images)
       imageIds = imageResults.map(img => img.id)
-      console.log('✅ Upload concluído. IDs das imagens:', imageIds)
     }
 
     // Passo 2: Transformar dados do form para o formato do Strapi
@@ -402,69 +405,43 @@ export async function createCar(data: CreateListingFormData): Promise<Car> {
         title: data.title,
         brand: data.brand,
         model: data.model,
+        category: data.category, // Campo obrigatório
         year: Number(data.year),
         price: Number(data.price.toString().replace(/\D/g, '')),
-        km: Number(data.km.toString().replace(/\D/g, '')),
-        fuelType: data.fuelType,
-        transmission: data.transmission,
-        color: data.color,
-        description: data.description,
         location: data.location,
         cityState: data.location, // Usar location também como cityState
-        engine: data.engine,
-        doors: Number(data.doors),
-        seats: Number(data.seats),
         status: 'available',
         features: data.features || [],
         // Associar as imagens enviadas
-        images: imageIds
+        images: imageIds,
+        
+        // Campos opcionais - só enviar se existirem e não forem vazios
+        ...(data.km && data.km.trim() !== '' && { km: Number(data.km.toString().replace(/\D/g, '')) }),
+        ...(data.fuelType && data.fuelType.trim() !== '' && { fuelType: data.fuelType }),
+        ...(data.transmission && data.transmission.trim() !== '' && { transmission: data.transmission }),
+        ...(data.color && data.color.trim() !== '' && { color: data.color }),
+        ...(data.description && data.description.trim() !== '' && { description: data.description }),
+        ...(data.engine && data.engine.trim() !== '' && { engine: data.engine }),
+        ...(data.doors && data.doors.trim() !== '' && { doors: Number(data.doors) }),
+        ...(data.seats && data.seats.trim() !== '' && { seats: Number(data.seats) })
       }
     }
 
     const response = await api.post('/cars', carData)
 
-    // Transformar resposta do Strapi para formato do app
-    const strapiCar = response.data.data
-    const car: Car = {
-      id: strapiCar.id.toString(),
-      category: strapiCar.category,
-      title: strapiCar.title,
-      brand: strapiCar.brand,
-      model: strapiCar.model,
-      year: strapiCar.year,
-      price: strapiCar.price,
-      km: strapiCar.km,
-      fuelType: strapiCar.fuelType,
-      transmission: strapiCar.transmission,
-      color: strapiCar.color,
-      description: strapiCar.description,
-      location: strapiCar.location,
-      cityState: strapiCar.cityState || strapiCar.location,
-      images: strapiCar.images ? 
-        strapiCar.images.map((img: any) => `http://192.168.0.8:1337${img.url}`) : 
-        [], // URLs completas das imagens do Strapi
-      specs: {
-        engine: strapiCar.engine,
-        doors: strapiCar.doors,
-        seats: strapiCar.seats,
-        features: strapiCar.features || []
-      },
-      seller: {
-        id: '1', // TODO: Pegar do usuário logado
-        name: 'Usuário',
-        phone: '',
-        location: strapiCar.location,
-        isDealer: false,
-        verifiedPhone: false
-      },
-      status: strapiCar.status,
-      views: strapiCar.views || 0,
-      createdAt: strapiCar.createdAt,
-      updatedAt: strapiCar.updatedAt
-    }
-
+    // Usar a função transformStrapiCar para consistência
+    const car = transformStrapiCar(response.data.data)
     return car
   } catch (error: any) {
+    // Extrair erros específicos do Strapi
+    const strapiError = error.response?.data?.error
+    if (strapiError?.details?.errors) {
+      const errorMessages = strapiError.details.errors.map((err: any) => 
+        `${err.path?.join('.')}: ${err.message}`
+      ).join(', ')
+      throw new Error(`Erro de validação: ${errorMessages}`)
+    }
+    
     throw new Error(error.response?.data?.error?.message || 'Erro ao criar anúncio')
   }
 }

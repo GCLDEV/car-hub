@@ -28,8 +28,6 @@ export async function uploadImage(imageUri: string): Promise<any> {
     // Preparar arquivo usando método testado
     const fileToUpload = PrepareFile({ uri: imageUri })
     
-    console.log('🔄 Fazendo upload:', fileToUpload.name)
-    
     // Criar FormData corretamente
     const formData = new FormData()
     formData.append('files', fileToUpload as any, fileToUpload.name)
@@ -50,16 +48,12 @@ export async function uploadImage(imageUri: string): Promise<any> {
     // Importante: NÃO definir Content-Type para multipart/form-data
     // O browser/RN define automaticamente com boundary
     
-    console.log('� Enviando para Strapi...')
-    
     // Usar fetch nativo como no projeto anterior
     const response = await fetch('http://192.168.0.8:1337/api/upload', {
       method: 'POST',
       body: formData,
       headers
     })
-    
-    console.log('📥 Status da resposta:', response.status)
     
     if (!response.ok) {
       const errorText = await response.text()
@@ -68,7 +62,6 @@ export async function uploadImage(imageUri: string): Promise<any> {
     }
     
     const responseJson = await response.json()
-    console.log('✅ Upload bem-sucedido:', responseJson[0]?.name)
     
     return responseJson?.[0]
   } catch (error: any) {
@@ -86,13 +79,9 @@ export async function uploadMultipleImages(imageUris: string[]): Promise<any[]> 
   try {
     const imageData: any[] = []
     
-    console.log(`📤 Iniciando upload de ${imageUris.length} imagens...`)
-    
     // Upload sequencial para evitar problemas de concorrência
     for (let i = 0; i < imageUris.length; i++) {
       const uri = imageUris[i]
-      
-      console.log(`📷 Enviando imagem ${i + 1}/${imageUris.length}`)
       
       const imageResult = await uploadImage(uri)
       imageData.push(imageResult)
@@ -103,10 +92,8 @@ export async function uploadMultipleImages(imageUris: string[]): Promise<any[]> 
       }
     }
     
-    console.log('✅ Todas as imagens enviadas com sucesso!')
     return imageData
   } catch (error) {
-    console.error('❌ Erro ao fazer upload das imagens:', error)
     throw error
   }
 }
@@ -139,27 +126,27 @@ export async function uploadImagesAndGetUrls(imageUris: string[]): Promise<strin
   try {
     if (imageUris.length === 0) return []
     
-    console.log('🔄 Tentando upload real das imagens...')
-    
     // Tentar upload real primeiro
     const imageIds = await uploadMultipleImages(imageUris)
     
-    // Se sucesso, construir URLs
-    const baseUrl = 'http://192.168.0.8:1337'
-    // Por ora, usar placeholders até confirmar que o upload está funcionando
-    const urls = await Promise.all(
-      imageUris.map(() => uploadImageBase64Fallback(''))
-    )
+    // Se sucesso, construir URLs reais das imagens do S3
+    const urls = imageIds.map((imageData: any) => {
+      // Se a imagem já tem URL completa (S3), usar diretamente
+      if (imageData?.url?.startsWith('http')) {
+        return imageData.url;
+      }
+      // Se é URL relativa, construir URL completa do Strapi
+      if (imageData?.url) {
+        return `http://192.168.0.8:1337${imageData.url}`;
+      }
+      // Fallback apenas se não houver URL
+      return null;
+    }).filter(Boolean);
     
     return urls
   } catch (error: any) {
-    console.warn('⚠️ Upload real falhou, usando fallback:', error.message)
     
-    // Fallback: usar imagens de placeholder
-    const fallbackUrls = await Promise.all(
-      imageUris.map(() => uploadImageBase64Fallback(''))
-    )
-    
-    return fallbackUrls
+    // Re-throw o erro para que seja tratado pelo código que chama
+    throw new Error('Falha no upload das imagens: ' + error.message)
   }
 }

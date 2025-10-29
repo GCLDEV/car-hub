@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import api from '@services/api/client'
 
 interface CarListing {
   id: string
@@ -76,42 +77,106 @@ export const useUserListingsStore = create<UserListingsState>((set, get) => ({
     set({ listings: [], error: null })
   },
 
+  // Buscar anúncios do usuário logado
+  fetchMyListings: async () => {
+    set({ loading: true, error: null })
+    
+    try {
+      // Buscar carros do usuário logado via API Strapi
+      const response = await api.get('/cars/me', {
+        params: {
+          'populate[images]': true,
+          'sort': 'createdAt:desc'
+        }
+      })
+      
+      // Transformar dados da API para o formato esperado
+      const listings: CarListing[] = response.data.map((strapiCar: any) => ({
+        id: strapiCar.id.toString(),
+        title: strapiCar.title,
+        brand: strapiCar.brand,
+        model: strapiCar.model,
+        year: strapiCar.year,
+        price: typeof strapiCar.price === 'string' ? parseInt(strapiCar.price) : strapiCar.price,
+        km: strapiCar.km,
+        fuelType: strapiCar.fuelType,
+        transmission: strapiCar.transmission,
+        color: strapiCar.color,
+        description: strapiCar.description,
+        images: strapiCar.images?.map((img: any) => {
+          if (img.url?.startsWith('http')) {
+            return img.url; // URL completa do S3
+          }
+          if (img.url) {
+            return `http://192.168.0.8:1337${img.url}`; // URL relativa do Strapi
+          }
+          return null;
+        }).filter(Boolean) || [],
+        location: strapiCar.location || strapiCar.cityState,
+        status: strapiCar.status || 'active',
+        createdAt: strapiCar.createdAt,
+        updatedAt: strapiCar.updatedAt
+      }))
+      
+      set({ listings, loading: false })
+    } catch (error) {
+      console.error('❌ Erro ao buscar meus anúncios:', error)
+      set({ 
+        error: error instanceof Error ? error.message : 'Erro ao buscar anúncios',
+        loading: false 
+      })
+    }
+  },
+
   fetchUserListings: async (userId: string) => {
     set({ loading: true, error: null })
     
     try {
-      // Simular busca dos anúncios do usuário
-      // Em um app real, isso faria uma chamada para a API
-      await new Promise(resolve => setTimeout(resolve, 2500)) // Simular delay para visualizar skeleton
-      
-      const mockListings: CarListing[] = [
-        {
-          id: 'listing-1',
-          title: 'Honda Civic 2020',
-          brand: 'Honda',
-          model: 'Civic',
-          year: 2020,
-          price: 85000,
-          km: 25000,
-          fuelType: 'Flex',
-          transmission: 'Automatic',
-          color: 'Silver',
-          description: 'Car in excellent condition, single owner, all maintenance up to date.',
-          images: [
-            'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=500',
-            'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=500'
-          ],
-          location: 'São Paulo, SP',
-          status: 'active',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+      // Buscar carros reais do usuário via API Strapi
+      const response = await api.get('/cars', {
+        params: {
+          'populate[images]': true,
+          'populate[seller]': true,
+          'filters[seller][id][$eq]': userId,
+          'sort': 'createdAt:desc'
         }
-      ]
+      })
       
-      set({ listings: mockListings, loading: false })
+      // Transformar dados da API para o formato esperado
+      const listings: CarListing[] = response.data.data.map((strapiCar: any) => ({
+        id: strapiCar.id.toString(),
+        title: strapiCar.title,
+        brand: strapiCar.brand,
+        model: strapiCar.model,
+        year: strapiCar.year,
+        price: typeof strapiCar.price === 'string' ? parseInt(strapiCar.price) : strapiCar.price,
+        km: strapiCar.km,
+        fuelType: strapiCar.fuelType,
+        transmission: strapiCar.transmission,
+        color: strapiCar.color,
+        description: strapiCar.description,
+        images: strapiCar.images?.map((img: any) => {
+          // Se já tem URL completa (S3), usar diretamente
+          if (img.url?.startsWith('http')) {
+            return img.url;
+          }
+          // Se é URL relativa do Strapi, construir URL completa
+          if (img.url) {
+            return `http://192.168.0.8:1337${img.url}`;
+          }
+          return null;
+        }).filter(Boolean) || [],
+        location: strapiCar.location || strapiCar.cityState,
+        status: strapiCar.status || 'active',
+        createdAt: strapiCar.createdAt,
+        updatedAt: strapiCar.updatedAt
+      }))
+      
+      set({ listings, loading: false })
     } catch (error) {
+      console.error('❌ Erro ao buscar anúncios do usuário:', error)
       set({ 
-        error: error instanceof Error ? error.message : 'Error fetching listings',
+        error: error instanceof Error ? error.message : 'Erro ao buscar anúncios',
         loading: false 
       })
     }

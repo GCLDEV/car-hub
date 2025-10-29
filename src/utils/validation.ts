@@ -76,8 +76,8 @@ export const resetPasswordSchema = z.object({
 export const createListingSchema = z.object({
   title: z
     .string()
-    .min(10, 'Título deve ter pelo menos 10 caracteres')
-    .max(100, 'Título deve ter no máximo 100 caracteres'),
+    .min(5, 'Título deve ter pelo menos 5 caracteres')
+    .max(80, 'Título deve ter no máximo 80 caracteres'),
   
   brand: z
     .string()
@@ -86,6 +86,10 @@ export const createListingSchema = z.object({
   model: z
     .string()
     .min(1, 'Modelo é obrigatório'),
+  
+  category: z
+    .string()
+    .min(1, 'Categoria é obrigatória'),
   
   year: z
     .string()
@@ -105,28 +109,30 @@ export const createListingSchema = z.object({
   
   km: z
     .string()
-    .min(1, 'Quilometragem é obrigatória')
+    .optional()
     .refine(val => {
+      if (!val || val === '') return true
       const num = Number(val.replace(/\D/g, ''))
       return !isNaN(num) && num >= 0 && num <= 500000
     }, 'Quilometragem deve estar entre 0 e 500.000 km'),
   
   fuelType: z
     .string()
-    .min(1, 'Tipo de combustível é obrigatório'),
+    .optional(),
   
   transmission: z
     .string()
-    .min(1, 'Tipo de câmbio é obrigatório'),
+    .optional(),
   
   color: z
     .string()
-    .min(1, 'Cor é obrigatória'),
+    .optional(),
   
   description: z
     .string()
-    .min(50, 'Descrição deve ter pelo menos 50 caracteres')
-    .max(1000, 'Descrição deve ter no máximo 1000 caracteres'),
+    .min(10, 'Descrição deve ter pelo menos 10 caracteres')
+    .max(500, 'Descrição deve ter no máximo 500 caracteres')
+    .optional(),
   
   location: z
     .string()
@@ -134,23 +140,25 @@ export const createListingSchema = z.object({
   
   doors: z
     .string()
-    .min(1, 'Número de portas é obrigatório')
+    .optional()
     .refine(val => {
+      if (!val || val === '') return true
       const num = Number(val)
       return !isNaN(num) && num >= 2 && num <= 5
     }, 'Número de portas deve estar entre 2 e 5'),
   
   seats: z
     .string()
-    .min(1, 'Número de assentos é obrigatório')
+    .optional()
     .refine(val => {
+      if (!val || val === '') return true
       const num = Number(val)
       return !isNaN(num) && num >= 2 && num <= 8
     }, 'Número de assentos deve estar entre 2 e 8'),
   
   engine: z
     .string()
-    .min(1, 'Motor é obrigatório'),
+    .optional(),
   
   features: z
     .array(z.string())
