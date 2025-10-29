@@ -1,6 +1,6 @@
 import React from 'react'
 import { Tabs } from 'expo-router'
-import { House, MagnifyingGlass, User } from 'phosphor-react-native'
+import { House, MagnifyingGlass, User, Car } from 'phosphor-react-native'
 import { colors } from '@theme/colors'
 
 export default function TabsLayout() {
@@ -45,6 +45,16 @@ export default function TabsLayout() {
           title: 'Search',
           tabBarIcon: ({ color, size }) => (
             <MagnifyingGlass size={size} color={color} />
+          ),
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="my-listings"
+        options={{
+          title: 'My Listings',
+          tabBarIcon: ({ color, size }) => (
+            <Car size={size} color={color} />
           ),
           headerShown: false,
         }}

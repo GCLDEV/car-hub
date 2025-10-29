@@ -446,6 +446,45 @@ export async function createCar(data: CreateListingFormData): Promise<Car> {
   }
 }
 
+// Buscar carros do usuário logado
+export async function getUserCars(): Promise<Car[]> {
+  try {
+    const response = await api.get('/cars/me', {
+      params: {
+        'populate[images]': true,
+        'populate[seller]': true,
+        'sort': 'createdAt:desc'
+      }
+    })
+    
+    return response.data.data.map(transformStrapiCar)
+  } catch (error: any) {
+    throw new Error(error.response?.data?.error?.message || 'Erro ao buscar seus anúncios')
+  }
+}
+
+// Deletar carro do usuário
+export async function deleteCar(id: string): Promise<void> {
+  try {
+    await api.delete(`/cars/${id}`)
+  } catch (error: any) {
+    throw new Error(error.response?.data?.error?.message || 'Erro ao deletar anúncio')
+  }
+}
+
+// Atualizar status do carro
+export async function updateCarStatus(id: string, status: 'available' | 'sold' | 'reserved'): Promise<Car> {
+  try {
+    const response = await api.put(`/cars/${id}`, {
+      data: { status }
+    })
+    
+    return transformStrapiCar(response.data.data)
+  } catch (error: any) {
+    throw new Error(error.response?.data?.error?.message || 'Erro ao atualizar status')
+  }
+}
+
 // Função para testar conectividade com a API Strapi
 export async function testAPI() {
   const response = await api.get('/cars', {

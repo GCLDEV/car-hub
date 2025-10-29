@@ -151,26 +151,12 @@ export default function ProfileMenu({
 
   const myAccountItems: ProfileMenuItem[] = [
     {
-      icon: <Car size={20} color={colors.primary[500]} weight="bold" />,
-      title: 'My Listings',
-      subtitle: 'Manage your advertised cars',
-      value: userListings?.length || 0,
-      onPress: onMyListings
-    },
-    {
       icon: <Heart size={20} color={colors.error[500]} weight="fill" />,
       title: 'Favorites',
       subtitle: 'Saved cars as favorites',
       value: favoriteCount || 0,
       onPress: onFavorites
     },
-    {
-      icon: <Eye size={20} color={colors.accent[500]} weight="bold" />,
-      title: 'Views',
-      subtitle: 'Analytics of your listings',
-      value: '1.2k',
-      onPress: onViews
-    }
   ]
 
   const settingsItems: ProfileMenuItem[] = [
