@@ -81,8 +81,8 @@ export async function getCarsList(filters?: CarFilters): Promise<CarSearchResult
   // Try to get from cache first if offline or as fallback
   const cachedData = cacheStore.getCachedCars(cacheKey)
   
-  // If offline, return cached data or throw error
-  if (!networkState.isConnected || !networkState.isInternetReachable) {
+  // If offline, return cached data or throw error (less restrictive check)
+  if (networkState.isConnected === false) {
     if (cachedData) {
       return cachedData.data
     }

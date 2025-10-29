@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 // Cliente HTTP para API Strapi real
 const api = axios.create({
   baseURL: 'http://192.168.0.8:1337/api',
-  timeout: 10000,
+  timeout: 30000, // Aumentado para 30 segundos
   headers: {
     'Content-Type': 'application/json'
   }
