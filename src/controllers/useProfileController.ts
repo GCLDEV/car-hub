@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'expo-router'
+import { useQueryClient } from '@tanstack/react-query'
 import Toast from 'react-native-toast-message'
 
 import { useAuthStore } from '@store/authStore'
@@ -10,12 +11,15 @@ import useAuthGuard from '@hooks/useAuthGuard'
 
 export default function useProfileController() {
   const router = useRouter()
+  const queryClient = useQueryClient()
   
   const { user, isAuthenticated, login, logout } = useAuthStore()
   const { favorites } = useFavoritesStore()
   const { listings: userListings, fetchUserListings, loading } = useUserListingsStore()
   const { setModal } = useModalStore()
   const { checkAuth } = useAuthGuard()
+  
+  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
     if (isAuthenticated && user?.id) {
@@ -106,15 +110,50 @@ export default function useProfileController() {
     })
   }
 
+  // Função para refresh manual dos dados do perfil
+  async function handleRefresh(): Promise<void> {
+    if (!isAuthenticated || !user?.id) return
+
+    setRefreshing(true)
+    
+    try {
+      // Invalidar todas as queries relacionadas ao usuário
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['user-cars', user.id] }),
+        queryClient.invalidateQueries({ queryKey: ['favorites'] }),
+        queryClient.invalidateQueries({ queryKey: ['user-profile'] })
+      ])
+      
+      // Recarregar listings do usuário através do store
+      await fetchUserListings(user.id)
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Profile refreshed',
+        text2: 'Your data has been updated'
+      })
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to refresh',
+        text2: 'Please try again'
+      })
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
   return {
     user,
     isAuthenticated,
     userListings,
     favoriteCount: favorites.length,
     loading,
+    refreshing,
     error: undefined, // TODO: implementar tratamento de erro
     handleLogin,
     handleLogout,
+    handleRefresh,
     navigateToCreateListing,
     navigateToMyListings,
     navigateToFavorites,

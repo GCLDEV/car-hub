@@ -1,5 +1,5 @@
 import React from 'react'
-import { ScrollView } from 'react-native'
+import { ScrollView, RefreshControl } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { VStack } from '@components/ui/vstack'
@@ -24,9 +24,11 @@ const {
     userListings,
     favoriteCount,
     loading,
+    refreshing,
     error,
     handleLogin,
     handleLogout,
+    handleRefresh,
     navigateToCreateListing,
     navigateToMyListings,
     navigateToFavorites,
@@ -74,6 +76,14 @@ const {
         <ScrollView
           className="flex-1"
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.accent[500]}
+              colors={[colors.accent[500]]}
+            />
+          }
         >
           {/* Header funcionando normalmente durante loading */}
           <ProfileHeader
@@ -108,6 +118,14 @@ const {
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.accent[500]}
+            colors={[colors.accent[500]]}
+          />
+        }
       >
         {/* Header */}
         <ProfileHeader

@@ -1,5 +1,5 @@
 import React from 'react'
-import { ScrollView } from 'react-native'
+import { ScrollView, RefreshControl } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
@@ -26,11 +26,13 @@ export default function CarDetailsScreen() {
   const {
     car,
     loading,
+    refreshing,
     error,
     isFavorite,
     toggleFavorite,
     handleContact,
     handleShare,
+    handleRefresh,
     goBack,
     similarCars
   } = useController()
@@ -73,7 +75,17 @@ export default function CarDetailsScreen() {
         </HStack>
         
         {/* Skeleton do conteúdo */}
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.accent[500]}
+              colors={[colors.accent[500]]}
+            />
+          }
+        >
           <CarDetailSkeleton />
         </ScrollView>
       </SafeAreaView>
@@ -170,6 +182,14 @@ export default function CarDetailsScreen() {
       <ScrollView 
         showsVerticalScrollIndicator={false}
         style={{ flex: 1 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.accent[500]}
+            colors={[colors.accent[500]]}
+          />
+        }
       >
         <VStack className="flex-1">
           {/* Galeria de Imagens */}
@@ -178,7 +198,7 @@ export default function CarDetailsScreen() {
           {/* Descrição */}
           <CarDescription 
             title={car.title}
-            description={car.description}
+            description={car.description || ''}
             brand={car.brand}
             model={car.model}
             year={car.year}
@@ -196,9 +216,9 @@ export default function CarDetailsScreen() {
           <Box className="px-4">
             <CarSpecsGrid 
               year={car.year}
-              km={car.km}
-              fuelType={car.fuelType}
-              transmission={car.transmission}
+              km={car.km || 0}
+              fuelType={car.fuelType || ''}
+              transmission={car.transmission || ''}
               engine={car.specs?.engine}
               color={car.color}
             />
@@ -206,9 +226,9 @@ export default function CarDetailsScreen() {
           
           {/* Botões de Ação */}
           <CarActionButtons 
-            onCallPress={handleCall}
-            onChatPress={handleChat}
-            onTestDrivePress={handleTestDrive}
+            onCallPress={handleContact}
+            onChatPress={handleContact}
+            onTestDrivePress={handleContact}
           />
         </VStack>
       </ScrollView>

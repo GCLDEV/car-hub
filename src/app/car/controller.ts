@@ -15,6 +15,8 @@ export default function useCarDetailsController() {
   const { favorites, addFavorite, removeFavorite } = useFavoritesStore()
   const { checkAuth } = useAuthGuard()
   
+  const [refreshing, setRefreshing] = useState(false)
+  
   const { 
     data: car, 
     isLoading: loading, 
@@ -25,7 +27,10 @@ export default function useCarDetailsController() {
     queryFn: async () => {
       return await getCarById(id!)
     },
-    enabled: !!id
+    enabled: !!id,
+    staleTime: 30 * 1000,           // 30 segundos cache para detalhes
+    gcTime: 5 * 60 * 1000,          // 5 minutos em memória
+    refetchOnWindowFocus: true      // Atualiza quando volta ao app
   })
 
   const isFavorite = useMemo(() => {
@@ -100,14 +105,41 @@ export default function useCarDetailsController() {
     router.back()
   }
 
+  // Função para refresh manual dos dados do carro
+  async function handleRefresh(): Promise<void> {
+    if (!id) return
+
+    setRefreshing(true)
+    
+    try {
+      await refetch()
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Car details updated',
+        text2: 'Latest information loaded'
+      })
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to refresh',
+        text2: 'Please try again'
+      })
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
   return {
     car,
     loading,
+    refreshing,
     error: error?.message,
     isFavorite,
     toggleFavorite,
     handleContact,
     handleShare,
+    handleRefresh,
     goBack,
     similarCars: [] // TODO: implementar carros similares
   }
