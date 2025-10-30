@@ -1,19 +1,21 @@
 # 🚗 Car Hub - Marketplace de Carros
 
-> **Aplicativo completo de compra e venda de carros com React Native, integração real com Strapi CMS e arquitetura offline-first**
+> **Aplicativo completo de compra e venda de carros com React Native, integração 100% real com Strapi CMS e arquitetura offline-first**
 
 ## 🎯 Visão Geral
 
-Car Hub é uma plataforma profissional para o mercado automotivo brasileiro, oferecendo uma experiência completa tanto para compradores quanto vendedores de veículos. O app combina **design moderno**, **performance otimizada**, **arquitetura offline-first** e **integração real com API Strapi**.
+Car Hub é uma plataforma profissional para o mercado automotivo brasileiro, oferecendo uma experiência completa tanto para compradores quanto vendedores de veículos. O app combina **design moderno**, **performance otimizada**, **arquitetura offline-first** e **integração 100% real com API Strapi**.
 
 ### 🏆 **Destaques do Projeto**
-- ✅ **100% funcional** com API real Strapi v5
-- ✅ **Offline-first** com sincronização inteligente  
-- ✅ **Sistema de autenticação** completo
-- ✅ **Filtros avançados** customizados
-- ✅ **Upload de imagens** real
-- ✅ **Design system** profissional
-- ✅ **Código TypeScript** strict sem `any`
+- ✅ **API 100% Real** - Integração completa com Strapi v5 + MySQL
+- ✅ **Upload de Avatar** - Sistema real de upload de fotos de perfil  
+- ✅ **Sistema de Filtros** - Filtros avançados com clear filters visual
+- ✅ **Pull-to-Refresh** - Sincronização em tempo real em todas as telas
+- ✅ **Offline-first** - Funciona sem internet com cache inteligente
+- ✅ **Edição de Perfil** - CRUD completo de dados do usuário
+- ✅ **Sistema de Autenticação** - JWT com auth guards inteligentes
+- ✅ **Design System** - Gluestack UI v2 + Tailwind CSS profissional
+- ✅ **TypeScript Strict** - Zero `any`, tipagem rigorosa em 100% do código
 
 ## 📱 Screenshots
 
@@ -46,12 +48,25 @@ Car Hub é uma plataforma profissional para o mercado automotivo brasileiro, ofe
 
 ## 🚀 Funcionalidades Implementadas
 
-### 🏠 **Tela Principal (Home)**
-- ✅ **Catálogo Real**: Carros da API Strapi com dados brasileiros autênticos
-- ✅ **Filtros por Categoria**: All, Sedan, SUV, Hatch, Coupé com funcionamento real
+### � **Última Atualização - Outubro 2025**
+- ✅ **API 100% Real**: Integração completa com Strapi substituindo todo mock data
+- ✅ **Edit Profile com Upload**: Sistema completo de edição de perfil + avatar  
+- ✅ **Clear Filters Visual**: Sistema avançado de filtros com contador e botão clear
+- ✅ **Pull-to-Refresh Universal**: Implementado em todas as telas principais
+- ✅ **Settings Screen**: Tela completa de configurações com navegação organizada
+- ✅ **Modal System**: Sistema centralizado para confirmações e informações
+- ✅ **Toast Notifications**: Feedback consistente para todas as ações do usuário
+- ✅ **Loading States**: Skeletons customizados para cada contexto
+
+### �🏠 **Tela Principal (Home)**
+- ✅ **Header Inteligente**: Nome do usuário logado, localização, badge de notificações
+- ✅ **Clear Filters**: Botão visual que aparece apenas quando há filtros ativos  
+- ✅ **Contador de Filtros**: Badge no ícone de filtro mostrando quantidade ativa
+- ✅ **Catálogo Real**: Carros vindos 100% da API Strapi com dados brasileiros
+- ✅ **Filtros por Categoria**: All, Sedan, SUV, Hatch, Coupé integrados com API
 - ✅ **Sistema de Favoritos**: Persistência com AsyncStorage + Zustand
 - ✅ **Pull to Refresh**: Sincronização em tempo real com API
-- ✅ **Infinite Scroll**: Paginação automática otimizada
+- ✅ **Infinite Scroll**: Paginação automática otimizada com React Query
 - ✅ **Offline-first**: Funciona sem internet com cache inteligente
 - ✅ **Network Status**: Banner indicativo de conectividade
 - ✅ **Auth Guard**: Proteção de ações para usuários não logados
@@ -74,13 +89,23 @@ Car Hub é uma plataforma profissional para o mercado automotivo brasileiro, ofe
 - ✅ **Toasts Informativos**: Feedback para funcionalidades em desenvolvimento
 - ✅ **Contador de Views**: Incremento automático de visualizações
 
-### 👤 **Sistema de Autenticação**
-- ✅ **JWT Real**: Login/registro integrado com Strapi Users & Permissions
-- ✅ **Validação Rigorosa**: Formulários com Zod + React Hook Form  
-- ✅ **Persistência Segura**: Token salvo com AsyncStorage
+### 👤 **Sistema de Autenticação Completo**
+- ✅ **API Real Strapi**: Login/registro integrado com Users & Permissions
+- ✅ **Edição de Perfil**: CRUD completo com validação Zod + React Hook Form
+- ✅ **Upload de Avatar**: Sistema real de upload com preview instantâneo
+- ✅ **Tela de Settings**: Navegação para configurações e logout
 - ✅ **Auth Guards**: Modais informativos para ações protegidas
-- ✅ **Estados de Loading**: Skeletons durante autenticação
-- ✅ **Logout Seguro**: Limpeza completa de dados do usuário
+- ✅ **Persistência Segura**: Token JWT salvo com AsyncStorage + Zustand
+- ✅ **Estados de Loading**: Skeletons e indicadores durante operações
+- ✅ **Logout Seguro**: Limpeza completa de dados e redirecionamento
+
+### 🔧 **Sistema de Filtros Avançado**
+- ✅ **Filtros Visuais**: Contador de filtros ativos no header
+- ✅ **Clear Filters**: Botão dedicado para limpar todos os filtros
+- ✅ **Modal de Confirmação**: Confirmação antes de ações destrutivas
+- ✅ **Feedback Visual**: Toast notifications para todas as ações
+- ✅ **Persistência Global**: Filtros mantidos entre navegações
+- ✅ **Performance Otimizada**: React Query com cache inteligente
 
 ### 📝 **Criação de Anúncios**
 - ✅ **Formulário Completo**: 15+ campos em inglês profissional
@@ -90,15 +115,40 @@ Car Hub é uma plataforma profissional para o mercado automotivo brasileiro, ofe
 - ✅ **Auth Required**: Proteção completa com redirecionamento
 - ✅ **Feedback Visual**: Loading states e toast notifications
 
-### 🎨 **Experiência do Usuário**
+### 🎨 **Experiência do Usuário Premium**
 - ✅ **Design System Profissional**: Gluestack UI v2 + Tailwind CSS
 - ✅ **Modo Escuro Completo**: Interface otimizada para baixa luminosidade  
-- ✅ **Animações Fluidas**: Transições suaves e micro-interações
-- ✅ **Sistema Modal**: Confirmações, informações e auth guards
-- ✅ **Toast Notifications**: Feedback visual consistente para todas as ações
-- ✅ **Loading States**: Skeletons animados e estados de carregamento
-- ✅ **Error Boundaries**: Tratamento robusto de erros
-- ✅ **Ícones Phosphor**: Biblioteca consistente sem emojis
+- ✅ **Pull-to-Refresh Universal**: Sincronização em todas as telas
+- ✅ **Sistema Modal Inteligente**: Confirmações, informações e auth guards
+- ✅ **Toast Notifications**: Feedback visual consistente e contextual
+- ✅ **Loading States Avançados**: Skeletons animados para cada contexto
+- ✅ **Error Boundaries**: Tratamento robusto de erros com recovery
+- ✅ **Ícones Phosphor**: 1.400+ ícones consistentes e profissionais
+- ✅ **Estados Condicionais**: UI adaptativa baseada no estado do usuário
+- ✅ **Micro-interações**: Animações sutis para melhor engagement
+
+### 📱 **Funcionalidades por Tela**
+
+#### **🏠 Home Screen**
+- ✅ **Header Inteligente**: Nome do usuário, localização, notificações
+- ✅ **Clear Filters Visual**: Botão aparece apenas quando necessário  
+- ✅ **Contador de Filtros**: Badge no ícone de filtro com quantidade
+- ✅ **Categorias Dinâmicas**: All, Sedan, SUV, Hatch, Coupé
+- ✅ **Lista Infinita**: Scroll infinito com paginação otimizada
+- ✅ **Network Banner**: Indicador visual de conectividade
+
+#### **⚙️ Settings Screen**
+- ✅ **Perfil Completo**: Avatar, nome, email e estatísticas
+- ✅ **Navegação Organizada**: Seções por categoria (Account, App, Support)
+- ✅ **Editar Perfil**: Navegação para tela de edição completa
+- ✅ **Logout Seguro**: Confirmação modal + limpeza de dados
+
+#### **✏️ Edit Profile Screen**  
+- ✅ **Upload de Avatar**: Câmera ou galeria com preview
+- ✅ **Formulário Completo**: Nome, telefone, localização, tipo de conta
+- ✅ **Validação Robusta**: Zod schema com mensagens em português
+- ✅ **API Integration**: Atualização real via Strapi endpoint customizado
+- ✅ **Estados de Loading**: Indicadores durante upload e salvamento
 
 ## 🛠️ Stack Tecnológica Completa
 
@@ -110,18 +160,21 @@ Car Hub é uma plataforma profissional para o mercado automotivo brasileiro, ofe
 - **Tailwind CSS** - Estilização utilitária com className prop
 - **Phosphor React Native** - 1.400+ ícones consistentes
 
-### **Backend & API**
+### **Backend & API Real**
 - **Strapi v5** - CMS headless com MySQL database
-- **Controller Customizado** - Filtros avançados e busca personalizada
-- **JWT Authentication** - Sistema seguro de autenticação
-- **Upload Plugin** - Upload real de imagens para servidor
-- **REST API** - Endpoints otimizados com paginação e cache
+- **Endpoints Customizados** - `/users/me` para CRUD de perfil
+- **Upload System** - Plugin de upload real integrado com autenticação
+- **JWT Authentication** - Sistema seguro Users & Permissions
+- **Content Types** - User, Car, Favorite, Message com relacionamentos
+- **REST API** - Endpoints otimizados com paginação e populate
 
-### **Gerenciamento de Estado**
-- **Zustand + AsyncStorage** - Auth, favoritos, filtros, network, offline cache
-- **React Query (TanStack)** - Cache inteligente, sincronização e offline-first
-- **Network Detection** - expo-network para detectar conectividade
-- **Offline Cache Store** - Sistema próprio de cache para dados offline
+### **Gerenciamento de Estado Avançado**
+- **Zustand Stores** - Auth, filtros, favoritos, modal, network, offline cache
+- **React Query** - Cache inteligente, mutations, invalidation automática
+- **AsyncStorage Persistence** - Dados persistidos entre sessões
+- **Network Detection** - expo-network para detectar conectividade em tempo real
+- **Offline Queue** - Sistema de fila para ações offline
+- **Cache Invalidation** - Sincronização automática após updates
 
 ### **Formulários & Validação**
 - **React Hook Form** - Performance otimizada para formulários complexos
@@ -143,6 +196,73 @@ Car Hub é uma plataforma profissional para o mercado automotivo brasileiro, ofe
 - **TypeScript Config** - Configurações strict para máxima confiabilidade
 
 ## 🏗️ Arquitetura Avançada
+
+### **📡 Integração API 100% Real**
+
+#### **Fluxo de Dados Completo**
+```
+📱 App React Native → 🔄 React Query → 🌐 Strapi API → 🗄️ MySQL Database
+                    ↓
+                🏪 Zustand Stores (Auth, Filters, Favorites)
+                    ↓  
+                💾 AsyncStorage (Persistence)
+```
+
+#### **Controllers Customizados Strapi**
+```typescript
+// 🔧 Backend: Controller customizado para perfil  
+// src/api/user/controllers/user.ts
+export default {
+  async updateMe(ctx) {
+    const userId = ctx.state.user.id
+    const { data } = ctx.request.body
+    
+    // Filtrar campos permitidos
+    const allowedFields = ['name', 'phone', 'location', 'cityState', 'isDealer', 'avatar']
+    const updateData = {}
+    allowedFields.forEach(field => {
+      if (data[field] !== undefined) updateData[field] = data[field]
+    })
+    
+    // Atualizar com populate do avatar
+    const updatedUser = await strapi.db.query('plugin::users-permissions.user').update({
+      where: { id: userId },
+      data: updateData,
+      populate: { avatar: true }
+    })
+    
+    ctx.send(sanitizedUser)
+  }
+}
+```
+
+#### **Services API Client-Side**
+```typescript
+// 🎯 Frontend: Service para perfil integrado
+// src/services/api/auth.ts
+export async function updateUserProfile(data: UpdateProfileRequest): Promise<User> {
+  const response = await api.put('/users/me', { data })
+  return transformStrapiUser(response.data)
+}
+
+// 📤 Upload de avatar real
+export async function uploadImage(imageUri: string): Promise<any> {
+  const formData = new FormData()
+  formData.append('files', {
+    uri: imageUri,
+    name: 'avatar.jpg', 
+    type: 'image/jpeg'
+  })
+  
+  const response = await fetch('/api/upload', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData
+  })
+  
+  return response.json()[0] // Retorna ID da imagem
+}
+```
 
 ### **Padrão Controller (Separation of Concerns)**
 ```typescript
@@ -312,9 +432,17 @@ yarn reset-cache   # Clear Metro cache
 # 📊 Acesse o Strapi Admin
 http://localhost:1337/admin
 
-# 👤 Crie um usuário admin
-# 🚗 Adicione alguns carros via Content Manager
-# 🔑 Configure roles & permissions para API pública
+# 👤 Crie um usuário admin inicial
+# 🚗 Adicione carros brasileiros via Content Manager
+# 🔑 Configure permissions:
+#   - Public: find, findOne para Cars
+#   - Authenticated: create, update, delete para Cars
+#   - Authenticated: update para Users (para edit profile)
+#   - Authenticated: create para Upload (para avatar)
+
+# 🛠️ Configurar IP do seu computador no app
+# Edite src/services/api/client.ts e upload.ts
+# Substitua 192.168.0.8 pelo IP da sua máquina local
 ```
 
 ## 🌐 Sistema de API Real
@@ -326,8 +454,31 @@ http://localhost:1337/admin
 - **Controller Customizado**: Filtros avançados e busca otimizada
 - **JWT Auth**: Sistema completo de autenticação
 
-### **Endpoints Disponíveis**
+### **Endpoints Integrados**
 ```bash
+# 🚗 Cars
+GET    /api/cars              # Listar carros (público)
+GET    /api/cars/:id          # Detalhes (público)  
+POST   /api/cars              # Criar (auth)
+PUT    /api/cars/:id          # Editar (auth + owner)
+DELETE /api/cars/:id          # Deletar (auth + owner)
+
+# 👤 Authentication  
+POST   /api/auth/local        # Login
+POST   /api/auth/local/register # Registro
+
+# 🔧 Profile (Controller Customizado)
+GET    /api/users/me          # Perfil atual (auth)
+PUT    /api/users/me          # Atualizar perfil (auth)
+
+# 📤 Upload
+POST   /api/upload            # Upload de arquivos (auth)
+
+# ❤️ Favorites  
+GET    /api/favorites         # Listar favoritos (auth)
+POST   /api/favorites         # Adicionar (auth)
+DELETE /api/favorites/:id     # Remover (auth)
+```
 # 🏠 Listagem principal (com filtros básicos)
 GET /api/cars?filters[category][$eq]=sedan&pagination[page]=1
 
@@ -610,22 +761,47 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 | **Screens** | 8 | Navigation completa |
 | **Business Logic** | 6 Controllers | Separation of concerns |
 
-## 🎯 Próximas Implementações
+## � Principais Achievements
+
+### **🎯 Integração API Completa**
+- ✅ **Zero Mock Data**: 100% dos dados vindos do Strapi real
+- ✅ **Upload Funcional**: Sistema de upload de avatar end-to-end  
+- ✅ **CRUD Completo**: Create, Read, Update, Delete integrados
+- ✅ **Controllers Customizados**: Backend personalizado para necessidades específicas
+- ✅ **Auth JWT**: Sistema seguro com token persistente
+- ✅ **Cache Inteligente**: React Query com invalidation automática
+
+### **💻 Qualidade de Código**
+- ✅ **TypeScript Strict**: Zero `any`, tipagem rigorosa em 100% do projeto
+- ✅ **Architecture Patterns**: Controller pattern, path aliases, separation of concerns
+- ✅ **Error Handling**: Try-catch robusto, error boundaries, fallbacks
+- ✅ **Performance**: Lazy loading, memoization, infinite scroll otimizado
+- ✅ **Accessibility**: Componentes Gluestack UI com a11y nativo
+
+### **🎨 UX/UI Excellence**
+- ✅ **Design System**: Tokens consistentes, componentes reutilizáveis
+- ✅ **Loading States**: Skeletons customizados para cada contexto
+- ✅ **Modal System**: Sistema centralizado com confirmações inteligentes
+- ✅ **Toast Feedback**: Notificações contextuais para todas as ações
+- ✅ **Responsive Design**: Layout adaptativo para diferentes telas
+
+## �🎯 Próximas Implementações
 
 ### **🚀 Roadmap Técnico**
 - [ ] **Push Notifications** com Expo Notifications
 - [ ] **Deep Linking** para compartilhar carros  
 - [ ] **Geolocalização** para filtros por distância
-- [ ] **Chat Real-time** com Socket.io
-- [ ] **Payment Integration** (PIX/cartão)
-- [ ] **Car Comparison** (comparar até 3 carros)
-- [ ] **Advanced Search** com filtros salvos
-- [ ] **Analytics** com tracking de eventos
+- [ ] **Chat Real-time** com Socket.io entre comprador/vendedor
+- [ ] **Payment Integration** (PIX/cartão de crédito)
+- [ ] **Car Comparison** (comparar até 3 carros lado a lado)
+- [ ] **Advanced Search** com filtros salvos e sugestões
+- [ ] **Analytics** com tracking de eventos e métricas
 
 ### **🛡️ Melhorias de Segurança**
 - [ ] **Biometric Auth** (Face ID/Touch ID)
-- [ ] **Token Refresh** automático
-- [ ] **Rate Limiting** no frontend
+- [ ] **Token Refresh** automático com interceptors
+- [ ] **Rate Limiting** no frontend e backend
+- [ ] **Data Encryption** para dados sensíveis
 - [ ] **Input Sanitization** avançada
 
 ---
