@@ -139,7 +139,7 @@ export default function HomeHeader({
           style={{ 
             backgroundColor: activeFiltersCount > 0 ? colors.accent[500] : colors.neutral[700] 
           }}
-          className="w-12 h-12 rounded-2xl justify-center items-center relative"
+          className="w-16 h-14 rounded-2xl justify-center items-center relative"
         >
           <Funnel size={20} color={colors.neutral[900]} weight="bold" />
           {activeFiltersCount > 0 && (
