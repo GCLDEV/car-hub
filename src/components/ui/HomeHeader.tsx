@@ -22,10 +22,12 @@ interface HomeHeaderProps {
   userName: string
   userLocation: string
   notificationCount?: number
+  activeFiltersCount?: number
   onNotificationPress: () => void
   onLocationPress: () => void
   onSearchPress: () => void
   onFiltersPress: () => void
+  onClearFiltersPress?: () => void
   onSettingsPress: () => void
 }
 
@@ -33,10 +35,12 @@ export default function HomeHeader({
   userName,
   userLocation,
   notificationCount = 0,
+  activeFiltersCount = 0,
   onNotificationPress,
   onLocationPress,
   onSearchPress,
   onFiltersPress,
+  onClearFiltersPress,
   onSettingsPress
 }: HomeHeaderProps) {
   return (
@@ -116,13 +120,38 @@ export default function HomeHeader({
           </Text>
         </Pressable>
 
+        {/* Clear Filters button (only show when filters are active) */}
+        {activeFiltersCount > 0 && (
+          <Pressable
+            onPress={onClearFiltersPress}
+            style={{ backgroundColor: colors.error[500] }}
+            className="px-3 h-12 rounded-2xl justify-center items-center flex-row"
+          >
+            <Text className="text-white text-sm font-medium mr-1">
+              Clear ({activeFiltersCount})
+            </Text>
+          </Pressable>
+        )}
+
         {/* Filter button */}
         <Pressable
           onPress={onFiltersPress}
-          style={{ backgroundColor: colors.accent[500] }}
-          className="w-12 h-12 rounded-2xl justify-center items-center"
+          style={{ 
+            backgroundColor: activeFiltersCount > 0 ? colors.accent[500] : colors.neutral[700] 
+          }}
+          className="w-12 h-12 rounded-2xl justify-center items-center relative"
         >
           <Funnel size={20} color={colors.neutral[900]} weight="bold" />
+          {activeFiltersCount > 0 && (
+            <Box
+              className="absolute -top-1 -right-1 w-5 h-5 rounded-full justify-center items-center"
+              style={{ backgroundColor: colors.error[500] }}
+            >
+              <Text className="text-white text-xs font-bold">
+                {activeFiltersCount > 9 ? '9+' : activeFiltersCount}
+              </Text>
+            </Box>
+          )}
         </Pressable>
       </HStack>
     </VStack>

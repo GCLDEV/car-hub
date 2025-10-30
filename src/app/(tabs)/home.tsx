@@ -42,8 +42,10 @@ export default function HomeScreen() {
     handleCarPress,
     navigateToSearch,
     openFiltersModal,
+    handleClearFilters,
     handleCategorySelect,
     selectedCategory,
+    activeFiltersCount,
     isOnline,
     isConnected,
     hasOfflineQueue
@@ -89,11 +91,13 @@ export default function HomeScreen() {
             userName={user?.name || 'User'}
             userLocation="New York City, USA"
             notificationCount={3}
+            activeFiltersCount={activeFiltersCount}
             onNotificationPress={handleNotificationPress}
             onLocationPress={handleLocationPress}
             onSettingsPress={navigateToSettings}
             onSearchPress={navigateToSearch}
             onFiltersPress={openFiltersModal}
+            onClearFiltersPress={handleClearFilters}
           />
 
           {/* Skeleton apenas da barra de pesquisa para baixo */}
@@ -120,11 +124,13 @@ export default function HomeScreen() {
           userName={user?.name || 'User'}
           userLocation="New York City, USA"
           notificationCount={3}
+          activeFiltersCount={activeFiltersCount}
           onNotificationPress={handleNotificationPress}
           onLocationPress={handleLocationPress}
           onSettingsPress={navigateToSettings}
           onSearchPress={navigateToSearch}
           onFiltersPress={openFiltersModal}
+          onClearFiltersPress={handleClearFilters}
         />
 
         {/* Network Status Banner */}

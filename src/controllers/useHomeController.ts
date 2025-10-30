@@ -16,7 +16,7 @@ import { Car } from '@/types/car'
 export default function useHomeController() {
   const router = useRouter()
   // Favorites are now handled directly by the FavoriteButton component
-  const { filters, setFilter } = useFiltersStore()
+  const { filters, setFilter, clearFilters, activeFiltersCount } = useFiltersStore()
   const { setModal } = useModalStore()
   const { addToOfflineQueue } = useOfflineCacheStore()
   const { isOnline, isConnected, hasOfflineQueue } = useNetworkController()
@@ -135,6 +135,34 @@ export default function useHomeController() {
     }
   }
 
+  function handleClearFilters(): void {
+    if (activeFiltersCount === 0) {
+      Toast.show({
+        type: 'info',
+        text1: 'No active filters',
+        text2: 'There are no filters to clear'
+      })
+      return
+    }
+
+    setModal({
+      type: 'confirm',
+      title: 'Clear all filters?',
+      confirmText: 'Clear Filters',
+      cancelText: 'Cancel',
+      action: () => {
+        clearFilters()
+        setSelectedCategory('all')
+        
+        Toast.show({
+          type: 'success',
+          text1: 'Filters cleared',
+          text2: 'All filters have been removed'
+        })
+      }
+    })
+  }
+
   return {
     cars,
     loading: isLoading,
@@ -145,8 +173,10 @@ export default function useHomeController() {
     handleCarPress,
     navigateToSearch,
     openFiltersModal,
+    handleClearFilters,
     handleCategorySelect,
     selectedCategory,
+    activeFiltersCount,
     // Offline state
     isOnline,
     isConnected,
