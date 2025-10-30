@@ -12,7 +12,8 @@ import {
   Plus,
   MapPin,
   User,
-  Gear
+  Gear,
+  Funnel
 } from 'phosphor-react-native'
 
 import { colors } from '@theme/colors'
@@ -24,7 +25,7 @@ interface HomeHeaderProps {
   onNotificationPress: () => void
   onLocationPress: () => void
   onSearchPress: () => void
-  onCreatePress: () => void
+  onFiltersPress: () => void
   onSettingsPress: () => void
 }
 
@@ -35,7 +36,7 @@ export default function HomeHeader({
   onNotificationPress,
   onLocationPress,
   onSearchPress,
-  onCreatePress,
+  onFiltersPress,
   onSettingsPress
 }: HomeHeaderProps) {
   return (
@@ -115,13 +116,13 @@ export default function HomeHeader({
           </Text>
         </Pressable>
 
-        {/* Add button */}
+        {/* Filter button */}
         <Pressable
-          onPress={onCreatePress}
+          onPress={onFiltersPress}
           style={{ backgroundColor: colors.accent[500] }}
           className="w-12 h-12 rounded-2xl justify-center items-center"
         >
-          <Plus size={24} color={colors.neutral[900]} weight="bold" />
+          <Funnel size={20} color={colors.neutral[900]} weight="bold" />
         </Pressable>
       </HStack>
     </VStack>

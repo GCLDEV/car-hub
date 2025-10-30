@@ -36,7 +36,7 @@ export default function HomeScreen() {
     handleLoadMore,
     handleCarPress,
     navigateToSearch,
-    navigateToCreateListing,
+    openFiltersModal,
     handleCategorySelect,
     selectedCategory,
     isOnline,
@@ -90,7 +90,7 @@ export default function HomeScreen() {
             onLocationPress={handleLocationPress}
             onSettingsPress={navigateToSettings}
             onSearchPress={navigateToSearch}
-            onCreatePress={navigateToCreateListing}
+            onFiltersPress={openFiltersModal}
           />
 
           {/* Skeleton apenas da barra de pesquisa para baixo */}
@@ -114,7 +114,6 @@ export default function HomeScreen() {
       <VStack className="flex-1">
         {/* Header moderno */}
         <HomeHeader
-
           userName="Jimmy"
           userLocation="New York City, USA"
           notificationCount={3}
@@ -122,7 +121,7 @@ export default function HomeScreen() {
           onLocationPress={handleLocationPress}
           onSettingsPress={navigateToSettings}
           onSearchPress={navigateToSearch}
-          onCreatePress={navigateToCreateListing}
+          onFiltersPress={openFiltersModal}
         />
 
         {/* Network Status Banner */}

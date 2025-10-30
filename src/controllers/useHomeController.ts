@@ -6,6 +6,7 @@ import Toast from 'react-native-toast-message'
 import { getCarsList, testAPI } from '@services/api'
 import { useFavoritesStore } from '@store/favoritesStore'
 import { useFiltersStore } from '@store/filtersStore'
+import { useModalStore } from '@store/modalStore'
 import { useOfflineCacheStore } from '@store/offlineCacheStore'
 import { useOptimizedCarQuery } from '@hooks/useOptimizedCarQuery'
 import useNetworkController from './useNetworkController'
@@ -16,6 +17,7 @@ export default function useHomeController() {
   const router = useRouter()
   // Favorites are now handled directly by the FavoriteButton component
   const { filters, setFilter } = useFiltersStore()
+  const { setModal } = useModalStore()
   const { addToOfflineQueue } = useOfflineCacheStore()
   const { isOnline, isConnected, hasOfflineQueue } = useNetworkController()
   const { checkAuth } = useAuthGuard()
@@ -85,9 +87,40 @@ export default function useHomeController() {
     router.push('./search')
   }
 
-  function navigateToCreateListing(): void {
-    checkAuth(() => {
-      router.push('./create-listing' as any)
+  function openFiltersModal(): void {
+    setModal({
+      type: 'filters',
+      title: 'Filter Cars',
+      filtersData: filters,
+      onApplyFilters: (appliedFilters) => {
+        // Aplicar os filtros recebidos do modal
+        const filtersToApply = {
+          brand: appliedFilters.brand,
+          yearFrom: appliedFilters.yearMin,
+          yearTo: appliedFilters.yearMax,
+          priceFrom: appliedFilters.priceMin,
+          priceTo: appliedFilters.priceMax,
+          fuelType: appliedFilters.fuelType,
+          transmission: appliedFilters.transmission,
+          kmTo: appliedFilters.maxKm
+        }
+        
+        // Aplicar cada filtro no store
+        Object.entries(filtersToApply).forEach(([key, value]) => {
+          if (value !== undefined && value !== '') {
+            setFilter(key as keyof typeof filtersToApply, value)
+          }
+        })
+        
+        // Mostrar feedback do número de filtros ativos
+        const activeFiltersCount = Object.values(filtersToApply).filter(v => v !== undefined && v !== '').length
+        
+        Toast.show({
+          type: 'success',
+          text1: 'Filters applied',
+          text2: activeFiltersCount > 0 ? `${activeFiltersCount} filters active` : 'All filters cleared'
+        })
+      }
     })
   }
 
@@ -111,7 +144,7 @@ export default function useHomeController() {
     handleLoadMore,
     handleCarPress,
     navigateToSearch,
-    navigateToCreateListing,
+    openFiltersModal,
     handleCategorySelect,
     selectedCategory,
     // Offline state
