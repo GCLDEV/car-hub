@@ -87,7 +87,7 @@ export default function useHomeController() {
 
   function navigateToCreateListing(): void {
     checkAuth(() => {
-      router.push('../create-listing' as any)
+      router.push('./create-listing' as any)
     })
   }
 

@@ -84,12 +84,6 @@ export default function RootLayout() {
                 })}
               />
               <Stack.Screen
-                name="create-listing"
-                options={{
-                  presentation: 'modal',                  
-                }}
-              />
-              <Stack.Screen
                 name="auth/login"
                 options={{
                   presentation: 'modal',                  

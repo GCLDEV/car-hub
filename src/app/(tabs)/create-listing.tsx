@@ -72,9 +72,7 @@ export default function CreateListingScreen() {
             
             {/* Header */}
             <HStack className="items-center justify-between mb-4">
-              <Pressable onPress={handleBack} className="p-2">
-                <ArrowLeft size={24} color={colors.neutral[100]} />
-              </Pressable>
+              <Box className='px-4'></Box>
               
               <Center>
                 <Box 

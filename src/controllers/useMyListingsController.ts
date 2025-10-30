@@ -61,7 +61,7 @@ export default function useMyListingsController() {
       })
       return
     }
-    router.push('/create-listing')
+    router.push('/(tabs)/create-listing')
   }
 
   // Navegar para editar anúncio

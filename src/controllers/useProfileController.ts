@@ -53,7 +53,7 @@ export default function useProfileController() {
   }
 
   function navigateToCreateListing() {
-    router.push('/create-listing' as any)
+    router.push('/(tabs)/create-listing' as any)
   }
 
   function navigateToMyListings() {
