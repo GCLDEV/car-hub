@@ -561,4 +561,103 @@ export function ProfileContentSkeleton({}: ProfileContentSkeletonProps) {
   )
 }
 
+interface MyListingSkeletonProps {
+  count?: number
+}
+
+export function MyListingSkeleton({ count = 3 }: MyListingSkeletonProps) {
+  return (
+    <VStack space="md" className="px-6 pt-2">
+      {Array.from({ length: count }).map((_, index) => (
+        <Box 
+          key={index}
+          className="rounded-xl p-4 animate-pulse"
+          style={{
+            backgroundColor: colors.neutral[800],
+            borderWidth: 1,
+            borderColor: colors.neutral[700]
+          }}
+        >
+          {/* Header com título e status */}
+          <HStack className="justify-between items-start mb-3">
+            <VStack className="flex-1 mr-3" space="xs">
+              <SkeletonText 
+                className="h-5 w-3/4 rounded"
+                startColor="bg-neutral-700"
+                isLoaded={false}
+              />
+              <SkeletonText 
+                className="h-4 w-1/2 rounded"
+                startColor="bg-neutral-700"
+                isLoaded={false}
+              />
+            </VStack>
+
+            {/* Status badge skeleton */}
+            <Skeleton 
+              className="w-16 h-6 rounded-full"
+              startColor="bg-neutral-700"
+              isLoaded={false}
+            />
+          </HStack>
+
+          {/* Imagem e informações principais */}
+          <HStack className="items-center mb-3" space="md">
+            {/* Image skeleton */}
+            <Skeleton 
+              className="w-16 h-16 rounded-lg"
+              startColor="bg-neutral-700"
+              isLoaded={false}
+            />
+
+            {/* Informações principais */}
+            <VStack className="flex-1" space="xs">
+              {/* Preço */}
+              <SkeletonText 
+                className="h-5 w-24 rounded"
+                startColor="bg-neutral-700"
+                isLoaded={false}
+              />
+
+              {/* Estatísticas */}
+              <HStack className="items-center" space="md">
+                <SkeletonText 
+                  className="h-3 w-16 rounded"
+                  startColor="bg-neutral-700"
+                  isLoaded={false}
+                />
+                <SkeletonText 
+                  className="h-3 w-20 rounded"
+                  startColor="bg-neutral-700"
+                  isLoaded={false}
+                />
+              </HStack>
+            </VStack>
+          </HStack>
+
+          {/* Ações */}
+          <HStack className="justify-between items-center pt-3 border-t" style={{ borderTopColor: colors.neutral[700] }}>
+            <SkeletonText 
+              className="h-3 w-20 rounded"
+              startColor="bg-neutral-700"
+              isLoaded={false}
+            />
+
+            <HStack className="items-center" space="sm">
+              {Array.from({ length: 4 }).map((_, actionIndex) => (
+                <Skeleton 
+                  key={actionIndex}
+                  className="w-8 h-8 rounded"
+                  startColor="bg-neutral-700"
+                  isLoaded={false}
+                />
+              ))}
+            </HStack>
+          </HStack>
+        </Box>
+      ))}
+    </VStack>
+  )
+}
+
 export default CarCardSkeleton

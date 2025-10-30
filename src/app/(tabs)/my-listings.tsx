@@ -20,6 +20,7 @@ import { Box } from '@components/ui/box'
 import { Center } from '@components/ui/center'
 import { Image } from '@components/ui/image'
 import { Spinner } from '@components/ui/spinner'
+import { MyListingSkeleton } from '@components/ui/CarSkeletons'
 
 import { colors } from '@theme/colors'
 import useMyListingsController from '@controllers/useMyListingsController'
@@ -333,15 +334,34 @@ export default function MyListingsScreen() {
 
         {/* Conteúdo */}
         {isLoading ? (
-          <Center className="flex-1">
-            <Spinner size="large" />
-            <Text 
-              className="text-sm mt-4"
-              style={{ color: colors.neutral[400] }}
-            >
-              Loading your listings...
-            </Text>
-          </Center>
+          <VStack className="flex-1">
+            {/* Header skeleton durante loading */}
+            <HStack className="justify-between items-center px-6 pt-4 pb-6">
+              <VStack space="xs">
+                <Text 
+                  className="text-2xl font-bold"
+                  style={{ color: colors.neutral[100] }}
+                >
+                  My Listings
+                </Text>
+                <Text 
+                  className="text-sm"
+                  style={{ color: colors.neutral[400] }}
+                >
+                  Loading...
+                </Text>
+              </VStack>
+
+              <Box
+                className="w-12 h-12 rounded-xl items-center justify-center"
+                style={{ backgroundColor: colors.accent[500] }}
+              >
+                <Plus size={24} color={colors.neutral[900]} weight="bold" />
+              </Box>
+            </HStack>
+
+            <MyListingSkeleton count={5} />
+          </VStack>
         ) : isEmpty ? (
           <EmptyState onCreateListing={() => requireAuth(handleCreateListing)} />
         ) : (

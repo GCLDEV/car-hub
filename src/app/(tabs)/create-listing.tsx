@@ -92,7 +92,7 @@ export default function CreateListingScreen() {
                 className="text-3xl font-bold text-center"
                 style={{ color: colors.neutral[100] }}
               >
-                Anunciar Veículo
+                Sell Your Car
               </Text>
               <Text 
                 className="text-base text-center"
