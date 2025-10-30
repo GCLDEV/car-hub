@@ -20,16 +20,18 @@ Car Hub é uma plataforma profissional para o mercado automotivo brasileiro, ofe
 <div align="center">
 
 ### 🏠 Tela Principal, Detalhes & Perfil
-<img width="250"  alt="image" src="https://github.com/user-attachments/assets/fab017cf-f2c6-47d5-a2a6-548cb4918f01" />
-<img  width="250"   alt="image" src="https://github.com/user-attachments/assets/f75de2d0-a6e7-4173-b9eb-1e28d1cb4fc8" />
-<img  width="250"  alt="image" src="https://github.com/user-attachments/assets/8cb6fc83-5e15-4e30-a790-bfe36a20748f" />
+<img width="250" alt="home" src="https://github.com/user-attachments/assets/44a0e0c9-4468-46f7-848a-b849d469b1a1" />
+<img width="250" alt="details" src="https://github.com/user-attachments/assets/02cee5bc-e81d-4f40-ad31-0a150635b0bb" />
+<img width="250" alt="profile" src="https://github.com/user-attachments/assets/fd19796a-81f3-4dde-88a7-c0a469d2fae4" />
 
 *Tela inicial com catálogo de carros, perfil do usuário logado e estado de visitante*
 
 ### 🚗 Estados de Loading
-<img width="250" alt="image" src="https://github.com/user-attachments/assets/56ce8aa5-498a-4b9a-9fa3-241e8eebfb37" />
-<img width="250" alt="image" src="https://github.com/user-attachments/assets/05d5a878-9192-40d6-94b2-ef71e1cd2704" />
-<img width="250" alt="image" src="https://github.com/user-attachments/assets/32255d3a-b6de-4691-a11f-c8dc6c32506c" />
+<img width="250" alt="skeleton-home" src="https://github.com/user-attachments/assets/a59e82ef-c2e5-473b-9f6c-7780bae653b4" />
+<img width="250" alt="skeleton-details" src="https://github.com/user-attachments/assets/768cc106-3529-4b09-9889-52f51ffe7ab5" />
+<img width="250" alt="skeleton-profile" src="https://github.com/user-attachments/assets/46fe24bd-c4c6-42d3-9042-83a556f5be3d" />
+
+
 
 *Tela de detalhes com especificações completas e skeletons de loading*
 
