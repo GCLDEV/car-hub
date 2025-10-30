@@ -24,6 +24,7 @@ export default function EditProfile() {
     user,
     watchedValues,
     onSubmit,
+    handleAvatarUpload,
     resetForm,
     goBack,
     handleDiscardChanges
@@ -76,7 +77,16 @@ export default function EditProfile() {
                 render={({ field: { onChange, value } }) => (
                   <AvatarUploader
                     value={value}
-                    onValueChange={onChange}
+                    onValueChange={(uri) => {
+                      if (uri) {
+                        // Apenas atualizar o form com o URI local para preview
+                        onChange(uri)
+                        // O upload real será feito quando escolher a imagem
+                        handleAvatarUpload(uri)
+                      } else {
+                        onChange(uri)
+                      }
+                    }}
                     userName={user?.name || 'User'}
                     placeholder="Add Profile Photo"
                     error={errors.avatar?.message}
@@ -107,22 +117,7 @@ export default function EditProfile() {
                 )}
               />
 
-              <Controller
-                control={control}
-                name="email"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <SimpleInput
-                    label="Email Address"
-                    placeholder="Enter your email"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    error={errors.email?.message}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                )}
-              />
+
 
               <Controller
                 control={control}

@@ -19,6 +19,8 @@ import { colors } from '@theme/colors'
 import useHomeController from '@controllers/useHomeController'
 import { Car } from '@/types/car'
 import Toast from 'react-native-toast-message'
+import useAuthGuard from '@/hooks/useAuthGuard'
+import { useAuthStore } from '@/store/authStore'
 
 interface CarItemProps {
   car: Car
@@ -46,6 +48,8 @@ export default function HomeScreen() {
     isConnected,
     hasOfflineQueue
   } = useHomeController()
+
+  const { user } = useAuthStore()
 
   function renderCarItem({ item }: { item: Car }) {
     return (
@@ -82,7 +86,7 @@ export default function HomeScreen() {
         <VStack className="flex-1">
           {/* Header moderno funcionando normalmente */}
           <HomeHeader
-            userName="Jimmy"
+            userName={user?.name || 'User'}
             userLocation="New York City, USA"
             notificationCount={3}
             onNotificationPress={handleNotificationPress}
@@ -113,7 +117,7 @@ export default function HomeScreen() {
       <VStack className="flex-1">
         {/* Header moderno */}
         <HomeHeader
-          userName="Jimmy"
+          userName={user?.name || 'User'}
           userLocation="New York City, USA"
           notificationCount={3}
           onNotificationPress={handleNotificationPress}

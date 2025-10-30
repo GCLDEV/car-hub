@@ -13,7 +13,11 @@ export async function registerUser(data: RegisterRequest): Promise<LoginResponse
     const response = await api.post('/auth/local/register', {
       username: data.name.toLowerCase().replace(/\s+/g, ''), // Criar username baseado no nome
       email: data.email,
-      password: data.password
+      password: data.password,
+      name: data.name,
+      phone: data.phone,
+      location: data.location,
+      isDealer: data.isDealer || false
     })
 
     const { user, jwt } = response.data
@@ -21,27 +25,13 @@ export async function registerUser(data: RegisterRequest): Promise<LoginResponse
     // Transformar resposta do Strapi para formato do app
     const transformedUser: User = {
       id: user.id.toString(),
-      name: user.username, // Strapi retorna username por padrão
+      name: user.name || user.username,
       email: user.email,
       avatar: user.avatar?.url || undefined,
-      phone: '', // Será preenchido depois no perfil
-      location: '', // Será preenchido depois no perfil
-      cityState: '',
-      bio: '',
-      isDealer: false,
-      dealerInfo: undefined,
-      preferences: user.preferences || {
-        notifications: { email: true, push: true, sms: false },
-        privacy: { showPhone: true, showEmail: false, showLocation: true },
-        filters: { maxDistance: 50, priceRange: { min: 0, max: 500000 }, brands: [] }
-      },
-      statistics: user.statistics || {
-        listingsCount: 0,
-        soldCarsCount: 0,
-        favoritesCount: 0,
-        viewsReceived: 0,
-        reviewsCount: 0
-      },
+      phone: user.phone || '',
+      location: user.location || '',
+      cityState: user.cityState || '',
+      isDealer: user.isDealer || false,
       createdAt: user.createdAt || new Date().toISOString(),
       updatedAt: user.updatedAt || new Date().toISOString()
     }
@@ -72,24 +62,10 @@ export async function login(credentials: LoginRequest): Promise<LoginResponse> {
       name: user.name || user.username,
       email: user.email,
       avatar: user.avatar?.url || undefined,
-      phone: user.phone,
-      location: user.location,
-      cityState: user.cityState,
-      bio: user.bio,
+      phone: user.phone || '',
+      location: user.location || '',
+      cityState: user.cityState || '',
       isDealer: user.isDealer || false,
-      dealerInfo: user.dealerInfo || undefined,
-      preferences: user.preferences || {
-        notifications: { email: true, push: true, sms: false },
-        privacy: { showPhone: true, showEmail: false, showLocation: true },
-        filters: { maxDistance: 50, priceRange: { min: 0, max: 500000 }, brands: [] }
-      },
-      statistics: user.statistics || {
-        listingsCount: 0,
-        soldCarsCount: 0,
-        favoritesCount: 0,
-        viewsReceived: 0,
-        reviewsCount: 0
-      },
       createdAt: user.createdAt || new Date().toISOString(),
       updatedAt: user.updatedAt || new Date().toISOString()
     }
@@ -113,7 +89,7 @@ export async function logout(): Promise<void> {
 // Obter perfil do usuário logado
 export async function getUserProfile(): Promise<User> {
   try {
-    const response = await api.get('/users/me')
+    const response = await api.get('/users/me?populate=avatar')
     const user = response.data
 
     // Transformar resposta do Strapi para formato do app
@@ -122,24 +98,10 @@ export async function getUserProfile(): Promise<User> {
       name: user.name || user.username,
       email: user.email,
       avatar: user.avatar?.url || undefined,
-      phone: user.phone,
-      location: user.location,
-      cityState: user.cityState,
-      bio: user.bio,
+      phone: user.phone || '',
+      location: user.location || '',
+      cityState: user.cityState || '',
       isDealer: user.isDealer || false,
-      dealerInfo: user.dealerInfo || undefined,
-      preferences: user.preferences || {
-        notifications: { email: true, push: true, sms: false },
-        privacy: { showPhone: true, showEmail: false, showLocation: true },
-        filters: { maxDistance: 50, priceRange: { min: 0, max: 500000 }, brands: [] }
-      },
-      statistics: user.statistics || {
-        listingsCount: 0,
-        soldCarsCount: 0,
-        favoritesCount: 0,
-        viewsReceived: 0,
-        reviewsCount: 0
-      },
       createdAt: user.createdAt || new Date().toISOString(),
       updatedAt: user.updatedAt || new Date().toISOString()
     }
@@ -153,7 +115,17 @@ export async function getUserProfile(): Promise<User> {
 // Atualizar perfil do usuário
 export async function updateUserProfile(data: UpdateProfileRequest): Promise<User> {
   try {
-    const response = await api.put('/users/me', data)
+    // Preparar dados para o Strapi
+    const updateData: any = {}
+    
+    if (data.name) updateData.name = data.name
+    if (data.phone) updateData.phone = data.phone
+    if (data.location) updateData.location = data.location
+    if (data.cityState) updateData.cityState = data.cityState
+    if (data.isDealer !== undefined) updateData.isDealer = data.isDealer
+    if (data.avatar) updateData.avatar = data.avatar
+
+    const response = await api.put('/users/me', { data: updateData })
     const user = response.data
 
     // Transformar resposta do Strapi para formato do app
@@ -162,31 +134,17 @@ export async function updateUserProfile(data: UpdateProfileRequest): Promise<Use
       name: user.name || user.username,
       email: user.email,
       avatar: user.avatar?.url || undefined,
-      phone: user.phone,
-      location: user.location,
-      cityState: user.cityState,
-      bio: user.bio,
+      phone: user.phone || '',
+      location: user.location || '',
+      cityState: user.cityState || '',
       isDealer: user.isDealer || false,
-      dealerInfo: user.dealerInfo || undefined,
-      preferences: user.preferences || {
-        notifications: { email: true, push: true, sms: false },
-        privacy: { showPhone: true, showEmail: false, showLocation: true },
-        filters: { maxDistance: 50, priceRange: { min: 0, max: 500000 }, brands: [] }
-      },
-      statistics: user.statistics || {
-        listingsCount: 0,
-        soldCarsCount: 0,
-        favoritesCount: 0,
-        viewsReceived: 0,
-        reviewsCount: 0
-      },
       createdAt: user.createdAt || new Date().toISOString(),
       updatedAt: user.updatedAt || new Date().toISOString()
     }
 
     return transformedUser
   } catch (error: any) {
-    throw new Error(error.response?.data?.error?.message || 'Erro ao atualizar perfil')
+    throw new Error(error.response?.data?.message || error.response?.data?.error?.message || 'Erro ao atualizar perfil')
   }
 }
 

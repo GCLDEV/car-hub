@@ -207,25 +207,7 @@ export default function SettingsScreen() {
               />
             }
             showArrow={false}
-          />
-          <View style={{ height: 1, backgroundColor: colors.neutral[700] }} />
-          <SettingItem
-            icon={<Moon size={20} color={colors.accent[500]} />}
-            title="Dark Mode"
-            subtitle="App appearance theme"
-            rightElement={
-              <Switch
-                value={darkModeEnabled}
-                onValueChange={toggleDarkMode}
-                trackColor={{
-                  false: colors.neutral[600],
-                  true: colors.accent[500]
-                }}
-                thumbColor={colors.neutral[100]}
-              />
-            }
-            showArrow={false}
-          />
+          />          
         </SettingSection>
 
         {/* Privacy & Security */}

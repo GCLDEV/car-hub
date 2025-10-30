@@ -57,7 +57,6 @@ export async function uploadImage(imageUri: string): Promise<any> {
     
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('❌ Erro do servidor:', errorText)
       throw new Error(`Upload falhou: ${response.status}`)
     }
     
