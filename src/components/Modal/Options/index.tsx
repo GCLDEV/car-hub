@@ -20,15 +20,22 @@ export default function ModalOptions(props: ModalOptionsProps) {
 
     const handleOptionPress = async (index: number, action: () => void) => {
         setLoading(index);
-        await action();
-        setLoading(null);
-        close();
+        try {
+            if (typeof action === 'function') {
+                await action();
+            }
+        } catch (error) {
+            console.error('Error executing modal option action:', error);
+        } finally {
+            setLoading(null);
+            close();
+        }
     };
 
     const getButtonStyle = (variant?: string) => {
         switch (variant) {
             case 'primary':
-                return { backgroundColor: colors.primary[500] };
+                return { backgroundColor: colors.accent[500] };
             case 'secondary':
                 return { backgroundColor: colors.neutral[800] };
             case 'success':
@@ -40,17 +47,22 @@ export default function ModalOptions(props: ModalOptionsProps) {
         }
     };
 
+    const getButtonVariant = (variant?: string): 'solid' | 'outline' | 'link' => {
+        // Garantir que sempre retornamos um variant válido
+        return 'solid';
+    };
+
     const getTextStyle = (variant?: string) => {
         switch (variant) {
             case 'secondary':
                 return { color: colors.neutral[200] };
             default:
-                return { color: colors.neutral[50] };
+                return { color: colors.neutral[900] };
         }
     };
 
     const getIcon = (title: string, variant?: string) => {
-        const iconColor = variant === 'secondary' ? colors.neutral[200] : colors.neutral[50];
+        const iconColor = variant === 'secondary' ? colors.neutral[200] : colors.neutral[900];
         
         if (title.toLowerCase().includes('camera') || title.toLowerCase().includes('take')) {
             return <Camera size={20} color={iconColor} weight="bold" />;
@@ -65,63 +77,35 @@ export default function ModalOptions(props: ModalOptionsProps) {
 
     return (
         <ModalWrapper fadeclose={close} title={modal?.title || 'Choose an option'}>
-            <View className="space-y-4">
-                {isPhotoModal && (
-                    <View className="mb-2">
-                        <ButtonText 
-                            className="text-center text-sm"
-                            style={{ color: colors.neutral[400] }}
-                        >
-                            Choose how you want to add your profile photo
-                        </ButtonText>
-                    </View>
-                )}
+            <View style={{ gap: 12 }}>
                 {modal?.options?.map((option, index) => {
-                    const icon = getIcon(option.title, option.variant);
+                    if (!option) return null;
+                    const icon = getIcon(option?.title || '', option?.variant);
                     return (
                         <Button
                             key={index}
-                            onPress={() => handleOptionPress(index, option.action)}
-                            variant='solid'
-                            style={{
-                                ...getButtonStyle(option.variant),
-                                paddingVertical: 16,
-                                borderRadius: 12
-                            }}
-                            disabled={loading !== null}
+                            onPress={() => handleOptionPress(index, option?.action || (() => {}))}
+                            style={getButtonStyle(option?.variant)}
                         >
-                            <HStack className="items-center justify-center" space="sm">
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                                 {icon}
-                                <ButtonText 
-                                    style={{
-                                        ...getTextStyle(option.variant),
-                                        fontSize: 16,
-                                        fontWeight: '600'
-                                    }}
-                                >
-                                    {option.title}
+                                <ButtonText style={getTextStyle(option?.variant)}>
+                                    {option?.title || 'Option'}
                                 </ButtonText>
-                            </HStack>
+                            </View>
                         </Button>
                     );
                 })}
                 
-                <View className="mt-2 pt-2 gap-4" style={{ borderTopWidth: 1, borderTopColor: colors.neutral[800] }}>
+                <View style={{ marginTop: 8, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.neutral[800] }}>
                     <Button 
-                        onPress={close} 
-                        variant='outline'
+                        onPress={close}
                         style={{ 
                             borderColor: colors.neutral[700],
-                            backgroundColor: colors.neutral[800],
-                            paddingVertical: 14,
-                            borderRadius: 12
+                            backgroundColor: colors.neutral[800]
                         }}
                     >
-                        <ButtonText style={{ 
-                            color: colors.neutral[300],
-                            fontSize: 16,
-                            fontWeight: '500'
-                        }}>
+                        <ButtonText style={{ color: colors.neutral[300] }}>
                             Cancel
                         </ButtonText>
                     </Button>
