@@ -78,12 +78,14 @@ export default function useProfileController() {
     })
   }
 
-  function navigateToSettings() {
-    Toast.show({
-      type: 'info',
-      text1: 'Configurações em desenvolvimento',
-      text2: 'As configurações estarão disponíveis em breve!'
+  function navigateToEditProfile() {
+    checkAuth(() => {
+      router.push('/edit-profile')
     })
+  }
+
+  function navigateToSettings() {
+    router.push('/settings')
   }
 
   function navigateToHelp() {
@@ -158,6 +160,7 @@ export default function useProfileController() {
     navigateToMyListings,
     navigateToFavorites,
     navigateToViews,
+    navigateToEditProfile,
     navigateToSettings,
     navigateToNotifications,
     navigateToPrivacy,

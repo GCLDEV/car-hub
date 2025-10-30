@@ -30,6 +30,7 @@ interface ProfileHeaderProps {
   onNotificationPress: () => void
   onSettingsPress: () => void
   onCreateListingPress: () => void
+  onEditProfilePress?: () => void
   onLoginPress: () => void
 }
 
@@ -41,6 +42,7 @@ export default function ProfileHeader({
   onNotificationPress,
   onSettingsPress,
   onCreateListingPress,
+  onEditProfilePress,
   onLoginPress
 }: ProfileHeaderProps) {
   return (
@@ -123,21 +125,39 @@ export default function ProfileHeader({
                   {String(user?.email || 'email@exemplo.com')}
                 </Text>
                 
-                {/* Stats */}
-                <HStack className="mt-2" space="lg">
-                  <HStack className="items-center" space="xs">
-                    <Car size={16} color={colors.accent[500]} weight="fill" />
-                    <Text style={{ color: colors.accent[500] }} className="text-sm font-semibold">
-                      {userListings?.length || 0} listings
-                    </Text>
+                {/* Stats and Edit button */}
+                <HStack className="mt-2 justify-between items-center">
+                  <HStack space="lg">
+                    <HStack className="items-center" space="xs">
+                      <Car size={16} color={colors.accent[500]} weight="fill" />
+                      <Text style={{ color: colors.accent[500] }} className="text-sm font-semibold">
+                        {userListings?.length || 0} listings
+                      </Text>
+                    </HStack>
+                    
+                    <HStack className="items-center" space="xs">
+                      <Heart size={16} color={colors.error[500]} weight="fill" />
+                      <Text style={{ color: colors.error[500] }} className="text-sm font-semibold">
+                        {favoriteCount || 0} favorites
+                      </Text>
+                    </HStack>
                   </HStack>
                   
-                  <HStack className="items-center" space="xs">
-                    <Heart size={16} color={colors.error[500]} weight="fill" />
-                    <Text style={{ color: colors.error[500] }} className="text-sm font-semibold">
-                      {favoriteCount || 0} favorites
-                    </Text>
-                  </HStack>
+                  {onEditProfilePress && (
+                    <Pressable
+                      onPress={onEditProfilePress}
+                      className="px-3 py-1 rounded-lg"
+                      style={{ 
+                        backgroundColor: colors.neutral[700],
+                        borderWidth: 1,
+                        borderColor: colors.neutral[600]
+                      }}
+                    >
+                      <Text style={{ color: colors.accent[400] }} className="text-xs font-medium">
+                        Edit
+                      </Text>
+                    </Pressable>
+                  )}
                 </HStack>
               </VStack>
             </HStack>

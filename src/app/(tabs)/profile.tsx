@@ -33,6 +33,7 @@ const {
     navigateToMyListings,
     navigateToFavorites,
     navigateToViews,
+    navigateToEditProfile,
     navigateToSettings,
     navigateToNotifications,
     navigateToPrivacy,
@@ -94,6 +95,7 @@ const {
             onNotificationPress={() => {}}
             onSettingsPress={() => {}}
             onCreateListingPress={() => {}}
+            onEditProfilePress={navigateToEditProfile}
             onLoginPress={() => {}}
           />
 
@@ -136,6 +138,7 @@ const {
           onNotificationPress={() => {}}
           onSettingsPress={navigateToSettings}
           onCreateListingPress={navigateToCreateListing}
+          onEditProfilePress={navigateToEditProfile}
           onLoginPress={handleLogin}
         />
 

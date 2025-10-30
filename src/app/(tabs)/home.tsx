@@ -1,6 +1,7 @@
 import React from 'react'
 import { FlatList, RefreshControl } from 'react-native'
 import { SafeAreaView } from '@components/ui/safe-area-view'
+import { useRouter } from 'expo-router'
 import { VStack } from '@components/ui/vstack'
 import { HStack } from '@components/ui/hstack'
 import { Text } from '@components/ui/text'
@@ -27,6 +28,8 @@ interface CarItemProps {
 }
 
 export default function HomeScreen() {
+  const router = useRouter()
+  
   const {
     cars,
     loading,
@@ -70,11 +73,7 @@ export default function HomeScreen() {
   }
 
   function navigateToSettings() {
-    Toast.show({
-      type: 'info',
-      text1: 'Configurações em desenvolvimento',
-      text2: 'As configurações estarão disponíveis em breve!'
-    })
+    router.push('/settings')
   }
 
   if (loading && cars.length === 0) {

@@ -8,6 +8,9 @@ interface User {
   email: string
   avatar?: string
   phone?: string
+  location?: string
+  cityState?: string
+  isDealer?: boolean
 }
 
 interface AuthState {
