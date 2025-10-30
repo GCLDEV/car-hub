@@ -60,28 +60,17 @@ export default function useCarDetailsController() {
   async function handleContact() {
     if (!car) return
     
-    // Contato real com vendedor via WhatsApp
-    const phoneNumber = car.seller?.phone || '5511999999999'
-    const formattedPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(car.price)
-    const message = `Olá! Tenho interesse no ${car.title} por ${formattedPrice}. Podemos conversar?`
-    const whatsappUrl = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`
-    
-    try {
-      const supported = await Linking.canOpenURL(whatsappUrl)
-      if (supported) {
-        await Linking.openURL(whatsappUrl)
-      } else {
-        Toast.show({ 
-          type: 'error', 
-          text1: 'WhatsApp não está instalado' 
-        })
-      }
-    } catch (error) {
+    checkAuth(() => {
+      // Navegar para o chat com o vendedor
+      // TODO: Criar ou encontrar conversa existente com o vendedor sobre este carro
+      router.push('/chat' as any)
+      
       Toast.show({ 
-        type: 'error', 
-        text1: 'Error opening WhatsApp' 
+        type: 'success', 
+        text1: 'Redirecionando para o chat',
+        text2: `Converse diretamente com o vendedor do ${car.title}`
       })
-    }
+    })
   }
 
   async function handleShare() {

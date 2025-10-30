@@ -32,6 +32,7 @@ const {
     navigateToCreateListing,
     navigateToMyListings,
     navigateToFavorites,
+    navigateToChats,
     navigateToViews,
     navigateToEditProfile,
     navigateToSettings,
@@ -149,6 +150,7 @@ const {
           favoriteCount={favoriteCount}
           onMyListings={navigateToMyListings}
           onFavorites={navigateToFavorites}
+          onChats={navigateToChats}
           onViews={navigateToViews}
           onSettings={navigateToSettings}
           onNotifications={navigateToNotifications}

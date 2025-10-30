@@ -46,6 +46,8 @@ export default function HomeScreen() {
     handleCategorySelect,
     selectedCategory,
     activeFiltersCount,
+    totalCarsFromAPI,
+    filteredOutCount,
     isOnline,
     isConnected,
     hasOfflineQueue
@@ -148,11 +150,16 @@ export default function HomeScreen() {
 
         {/* Seção Popular New Cars */}
         <VStack space="md" className="flex-1">
-          <HStack className="justify-between items-center px-4">
-            <Text className="text-white text-lg font-bold">
-              Popular New Cars
+          <VStack className="px-4" space="xs">
+            <HStack className="justify-between items-center">
+              <Text className="text-white text-lg font-bold">
+                Popular New Cars
+              </Text>
+            </HStack>
+            <Text className="text-neutral-400 text-sm">
+              Explore carros de outros usuários. Seus anúncios aparecem no perfil.
             </Text>
-          </HStack>
+          </VStack>
 
           {/* Lista de carros */}
           {cars.length === 0 ? (

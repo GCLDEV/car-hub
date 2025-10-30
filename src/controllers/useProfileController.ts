@@ -70,6 +70,12 @@ export default function useProfileController() {
     })
   }
 
+  function navigateToChats() {
+    checkAuth(() => {
+      router.push('/chat' as any)
+    })
+  }
+
   function navigateToViews() {
     Toast.show({
       type: 'info',
@@ -159,6 +165,7 @@ export default function useProfileController() {
     navigateToCreateListing,
     navigateToMyListings,
     navigateToFavorites,
+    navigateToChats,
     navigateToViews,
     navigateToEditProfile,
     navigateToSettings,

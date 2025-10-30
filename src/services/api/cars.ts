@@ -11,6 +11,13 @@ import { useOfflineCacheStore } from '@store/offlineCacheStore'
 
 // Transform Strapi car response to app Car format
 function transformStrapiCar(strapiCar: any): Car {
+  console.log('🔄 Transform Strapi Car - Raw seller data:', { 
+    sellerId: strapiCar.seller?.id, 
+    sellerUsername: strapiCar.seller?.username,
+    sellerName: strapiCar.seller?.name,
+    fullSeller: strapiCar.seller 
+  })
+  
   return {
     id: strapiCar.id.toString(),
     title: strapiCar.title,
@@ -45,11 +52,11 @@ function transformStrapiCar(strapiCar: any): Car {
       features: strapiCar.features || []
     },
     seller: {
-      id: strapiCar.seller?.id?.toString() || '1',
-      name: strapiCar.seller?.username || 'Vendedor Autorizado',
+      id: strapiCar.seller?.id ? strapiCar.seller.id.toString() : `unknown-${strapiCar.id}`,
+      name: strapiCar.seller?.username || strapiCar.seller?.name || 'Vendedor Autorizado',
       phone: strapiCar.seller?.phone || '(11) 99999-9999',
       location: strapiCar.location,
-      isDealer: false,
+      isDealer: strapiCar.seller?.isDealer || false,
       verifiedPhone: true
     },
     status: strapiCar.status || 'available',
@@ -414,6 +421,7 @@ export async function createCar(data: CreateListingFormData): Promise<Car> {
         features: data.features || [],
         // Associar as imagens enviadas
         images: imageIds,
+        // ✅ O seller é automaticamente definido pelo controller do Strapi baseado no token JWT
         
         // Campos opcionais - só enviar se existirem e não forem vazios
         ...(data.km && data.km.trim() !== '' && { km: Number(data.km.toString().replace(/\D/g, '')) }),

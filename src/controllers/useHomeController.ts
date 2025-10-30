@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import Toast from 'react-native-toast-message'
@@ -8,6 +8,7 @@ import { useFavoritesStore } from '@store/favoritesStore'
 import { useFiltersStore } from '@store/filtersStore'
 import { useModalStore } from '@store/modalStore'
 import { useOfflineCacheStore } from '@store/offlineCacheStore'
+import { useAuthStore } from '@store/authStore'
 import { useOptimizedCarQuery } from '@hooks/useOptimizedCarQuery'
 import useNetworkController from './useNetworkController'
 import useAuthGuard from '@hooks/useAuthGuard'
@@ -15,6 +16,7 @@ import { Car } from '@/types/car'
 
 export default function useHomeController() {
   const router = useRouter()
+  const { user } = useAuthStore()
   // Favorites are now handled directly by the FavoriteButton component
   const { filters, setFilter, clearFilters, activeFiltersCount } = useFiltersStore()
   const { setModal } = useModalStore()
@@ -63,7 +65,63 @@ export default function useHomeController() {
     refetchIntervalInBackground: false,
   })
 
-  const cars = data?.pages.flatMap(page => page.results) ?? []
+  // Filtrar carros para excluir os do próprio usuário
+  const cars = useMemo(() => {
+    const allCars = data?.pages.flatMap(page => page.results) ?? []
+    
+    // Se não está logado, mostra todos os carros
+    if (!user?.id) {
+      console.log('🔍 Usuário não logado, mostrando todos os carros:', allCars.length)
+      return allCars
+    }
+    
+    // Log resumido para debug
+    console.log('🔍 Filtro de carros:', { 
+      userId: user.id, 
+      totalCars: allCars.length,
+      firstCarSeller: allCars[0]?.seller?.id 
+    })
+    
+    // Filtrar carros que NÃO são do usuário atual (comparação robusta)
+    const filteredCars = allCars.filter(car => {
+      if (!car?.seller?.id) {
+        console.warn('⚠️ Carro sem seller.id:', car)
+        return true // Mantém carros sem seller definido
+      }
+      
+      // Comparar convertendo ambos para string para garantir
+      const isOwn = String(car.seller.id) === String(user.id)
+      
+      // Log apenas se for próprio carro (para debug)
+      if (isOwn) {
+        console.log('🚫 Removendo carro próprio:', car.title)
+      }
+      
+      return !isOwn
+    })
+    
+    console.log('✅ Carros filtrados:', {
+      total: allCars.length,
+      filtrados: filteredCars.length,
+      removidos: allCars.length - filteredCars.length
+    })
+    
+    // Log adicional se nenhum carro for mostrado
+    if (filteredCars.length === 0 && allCars.length > 0) {
+      console.warn('⚠️ NENHUM CARRO SENDO EXIBIDO!')
+      console.log('🔍 Verificar se todos os carros são do próprio usuário')
+      allCars.forEach((car, index) => {
+        console.log(`Carro ${index + 1}:`, {
+          title: car.title,
+          sellerId: car.seller?.id,
+          sellerName: car.seller?.name,
+          isOwn: String(car.seller?.id) === String(user.id)
+        })
+      })
+    }
+    
+    return filteredCars
+  }, [data, user?.id])
 
   async function handleRefresh(): Promise<void> {
     setRefreshing(true)
@@ -163,6 +221,10 @@ export default function useHomeController() {
     })
   }
 
+  // Estatísticas úteis
+  const totalCarsFromAPI = data?.pages.flatMap(page => page.results).length ?? 0
+  const filteredOutCount = totalCarsFromAPI - cars.length
+
   return {
     cars,
     loading: isLoading,
@@ -177,6 +239,9 @@ export default function useHomeController() {
     handleCategorySelect,
     selectedCategory,
     activeFiltersCount,
+    // Estatísticas
+    totalCarsFromAPI,
+    filteredOutCount,
     // Offline state
     isOnline,
     isConnected,

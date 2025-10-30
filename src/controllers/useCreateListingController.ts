@@ -55,16 +55,15 @@ export default function useCreateListingController() {
       return await createCar(data)
     },
     onSuccess: (response) => {
+      console.log('✅ Car created successfully:', response)
+      
       Toast.show({
         type: 'success',
         text1: 'Anúncio criado com sucesso!',
         text2: 'Seu veículo e fotos foram listados no marketplace'
       })
       
-      // ⚡ Update otimizado: Adiciona o carro ao cache instantaneamente
-      addCarToCache(response)
-      
-      // 🔄 Invalidar cache para garantir consistência
+      // 🔄 Invalidar cache para buscar dados atualizados (mais seguro que manipular cache)
       invalidateAllCars()
       
       // 📱 Atualizar listagens do usuário (Profile)

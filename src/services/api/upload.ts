@@ -24,49 +24,72 @@ const PrepareFile = (result: any) => {
  * @returns Promise com dados da imagem do Strapi
  */
 export async function uploadImage(imageUri: string): Promise<any> {
-  try {
-    // Preparar arquivo usando método testado
-    const fileToUpload = PrepareFile({ uri: imageUri })
-    
-    // Criar FormData corretamente
-    const formData = new FormData()
-    formData.append('files', fileToUpload as any, fileToUpload.name)
-    
-    // Buscar headers de autenticação
-    const authStorage = await AsyncStorage.getItem('auth-storage')
-    let token = null
-    
-    if (authStorage) {
-      const parsedAuth = JSON.parse(authStorage)
-      token = parsedAuth.state?.token
+  const maxRetries = 3
+  let lastError: any
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`📤 Upload attempt ${attempt}/${maxRetries} for image:`, imageUri)
+      
+      // Preparar arquivo usando método testado
+      const fileToUpload = PrepareFile({ uri: imageUri })
+      
+      // Criar FormData corretamente
+      const formData = new FormData()
+      formData.append('files', fileToUpload as any, fileToUpload.name)
+      
+      // Buscar headers de autenticação
+      const authStorage = await AsyncStorage.getItem('auth-storage')
+      let token = null
+      
+      if (authStorage) {
+        const parsedAuth = JSON.parse(authStorage)
+        token = parsedAuth.state?.token
+      }
+      
+      const headers: any = {}
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+      
+      // Usar fetch nativo com timeout maior
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 60000) // 60 segundos
+      
+      const response = await fetch('http://192.168.0.8:1337/api/upload', {
+        method: 'POST',
+        body: formData,
+        headers,
+        signal: controller.signal
+      })
+      
+      clearTimeout(timeoutId)
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Upload falhou: ${response.status} - ${errorText}`)
+      }
+      
+      const responseJson = await response.json()
+      console.log(`✅ Upload successful on attempt ${attempt}`)
+      
+      return responseJson?.[0]
+      
+    } catch (error: any) {
+      lastError = error
+      console.warn(`⚠️ Upload attempt ${attempt} failed:`, error.message)
+      
+      // Se não é o último attempt, aguarda antes de tentar novamente
+      if (attempt < maxRetries) {
+        const delay = attempt * 2000 // 2s, 4s, etc
+        console.log(`⏳ Waiting ${delay}ms before retry...`)
+        await new Promise(resolve => setTimeout(resolve, delay))
+      }
     }
-    
-    const headers: any = {}
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`
-    }
-    // Importante: NÃO definir Content-Type para multipart/form-data
-    // O browser/RN define automaticamente com boundary
-    
-    // Usar fetch nativo como no projeto anterior
-    const response = await fetch('http://192.168.0.8:1337/api/upload', {
-      method: 'POST',
-      body: formData,
-      headers
-    })
-    
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`Upload falhou: ${response.status}`)
-    }
-    
-    const responseJson = await response.json()
-    
-    return responseJson?.[0]
-  } catch (error: any) {
-    console.error('❌ Erro ao fazer upload:', error)
-    throw new Error(error.message || 'Erro no upload da imagem')
   }
+  
+  console.error('❌ Erro ao fazer upload após', maxRetries, 'tentativas:', lastError)
+  throw new Error(lastError?.message || 'Erro no upload da imagem após múltiplas tentativas')
 }
 
 /**
@@ -75,26 +98,45 @@ export async function uploadImage(imageUri: string): Promise<any> {
  * @returns Promise com array de dados das imagens no Strapi
  */
 export async function uploadMultipleImages(imageUris: string[]): Promise<any[]> {
-  try {
-    const imageData: any[] = []
+  console.log(`📤 Starting upload of ${imageUris.length} images...`)
+  
+  const imageData: any[] = []
+  const failedUploads: string[] = []
+  
+  // Upload sequencial para evitar problemas de concorrência
+  for (let i = 0; i < imageUris.length; i++) {
+    const uri = imageUris[i]
     
-    // Upload sequencial para evitar problemas de concorrência
-    for (let i = 0; i < imageUris.length; i++) {
-      const uri = imageUris[i]
-      
+    try {
+      console.log(`📷 Uploading image ${i + 1}/${imageUris.length}`)
       const imageResult = await uploadImage(uri)
       imageData.push(imageResult)
       
-      // Pequena pausa entre uploads
+      // Pequena pausa entre uploads para não sobrecarregar o servidor
       if (i < imageUris.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise(resolve => setTimeout(resolve, 1500))
+      }
+    } catch (error: any) {
+      console.error(`❌ Failed to upload image ${i + 1}:`, error.message)
+      failedUploads.push(uri)
+      
+      // Se falhar mais que 50% das imagens, parar
+      if (failedUploads.length > imageUris.length / 2) {
+        throw new Error(`Muitas falhas no upload: ${failedUploads.length} de ${imageUris.length} falharam`)
       }
     }
-    
-    return imageData
-  } catch (error) {
-    throw error
   }
+  
+  if (imageData.length === 0) {
+    throw new Error('Nenhuma imagem foi enviada com sucesso')
+  }
+  
+  if (failedUploads.length > 0) {
+    console.warn(`⚠️ ${failedUploads.length} imagens falharam no upload, mas continuando com ${imageData.length} imagens`)
+  }
+  
+  console.log(`✅ Upload completed: ${imageData.length} images successful, ${failedUploads.length} failed`)
+  return imageData
 }
 
 /**

@@ -1,7 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { AppState } from 'react-native'
-import { getCarsList, type CarFilters } from '@/services/api/cars'
+import { getCarsList } from '@/services/api/cars'
+import { CarFilters } from '@/types/car'
 
 /**
  * Hook otimizado para buscar carros com estratégia inteligente de cache e atualizações
@@ -72,34 +73,111 @@ export function useInvalidateCars() {
     
     // Atualizar carro específico no cache
     updateCarInCache: (updatedCar: any) => {
-      queryClient.setQueriesData(
-        { queryKey: ['cars'] },
-        (oldData: any) => {
-          if (!oldData) return oldData
-          
-          return {
-            ...oldData,
-            results: oldData.results.map((car: any) => 
-              car.id === updatedCar.id ? { ...car, ...updatedCar } : car
-            )
+      // Validar se updatedCar não é undefined/null
+      if (!updatedCar || !updatedCar.id) {
+        console.warn('updateCarInCache: updatedCar is invalid')
+        return
+      }
+
+      try {
+        queryClient.setQueriesData(
+          { queryKey: ['cars'] },
+          (oldData: any) => {
+            // Para useQuery normal
+            if (oldData && oldData.results && Array.isArray(oldData.results)) {
+              return {
+                ...oldData,
+                results: oldData.results.map((car: any) => 
+                  car.id === updatedCar.id ? { ...car, ...updatedCar } : car
+                )
+              }
+            }
+            
+            // Para useInfiniteQuery - estrutura com pages
+            if (oldData && oldData.pages && Array.isArray(oldData.pages)) {
+              const newPages = oldData.pages.map((page: any) => {
+                if (page && page.results && Array.isArray(page.results)) {
+                  return {
+                    ...page,
+                    results: page.results.map((car: any) => 
+                      car.id === updatedCar.id ? { ...car, ...updatedCar } : car
+                    )
+                  }
+                }
+                return page
+              })
+              
+              return {
+                ...oldData,
+                pages: newPages
+              }
+            }
+
+            // Se não há dados compatíveis, retorna como está
+            return oldData
           }
-        }
-      )
+        )
+      } catch (error) {
+        console.error('Error in updateCarInCache:', error)
+      }
     },
     
     // Adicionar novo carro ao início da lista
     addCarToCache: (newCar: any) => {
-      queryClient.setQueriesData(
-        { queryKey: ['cars'] },
-        (oldData: any) => {
-          if (!oldData) return oldData
-          
-          return {
-            ...oldData,
-            results: [newCar, ...oldData.results]
+      // Validar se newCar não é undefined/null
+      if (!newCar) {
+        console.warn('addCarToCache: newCar is undefined/null')
+        return
+      }
+
+      try {
+        // Atualizar cache para queries normais
+        queryClient.setQueriesData(
+          { queryKey: ['cars'] },
+          (oldData: any) => {
+            // Para useQuery normal
+            if (oldData && oldData.results && Array.isArray(oldData.results)) {
+              return {
+                ...oldData,
+                results: [newCar, ...oldData.results],
+                pagination: {
+                  ...oldData.pagination,
+                  total: (oldData.pagination?.total || 0) + 1
+                }
+              }
+            }
+            
+            // Para useInfiniteQuery - estrutura com pages
+            if (oldData && oldData.pages && Array.isArray(oldData.pages)) {
+              const newPages = [...oldData.pages]
+              if (newPages[0] && newPages[0].results) {
+                newPages[0] = {
+                  ...newPages[0],
+                  results: [newCar, ...newPages[0].results]
+                }
+              }
+              
+              return {
+                ...oldData,
+                pages: newPages
+              }
+            }
+
+            // Se não há dados antigos, retorna uma estrutura básica
+            return {
+              results: [newCar],
+              pagination: {
+                page: 1,
+                pageSize: 10,
+                pageCount: 1,
+                total: 1
+              }
+            }
           }
-        }
-      )
+        )
+      } catch (error) {
+        console.error('Error in addCarToCache:', error)
+      }
     }
   }
 }

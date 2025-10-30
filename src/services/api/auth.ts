@@ -10,36 +10,72 @@ import {
 // Registrar usuário
 export async function registerUser(data: RegisterRequest): Promise<LoginResponse> {
   try {
+    // Primeiro registrar com os campos padrão do Strapi
     const response = await api.post('/auth/local/register', {
       username: data.name.toLowerCase().replace(/\s+/g, ''), // Criar username baseado no nome
       email: data.email,
-      password: data.password,
-      name: data.name,
-      phone: data.phone,
-      location: data.location,
-      isDealer: data.isDealer || false
+      password: data.password
     })
 
     const { user, jwt } = response.data
 
-    // Transformar resposta do Strapi para formato do app
-    const transformedUser: User = {
-      id: user.id.toString(),
-      name: user.name || user.username,
-      email: user.email,
-      avatar: user.avatar?.url || undefined,
-      phone: user.phone || '',
-      location: user.location || '',
-      cityState: user.cityState || '',
-      isDealer: user.isDealer || false,
-      createdAt: user.createdAt || new Date().toISOString(),
-      updatedAt: user.updatedAt || new Date().toISOString()
-    }
+    // Agora atualizar o perfil com os campos customizados
+    try {
+      const updateResponse = await api.put(`/users/${user.id}`, {
+        name: data.name,
+        phone: data.phone,
+        location: data.location,
+        cityState: data.location, // Usar location como cityState
+        isDealer: data.isDealer || false
+      }, {
+        headers: {
+          Authorization: `Bearer ${jwt}`
+        }
+      })
 
-    return {
-      user: transformedUser,
-      token: jwt,
-      refreshToken: jwt // Strapi usa o mesmo JWT
+      const updatedUser = updateResponse.data
+      
+      // Transformar resposta do Strapi para formato do app
+      const transformedUser: User = {
+        id: updatedUser.id.toString(),
+        name: updatedUser.name || data.name,
+        email: updatedUser.email,
+        avatar: updatedUser.avatar?.url || undefined,
+        phone: updatedUser.phone || '',
+        location: updatedUser.location || '',
+        cityState: updatedUser.cityState || '',
+        isDealer: updatedUser.isDealer || false,
+        createdAt: updatedUser.createdAt || new Date().toISOString(),
+        updatedAt: updatedUser.updatedAt || new Date().toISOString()
+      }
+
+      return {
+        user: transformedUser,
+        token: jwt,
+        refreshToken: jwt // Strapi usa o mesmo JWT
+      }
+    } catch (updateError) {
+      // Se falhar ao atualizar, retorna o usuário básico
+      console.warn('Failed to update user profile:', updateError)
+      
+      const transformedUser: User = {
+        id: user.id.toString(),
+        name: data.name,
+        email: user.email,
+        avatar: undefined,
+        phone: data.phone || '',
+        location: data.location || '',
+        cityState: data.location || '',
+        isDealer: data.isDealer || false,
+        createdAt: user.createdAt || new Date().toISOString(),
+        updatedAt: user.updatedAt || new Date().toISOString()
+      }
+
+      return {
+        user: transformedUser,
+        token: jwt,
+        refreshToken: jwt
+      }
     }
   } catch (error: any) {
     throw new Error(error.response?.data?.error?.message || 'Erro ao registrar usuário')

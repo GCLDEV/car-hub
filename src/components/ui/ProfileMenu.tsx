@@ -17,7 +17,8 @@ import {
   Car,
   Star,
   Clock,
-  Eye
+  Eye,
+  ChatCircle
 } from 'phosphor-react-native'
 
 import { colors } from '@theme/colors'
@@ -124,6 +125,7 @@ interface ProfileMenuProps {
   favoriteCount: number
   onMyListings: () => void
   onFavorites: () => void
+  onChats: () => void
   onViews: () => void
   onSettings: () => void
   onNotifications: () => void
@@ -138,6 +140,7 @@ export default function ProfileMenu({
   favoriteCount,
   onMyListings,
   onFavorites,
+  onChats,
   onViews,
   onSettings,
   onNotifications,
@@ -156,6 +159,12 @@ export default function ProfileMenu({
       subtitle: 'Saved cars as favorites',
       value: favoriteCount || 0,
       onPress: onFavorites
+    },
+    {
+      icon: <ChatCircle size={20} color={colors.accent[500]} weight="fill" />,
+      title: 'Chats',
+      subtitle: 'Your conversations',
+      onPress: onChats
     },
   ]
 
