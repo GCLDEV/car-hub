@@ -16,6 +16,7 @@ import {
 } from 'phosphor-react-native'
 
 import { colors } from '@theme/colors'
+import { useRouter } from 'expo-router'
 
 interface HomeHeaderProps {
   userName: string
@@ -40,23 +41,32 @@ export default function HomeHeader({
   onClearFiltersPress,
   onSettingsPress
 }: HomeHeaderProps) {
+
+    const router = useRouter()
+
+    function handleProfilePress() {
+      router.push('/profile')
+    }
+
   return (
     <VStack space="lg" className="px-4 pt-4 pb-6" style={{ backgroundColor: colors.neutral[900] }}>
       {/* Top bar */}
       <HStack className="justify-between items-center">
         {/* User Profile */}
-        <HStack space="md" className="items-center flex-1">
-          <Avatar size="md">
-            {userAvatar ? (
-              <AvatarImage source={{ uri: userAvatar }} alt={userName} />
-            ) : (
-              <AvatarFallbackText>{userName.charAt(0).toUpperCase()}</AvatarFallbackText>
-            )}
-          </Avatar>
-          <Text className="text-gray-300 text-sm font-medium">
-            Hello, {userName}
-          </Text>
-        </HStack>
+        <Pressable onPress={handleProfilePress}>
+          <HStack space="md">
+            <Avatar size="md">
+              {userAvatar ? (
+                <AvatarImage source={{ uri: userAvatar }} alt={userName} />
+              ) : (
+                <AvatarFallbackText>{userName.charAt(0).toUpperCase()}</AvatarFallbackText>
+              )}
+            </Avatar>
+            <Text className="text-gray-300 text-sm font-medium">
+              Hello, {userName}
+            </Text>
+          </HStack>
+        </Pressable>
 
         <HStack space='md'>
           {/* Notifications */}
