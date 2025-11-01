@@ -87,29 +87,10 @@ export default function useHomeController() {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   })
 
-  // Filtrar carros para excluir os do próprio usuário
+  // ✅ Os carros já vêm filtrados pelo backend (sem carros do próprio usuário)
   const cars = useMemo(() => {
-    const allCars = data?.pages.flatMap((page: any) => page.results) ?? []
-    
-    // Se não está logado, mostra todos os carros
-    if (!user?.id) {
-      return allCars
-    }
-    
-    // Filtrar carros que NÃO são do usuário atual (comparação robusta)
-    const filteredCars = allCars.filter(car => {
-      if (!car?.seller?.id) {
-        return true // Mantém carros sem seller definido
-      }
-      
-      // Comparar convertendo ambos para string para garantir
-      const isOwn = String(car.seller.id) === String(user.id)
-      
-      return !isOwn
-    })
-    
-    return filteredCars
-  }, [data, user?.id])
+    return data?.pages.flatMap((page: any) => page.results) ?? []
+  }, [data])
 
   async function handleRefresh(): Promise<void> {
     setRefreshing(true)
@@ -221,10 +202,6 @@ export default function useHomeController() {
     })
   }
 
-  // Estatísticas úteis
-  const totalCarsFromAPI = data?.pages.flatMap((page: any) => page.results).length ?? 0
-  const filteredOutCount = totalCarsFromAPI - cars.length
-
   return {
     cars,
     loading: isLoading,
@@ -244,10 +221,6 @@ export default function useHomeController() {
     isFetchingNextPage,         // Carregando mais carros
     isRefetching,               // Atualizando dados em background
     hasNextPage,                // Tem mais páginas para carregar
-    
-    // Estatísticas
-    totalCarsFromAPI,
-    filteredOutCount,
     
     // Offline state
     isOnline,
