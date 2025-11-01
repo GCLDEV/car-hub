@@ -21,7 +21,8 @@ export default function useChatController() {
   })
 
   // Navegar para conversa específica
-  const handleConversationPress = useCallback((conversationId: string) => {
+  const handleConversationPress = useCallback((conversation: Conversation | any) => {
+    const conversationId = typeof conversation === 'string' ? conversation : conversation.id
     router.push(`/chat/${conversationId}` as any)
   }, [router])
 
@@ -30,11 +31,23 @@ export default function useChatController() {
     await refetch()
   }, [refetch])
 
-  // Criar nova conversa (para futuro)
-  const createConversation = useCallback((carId: string, participantId: string) => {
-    // TODO: Implementar criação de conversa
-    console.log('Create conversation for car:', carId, 'with user:', participantId)
-  }, [])
+  // Criar nova conversa
+  const createConversation = useCallback(async (carId: string, participantId: string) => {
+    try {
+      const { createOrFindConversation } = await import('@services/api/chat')
+      const conversation = await createOrFindConversation(carId, participantId)
+      
+      // Invalidar cache das conversas para incluir a nova
+      await refetch()
+      
+      // Navegar para a conversa criada
+      router.push(`/chat/${conversation.id}` as any)
+      
+      return conversation
+    } catch (error) {
+      throw error
+    }
+  }, [refetch, router])
 
   return {
     conversations: conversations || [],

@@ -12,6 +12,7 @@ import { useAuthStore } from '@store/authStore'
 import { useOptimizedCarQuery } from '@hooks/useOptimizedCarQuery'
 import useNetworkController from './useNetworkController'
 import useAuthGuard from '@hooks/useAuthGuard'
+import { useCarCacheManager } from '@hooks/useCarCacheManager'
 import { Car } from '@/types/car'
 
 export default function useHomeController() {
@@ -23,6 +24,7 @@ export default function useHomeController() {
   const { addToOfflineQueue } = useOfflineCacheStore()
   const { isOnline, isConnected, hasOfflineQueue } = useNetworkController()
   const { checkAuth } = useAuthGuard()
+  const { invalidateCarListings, prefetchPopularCars } = useCarCacheManager()
 
   const [refreshing, setRefreshing] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -33,7 +35,9 @@ export default function useHomeController() {
     error,
     fetchNextPage,
     hasNextPage,
-    refetch
+    refetch,
+    isFetchingNextPage,
+    isRefetching
   } = useInfiniteQuery({
     queryKey: ['cars', filters],
     queryFn: async ({ pageParam = 1 }) => {
@@ -44,89 +48,85 @@ export default function useHomeController() {
     },
     initialPageParam: 1,
     
-    // ✨ Configurações otimizadas para performance + real-time
-    staleTime: 2 * 60 * 1000,        // 2 minutos cache
-    gcTime: 10 * 60 * 1000,          // 10 minutos em memória
+    // ✨ Configurações otimizadas para tempo real
+    staleTime: 30 * 1000,             // 30 segundos - mais agressivo para dados frescos
+    gcTime: 15 * 60 * 1000,           // 15 minutos em memória
     refetchOnWindowFocus: true,       // Atualiza quando volta ao app
     refetchOnMount: true,             // Busca dados frescos ao montar
+    refetchOnReconnect: true,         // Atualiza quando reconecta à internet
     
-    // Polling inteligente baseado na hora
-    refetchInterval: () => {
+    // 🔥 Polling super inteligente baseado na atividade
+    refetchInterval: (query) => {
       const hour = new Date().getHours()
-      // Horário comercial (9h-18h): mais movimento
-      if (hour >= 9 && hour <= 18) {
-        return 3 * 60 * 1000  // 3 minutos
+      const isBusinessHours = hour >= 8 && hour <= 20
+      
+      // Se tem dados recentemente carregados, polling mais frequente
+      const recentlyLoaded = query.state.data && Date.now() - (query.state.dataUpdatedAt || 0) < 60000
+      
+      if (isBusinessHours) {
+        return recentlyLoaded ? 45 * 1000 : 2 * 60 * 1000  // 45s ou 2min
+      } else {
+        return recentlyLoaded ? 2 * 60 * 1000 : 8 * 60 * 1000  // 2min ou 8min
       }
-      // Fora do horário: menos movimento
-      return 10 * 60 * 1000   // 10 minutos
     },
     
     // Só polling quando app está ativo
     refetchIntervalInBackground: false,
+    
+    // 🚀 Retry inteligente
+    retry: (failureCount, error: any) => {
+      // Não retry em erro 404 ou 401
+      if (error?.response?.status === 404 || error?.response?.status === 401) {
+        return false
+      }
+      // Retry até 3 vezes para outros erros
+      return failureCount < 3
+    },
+    
+    // Delay progressivo entre retries
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   })
 
   // Filtrar carros para excluir os do próprio usuário
   const cars = useMemo(() => {
-    const allCars = data?.pages.flatMap(page => page.results) ?? []
+    const allCars = data?.pages.flatMap((page: any) => page.results) ?? []
     
     // Se não está logado, mostra todos os carros
     if (!user?.id) {
-      console.log('🔍 Usuário não logado, mostrando todos os carros:', allCars.length)
       return allCars
     }
-    
-    // Log resumido para debug
-    console.log('🔍 Filtro de carros:', { 
-      userId: user.id, 
-      totalCars: allCars.length,
-      firstCarSeller: allCars[0]?.seller?.id 
-    })
     
     // Filtrar carros que NÃO são do usuário atual (comparação robusta)
     const filteredCars = allCars.filter(car => {
       if (!car?.seller?.id) {
-        console.warn('⚠️ Carro sem seller.id:', car)
         return true // Mantém carros sem seller definido
       }
       
       // Comparar convertendo ambos para string para garantir
       const isOwn = String(car.seller.id) === String(user.id)
       
-      // Log apenas se for próprio carro (para debug)
-      if (isOwn) {
-        console.log('🚫 Removendo carro próprio:', car.title)
-      }
-      
       return !isOwn
     })
-    
-    console.log('✅ Carros filtrados:', {
-      total: allCars.length,
-      filtrados: filteredCars.length,
-      removidos: allCars.length - filteredCars.length
-    })
-    
-    // Log adicional se nenhum carro for mostrado
-    if (filteredCars.length === 0 && allCars.length > 0) {
-      console.warn('⚠️ NENHUM CARRO SENDO EXIBIDO!')
-      console.log('🔍 Verificar se todos os carros são do próprio usuário')
-      allCars.forEach((car, index) => {
-        console.log(`Carro ${index + 1}:`, {
-          title: car.title,
-          sellerId: car.seller?.id,
-          sellerName: car.seller?.name,
-          isOwn: String(car.seller?.id) === String(user.id)
-        })
-      })
-    }
     
     return filteredCars
   }, [data, user?.id])
 
   async function handleRefresh(): Promise<void> {
     setRefreshing(true)
-    await refetch()
-    setRefreshing(false)
+    
+    try {
+      // Invalidar dados relacionados para garantir atualização completa
+      await invalidateCarListings()
+      await refetch()
+      
+      // Prefetch dados populares para melhorar navegação
+      prefetchPopularCars()
+      
+    } catch (error) {
+      // Silently handle errors
+    } finally {
+      setRefreshing(false)
+    }
   }
 
   function handleLoadMore(): void {
@@ -222,7 +222,7 @@ export default function useHomeController() {
   }
 
   // Estatísticas úteis
-  const totalCarsFromAPI = data?.pages.flatMap(page => page.results).length ?? 0
+  const totalCarsFromAPI = data?.pages.flatMap((page: any) => page.results).length ?? 0
   const filteredOutCount = totalCarsFromAPI - cars.length
 
   return {
@@ -239,12 +239,22 @@ export default function useHomeController() {
     handleCategorySelect,
     selectedCategory,
     activeFiltersCount,
+    
+    // ✨ Estados avançados para UI em tempo real
+    isFetchingNextPage,         // Carregando mais carros
+    isRefetching,               // Atualizando dados em background
+    hasNextPage,                // Tem mais páginas para carregar
+    
     // Estatísticas
     totalCarsFromAPI,
     filteredOutCount,
+    
     // Offline state
     isOnline,
     isConnected,
-    hasOfflineQueue
+    hasOfflineQueue,
+    
+    // 🚀 Cache management
+    invalidateCarListings,
   }
 }

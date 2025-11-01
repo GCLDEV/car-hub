@@ -1,5 +1,5 @@
 import { Car, CarFilters, CarSearchResult } from '@/types/car'
-import api from './client'
+import api, { SERVER_BASE_URL } from './client'
 import type { CreateListingFormData } from '@/utils/validation'
 import { uploadMultipleImages } from './upload'
 import { useNetworkStore } from '@store/networkStore'
@@ -11,13 +11,6 @@ import { useOfflineCacheStore } from '@store/offlineCacheStore'
 
 // Transform Strapi car response to app Car format
 function transformStrapiCar(strapiCar: any): Car {
-  console.log('🔄 Transform Strapi Car - Raw seller data:', { 
-    sellerId: strapiCar.seller?.id, 
-    sellerUsername: strapiCar.seller?.username,
-    sellerName: strapiCar.seller?.name,
-    fullSeller: strapiCar.seller 
-  })
-  
   return {
     id: strapiCar.id.toString(),
     title: strapiCar.title,
@@ -40,7 +33,7 @@ function transformStrapiCar(strapiCar: any): Car {
       }
       // Se é URL relativa do Strapi, construir URL completa
       if (img.url) {
-        return `http://192.168.0.8:1337${img.url}`;
+        return `${SERVER_BASE_URL}${img.url}`;
       }
       // Fallback para placeholder apenas se não houver imagem
       return null;
@@ -360,8 +353,6 @@ export async function searchCars(query: string, filters?: CarFilters): Promise<C
         params['pagination[pageSize]'] = 10
       }
       
-      // Debug log to check what's being sent
-      console.log('Search params being sent:', params)
     }
 
     const response = await api.get('/cars/search', { params })

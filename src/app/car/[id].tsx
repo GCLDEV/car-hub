@@ -120,14 +120,6 @@ export default function CarDetailsScreen() {
     })
   }
 
-  const handleChat = () => {
-    Toast.show({
-      type: 'info',
-      text1: 'Chat em desenvolvimento',
-      text2: 'O chat com vendedores estará disponível em breve!'
-    })
-  }
-
   const handleTestDrive = () => {
     Toast.show({
       type: 'info',
@@ -226,9 +218,9 @@ export default function CarDetailsScreen() {
           
           {/* Botões de Ação */}
           <CarActionButtons 
-            onCallPress={handleContact}
+            onCallPress={handleCall}
             onChatPress={handleContact}
-            onTestDrivePress={handleContact}
+            onTestDrivePress={handleTestDrive}
           />
         </VStack>
       </ScrollView>

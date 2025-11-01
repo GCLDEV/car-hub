@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Toast from 'react-native-toast-message'
 import { useAuthStore } from '@store/authStore'
 import { getConversationMessages, sendMessage } from '@services/api/chat'
+import api from '@services/api/client'
 
 export default function useConversationController() {
   const { conversationId } = useLocalSearchParams<{ conversationId: string }>()
@@ -12,43 +13,92 @@ export default function useConversationController() {
   const queryClient = useQueryClient()
   const [inputMessage, setInputMessage] = useState('')
 
-  // Buscar mensagens da conversa
+  // Buscar dados da conversa
+  const { 
+    data: conversation, 
+    isLoading: conversationLoading 
+  } = useQuery({
+    queryKey: ['conversation', conversationId],
+    queryFn: async () => {
+      const response = await api.get(`/conversations/${conversationId}`)
+      return response.data.data
+    },
+    enabled: !!conversationId,
+    staleTime: 30 * 1000, // 30 segundos
+  })
+
+  // Buscar mensagens da conversa com polling para tempo real
   const { 
     data: messages, 
-    isLoading, 
+    isLoading: messagesLoading, 
     error, 
     refetch 
   } = useQuery({
     queryKey: ['messages', conversationId],
     queryFn: () => getConversationMessages(conversationId!),
     enabled: !!conversationId,
-    staleTime: 10 * 1000, // 10 segundos
+    staleTime: 5 * 1000, // 5 segundos - mais frequente
     gcTime: 5 * 60 * 1000, // 5 minutos
+    refetchInterval: 10 * 1000, // Refetch a cada 10 segundos para tempo real
+    refetchIntervalInBackground: false, // Não fazer polling quando app está em background
   })
 
-  // Mutation para enviar mensagem
+  // Mutation para enviar mensagem com optimistic updates
   const sendMessageMutation = useMutation({
     mutationFn: sendMessage,
-    onSuccess: (newMessage) => {
-      // Adicionar mensagem à lista local
+    onMutate: async (newMessageData) => {
+      // ✨ OPTIMISTIC UPDATE: Adicionar mensagem imediatamente na tela      
+      // Cancelar queries em andamento para evitar conflitos
+      await queryClient.cancelQueries({ queryKey: ['messages', conversationId] })
+      
+      // Salvar estado anterior para rollback se der erro
+      const previousMessages = queryClient.getQueryData(['messages', conversationId])
+      
+      // Criar mensagem temporária para mostrar na tela
+      const optimisticMessage = {
+        id: `temp-${Date.now()}`, // ID temporário
+        content: newMessageData.content,
+        senderId: user?.id?.toString() || '',
+        receiverId: '', // Será preenchido pelo servidor
+        createdAt: new Date().toISOString(),
+        isRead: false,
+        type: 'text' as const,
+        carId: undefined
+      }
+      
+      // Adicionar mensagem otimista ao cache
       queryClient.setQueryData(['messages', conversationId], (oldMessages: any) => [
         ...(oldMessages || []),
-        newMessage
+        optimisticMessage
       ])
+            
+      // Retornar contexto para rollback se necessário
+      return { previousMessages }
+    },
+    onSuccess: (newMessage, variables, context) => {      
+      // Substituir mensagem otimista pela real do servidor
+      queryClient.setQueryData(['messages', conversationId], (oldMessages: any) => {
+        if (!oldMessages) return [newMessage]
+        
+        // Remover mensagem temporária e adicionar a real
+        const withoutTemp = oldMessages.filter((msg: any) => !msg.id.startsWith('temp-'))
+        return [...withoutTemp, newMessage]
+      })
       
       // Atualizar cache das conversas
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
       
+      // Refetch messages para garantir sincronização
+      refetch()
+      
       setInputMessage('')
-      Toast.show({
-        type: 'success',
-        text1: 'Mensagem enviada',
-        position: 'bottom',
-        visibilityTime: 2000,
-      })
     },
-    onError: (error: any) => {
-      console.error('Error sending message:', error)
+    onError: (error: any, variables, context) => {
+      // Rollback: Restaurar estado anterior
+      if (context?.previousMessages) {
+        queryClient.setQueryData(['messages', conversationId], context.previousMessages)
+      }
+      
       Toast.show({
         type: 'error',
         text1: 'Erro ao enviar mensagem',
@@ -60,7 +110,10 @@ export default function useConversationController() {
 
   // Enviar mensagem
   const handleSendMessage = useCallback(() => {
-    if (!inputMessage.trim() || !conversationId || !user) return
+
+    if (!inputMessage.trim() || !conversationId || !user) {
+      return
+    }
 
     sendMessageMutation.mutate({
       content: inputMessage.trim(),
@@ -83,12 +136,15 @@ export default function useConversationController() {
     messages: messages || [],
     inputMessage,
     setInputMessage,
-    isLoading,
+    isLoading: messagesLoading || conversationLoading,
+    loading: messagesLoading || conversationLoading, // Alias para compatibilidade
+    sending: sendMessageMutation.isPending,
     isSending: sendMessageMutation.isPending,
     error,
     handleSendMessage,
-    handleGoBack,
+    handleGoBack,  
     handleRefresh,
     currentUserId: user?.id,
+    conversation: conversation || null,
   }
 }

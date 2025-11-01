@@ -18,7 +18,7 @@ export interface Conversation {
     price: number
     images: string[]
   }
-  lastMessage: Message
+  lastMessage: Message | null // Pode ser null se não há mensagens ainda
   unreadCount: number
   updatedAt: string
 }

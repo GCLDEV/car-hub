@@ -75,7 +75,6 @@ export function useInvalidateCars() {
     updateCarInCache: (updatedCar: any) => {
       // Validar se updatedCar não é undefined/null
       if (!updatedCar || !updatedCar.id) {
-        console.warn('updateCarInCache: updatedCar is invalid')
         return
       }
 
@@ -118,7 +117,7 @@ export function useInvalidateCars() {
           }
         )
       } catch (error) {
-        console.error('Error in updateCarInCache:', error)
+        // Silently handle errors
       }
     },
     
@@ -126,7 +125,6 @@ export function useInvalidateCars() {
     addCarToCache: (newCar: any) => {
       // Validar se newCar não é undefined/null
       if (!newCar) {
-        console.warn('addCarToCache: newCar is undefined/null')
         return
       }
 
@@ -176,7 +174,7 @@ export function useInvalidateCars() {
           }
         )
       } catch (error) {
-        console.error('Error in addCarToCache:', error)
+        // Silently handle errors
       }
     }
   }

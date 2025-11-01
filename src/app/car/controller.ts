@@ -5,6 +5,7 @@ import { Share, Linking } from 'react-native'
 import Toast from 'react-native-toast-message'
 
 import { getCarById } from '@services/api/cars'
+import { createOrFindConversation } from '@services/api/chat'
 import { useFavoritesStore } from '@store/favoritesStore'
 import useAuthGuard from '@hooks/useAuthGuard'
 
@@ -58,18 +59,44 @@ export default function useCarDetailsController() {
   }
 
   async function handleContact() {
-    if (!car) return
+    if (!car) {
+      return
+    }
     
-    checkAuth(() => {
-      // Navegar para o chat com o vendedor
-      // TODO: Criar ou encontrar conversa existente com o vendedor sobre este carro
-      router.push('/chat' as any)
-      
-      Toast.show({ 
-        type: 'success', 
-        text1: 'Redirecionando para o chat',
-        text2: `Converse diretamente com o vendedor do ${car.title}`
-      })
+    checkAuth(async () => {
+      try {
+        // Verificar se temos dados do vendedor válidos
+        if (!car.seller?.id || car.seller.id.startsWith('unknown-')) {
+          console.error('❌ Invalid seller data:', car.seller)
+          throw new Error('Este carro não possui informações válidas do vendedor. Não é possível iniciar uma conversa.')
+        }
+
+        // Mostrar loading
+        Toast.show({ 
+          type: 'info', 
+          text1: 'Iniciando conversa...',
+          text2: 'Aguarde um momento'
+        })
+
+        // Criar ou encontrar conversa com o vendedor sobre este carro
+        const conversation = await createOrFindConversation(car.id, car.seller.id)
+        
+        // Navegar diretamente para a conversa criada/encontrada
+        router.push(`/chat/${conversation.id}` as any)
+        
+        Toast.show({ 
+          type: 'success', 
+          text1: 'Chat iniciado',
+          text2: `Conversa com ${car.seller.name || 'o vendedor'}`
+        })
+      } catch (error: any) {
+        console.error('❌ Error creating conversation:', error)
+        Toast.show({ 
+          type: 'error', 
+          text1: 'Erro ao iniciar chat',
+          text2: error.message || 'Tente novamente mais tarde'
+        })
+      }
     })
   }
 

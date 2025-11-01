@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { API_BASE_URL, SERVER_BASE_URL } from './client'
 
 // Utilitários para preparar arquivos (baseado no projeto anterior)
 const ResolveUri = (result: any) => {
@@ -29,7 +30,6 @@ export async function uploadImage(imageUri: string): Promise<any> {
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`📤 Upload attempt ${attempt}/${maxRetries} for image:`, imageUri)
       
       // Preparar arquivo usando método testado
       const fileToUpload = PrepareFile({ uri: imageUri })
@@ -54,9 +54,11 @@ export async function uploadImage(imageUri: string): Promise<any> {
       
       // Usar fetch nativo com timeout maior
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 60000) // 60 segundos
+      const timeoutId = setTimeout(() => controller.abort(), 120000) // 120 segundos (2 minutos)
       
-      const response = await fetch('http://192.168.0.8:1337/api/upload', {
+      const uploadURL = `${SERVER_BASE_URL}/api/upload`
+      
+      const response = await fetch(uploadURL, {
         method: 'POST',
         body: formData,
         headers,
@@ -71,7 +73,6 @@ export async function uploadImage(imageUri: string): Promise<any> {
       }
       
       const responseJson = await response.json()
-      console.log(`✅ Upload successful on attempt ${attempt}`)
       
       return responseJson?.[0]
       
@@ -81,8 +82,7 @@ export async function uploadImage(imageUri: string): Promise<any> {
       
       // Se não é o último attempt, aguarda antes de tentar novamente
       if (attempt < maxRetries) {
-        const delay = attempt * 2000 // 2s, 4s, etc
-        console.log(`⏳ Waiting ${delay}ms before retry...`)
+        const delay = Math.pow(2, attempt) * 2000 // 4s, 8s, 16s (exponencial)
         await new Promise(resolve => setTimeout(resolve, delay))
       }
     }
@@ -98,8 +98,6 @@ export async function uploadImage(imageUri: string): Promise<any> {
  * @returns Promise com array de dados das imagens no Strapi
  */
 export async function uploadMultipleImages(imageUris: string[]): Promise<any[]> {
-  console.log(`📤 Starting upload of ${imageUris.length} images...`)
-  
   const imageData: any[] = []
   const failedUploads: string[] = []
   
@@ -108,13 +106,12 @@ export async function uploadMultipleImages(imageUris: string[]): Promise<any[]> 
     const uri = imageUris[i]
     
     try {
-      console.log(`📷 Uploading image ${i + 1}/${imageUris.length}`)
       const imageResult = await uploadImage(uri)
       imageData.push(imageResult)
       
-      // Pequena pausa entre uploads para não sobrecarregar o servidor
+      // Pausa maior entre uploads para evitar timeout
       if (i < imageUris.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1500))
+        await new Promise(resolve => setTimeout(resolve, 3000)) // 3 segundos entre uploads
       }
     } catch (error: any) {
       console.error(`❌ Failed to upload image ${i + 1}:`, error.message)
@@ -135,7 +132,6 @@ export async function uploadMultipleImages(imageUris: string[]): Promise<any[]> 
     console.warn(`⚠️ ${failedUploads.length} imagens falharam no upload, mas continuando com ${imageData.length} imagens`)
   }
   
-  console.log(`✅ Upload completed: ${imageData.length} images successful, ${failedUploads.length} failed`)
   return imageData
 }
 
@@ -178,7 +174,7 @@ export async function uploadImagesAndGetUrls(imageUris: string[]): Promise<strin
       }
       // Se é URL relativa, construir URL completa do Strapi
       if (imageData?.url) {
-        return `http://192.168.0.8:1337${imageData.url}`;
+        return `${SERVER_BASE_URL}${imageData.url}`;
       }
       // Fallback apenas se não houver URL
       return null;
