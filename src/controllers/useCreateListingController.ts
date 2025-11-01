@@ -54,9 +54,7 @@ export default function useCreateListingController() {
     mutationFn: async (data: CreateListingFormData) => {
       return await createCar(data)
     },
-    onSuccess: (response) => {
-      console.log('✅ Car created successfully:', response)
-      
+    onSuccess: () => {
       Toast.show({
         type: 'success',
         text1: 'Anúncio criado com sucesso!',
