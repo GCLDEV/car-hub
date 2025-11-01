@@ -61,6 +61,27 @@ export default function useCreateListingController() {
         text2: 'Seu veículo e fotos foram listados no marketplace'
       })
       
+      // 🧹 Limpar formulário após sucesso
+      form.reset({
+        title: '',
+        brand: '',
+        model: '',
+        category: '',
+        year: new Date().getFullYear().toString(),
+        price: '',
+        km: '',
+        fuelType: '',
+        transmission: '',
+        color: '',
+        description: '',
+        location: '',
+        doors: '',
+        seats: '',
+        engine: '',
+        features: [] as string[],
+        images: []
+      })
+      
       // 🔄 Invalidar cache para buscar dados atualizados (mais seguro que manipular cache)
       invalidateAllCars()
       
