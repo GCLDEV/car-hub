@@ -6,7 +6,6 @@ import { VStack } from '@components/ui/vstack'
 import { HStack } from '@components/ui/hstack'
 import { Text } from '@components/ui/text'
 
-import LoadingState from '@components/ui/LoadingState'
 import ErrorState from '@components/ui/ErrorState'
 import EmptyState from '@components/ui/EmptyState'
 import CarCard from '@components/ui/CarCard'
@@ -19,15 +18,7 @@ import { colors } from '@theme/colors'
 import useHomeController from '@controllers/useHomeController'
 import { Car } from '@/types/car'
 import Toast from 'react-native-toast-message'
-import useAuthGuard from '@/hooks/useAuthGuard'
 import { useAuthStore } from '@/store/authStore'
-
-interface CarItemProps {
-  car: Car
-  onPress: () => void
-  onFavoritePress: () => void
-  isFavorite: boolean
-}
 
 export default function HomeScreen() {
   const router = useRouter()
@@ -46,8 +37,7 @@ export default function HomeScreen() {
     handleCategorySelect,
     selectedCategory,
     activeFiltersCount,
-    totalCarsFromAPI,
-    filteredOutCount,
+
     isOnline,
     isConnected,
     hasOfflineQueue
@@ -72,13 +62,7 @@ export default function HomeScreen() {
     })
   }
 
-  function handleLocationPress() {
-    Toast.show({
-      type: 'info',
-      text1: 'Seleção de localização em desenvolvimento',
-      text2: 'Filtro por localização estará disponível em breve!'
-    })
-  }
+
 
   function navigateToSettings() {
     router.push('/settings')
@@ -91,11 +75,10 @@ export default function HomeScreen() {
           {/* Header moderno funcionando normalmente */}
           <HomeHeader
             userName={user?.name || 'User'}
-            userLocation="New York City, USA"
+            userAvatar={user?.avatar}
             notificationCount={3}
             activeFiltersCount={activeFiltersCount}
             onNotificationPress={handleNotificationPress}
-            onLocationPress={handleLocationPress}
             onSettingsPress={navigateToSettings}
             onSearchPress={navigateToSearch}
             onFiltersPress={openFiltersModal}
@@ -124,11 +107,10 @@ export default function HomeScreen() {
         {/* Header moderno */}
         <HomeHeader
           userName={user?.name || 'User'}
-          userLocation="New York City, USA"
+          userAvatar={user?.avatar}
           notificationCount={3}
           activeFiltersCount={activeFiltersCount}
           onNotificationPress={handleNotificationPress}
-          onLocationPress={handleLocationPress}
           onSettingsPress={navigateToSettings}
           onSearchPress={navigateToSearch}
           onFiltersPress={openFiltersModal}
