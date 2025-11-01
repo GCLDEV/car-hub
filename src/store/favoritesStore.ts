@@ -18,9 +18,9 @@ interface FavoritesState {
   isFavorite: (carId: string) => boolean
   syncFavorites: () => Promise<void>
   clearFavorites: () => void
+  setFavorites: (favorites: string[]) => void
   
   // Internal state management
-  setFavorites: (favorites: string[]) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
 }

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useFavoritesStore } from '@store/favoritesStore'
 import { useAuthStore } from '@store/authStore'
-import { getUserFavorites, type FavoritesResult } from '@/services/api/favorites'
+import { getUserFavorites, addToFavorites, removeFromFavorites, type FavoritesResult } from '@/services/api/favorites'
 
 /**
  * Custom hook for managing favorites with React Query integration
@@ -12,11 +12,11 @@ export function useFavoritesQuery() {
   const { isAuthenticated } = useAuthStore()
   const { 
     favorites: localFavorites, 
-    addFavorite, 
-    removeFavorite, 
     isFavorite,
     syncFavorites,
-    loading: localLoading 
+    loading: localLoading,
+    addFavorite: addFavoriteToStore,
+    removeFavorite: removeFavoriteFromStore
   } = useFavoritesStore()
 
   // Query to fetch favorites from API
@@ -31,18 +31,24 @@ export function useFavoritesQuery() {
 
   // Mutation to add favorite
   const addFavoriteMutation = useMutation({
-    mutationFn: addFavorite,
+    mutationFn: async (carId: string) => {
+      await addFavoriteToStore(carId)
+      return carId
+    },
     onSuccess: () => {
-      // Invalidate and refetch favorites
+      // Invalidate and refetch favorites from API
       queryClient.invalidateQueries({ queryKey: ['favorites'] })
     }
   })
 
   // Mutation to remove favorite
   const removeFavoriteMutation = useMutation({
-    mutationFn: removeFavorite,
+    mutationFn: async (carId: string) => {
+      await removeFavoriteFromStore(carId)
+      return carId
+    },
     onSuccess: () => {
-      // Invalidate and refetch favorites
+      // Invalidate and refetch favorites from API
       queryClient.invalidateQueries({ queryKey: ['favorites'] })
     }
   })

@@ -54,7 +54,7 @@ export default function SearchHeader({
             }}
           >
             <InputField
-              placeholder="🔍 Buscar marca, modelo, ano..."
+              placeholder="🔍 Search brand, model, year..."
               value={searchQuery}
               onChangeText={onSearchChange}
               onSubmitEditing={onSearchSubmit}

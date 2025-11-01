@@ -25,6 +25,47 @@ interface CarCardProps {
 }
 
 export default function CarCard({ car, onPress }: CarCardProps) {
+  // Helper functions para tratar dados vazios
+  const getDisplayPrice = () => {
+    if (!car.price || isNaN(car.price) || car.price <= 0) {
+      return 'Price not available'
+    }
+    return formatPrice(car.price)
+  }
+
+  const getDisplayYear = () => {
+    if (!car.year || isNaN(car.year)) {
+      return '--'
+    }
+    return car.year.toString()
+  }
+
+  const getDisplayKm = () => {
+    if (!car.km || isNaN(car.km)) {
+      return '--'
+    }
+    return formatKm(car.km)
+  }
+
+  const getDisplayFuelType = () => {
+    return car.fuelType?.trim() || '--'
+  }
+
+  const getDisplayLocation = () => {
+    return car.cityState?.trim() || 'Location not informed'
+  }
+
+  const getDisplayTitle = () => {
+    const brand = car.brand?.trim() || ''
+    const model = car.model?.trim() || ''
+    
+    if (!brand && !model) {
+      return 'Car without identification'
+    }
+    
+    return `${brand} ${model}`.trim()
+  }
+
   return (
     <Pressable
       onPress={onPress}
@@ -40,7 +81,7 @@ export default function CarCard({ car, onPress }: CarCardProps) {
         {car.images && car.images.length > 0 ? (
           <Image
             source={{ uri: car.images[0] }}
-            alt={car.title}
+            alt={getDisplayTitle()}
             className="w-full h-full rounded-t-3xl"
             resizeMode="cover"
           />
@@ -50,7 +91,7 @@ export default function CarCard({ car, onPress }: CarCardProps) {
             style={{ backgroundColor: colors.neutral[700] }}
           >
             <Text className="text-neutral-400 text-sm font-medium">
-              Sem imagem disponível
+              No image available
             </Text>
           </Box>
         )}
@@ -78,10 +119,13 @@ export default function CarCard({ car, onPress }: CarCardProps) {
       <VStack space="md" className="p-5">
         <VStack space="xs">
           <Text className="text-white text-lg font-bold leading-6">
-            {car.brand} {car.model}
+            {getDisplayTitle()}
           </Text>
-          <Text style={{ color: colors.accent[500] }} className="text-2xl font-extrabold leading-8">
-            {formatPrice(car.price)}
+          <Text 
+            style={{ color: car.price && !isNaN(car.price) && car.price > 0 ? colors.accent[500] : colors.neutral[400] }} 
+            className="text-2xl font-extrabold leading-8"
+          >
+            {getDisplayPrice()}
           </Text>
         </VStack>
         
@@ -92,7 +136,7 @@ export default function CarCard({ car, onPress }: CarCardProps) {
               Year
             </Text>
             <Text className="text-white text-sm font-semibold">
-              {car.year}
+              {getDisplayYear()}
             </Text>
           </VStack>
           
@@ -101,7 +145,7 @@ export default function CarCard({ car, onPress }: CarCardProps) {
               KM
             </Text>
             <Text className="text-white text-sm font-semibold">
-              {formatKm(car.km)}
+              {getDisplayKm()}
             </Text>
           </VStack>
           
@@ -110,7 +154,7 @@ export default function CarCard({ car, onPress }: CarCardProps) {
              Fuel
             </Text>
             <Text className="text-white text-sm font-semibold">
-              {car.fuelType}
+              {getDisplayFuelType()}
             </Text>
           </VStack>
         </HStack>
@@ -119,7 +163,7 @@ export default function CarCard({ car, onPress }: CarCardProps) {
         <HStack space="xs" className="items-center">
           <MapPin size={14} color={colors.neutral[400]} />
           <Text className="text-gray-400 text-sm flex-1">
-            {car.cityState}
+            {getDisplayLocation()}
           </Text>
           <CaretRight size={16} color={colors.neutral[600]} />
         </HStack>

@@ -139,15 +139,15 @@ export default function HomeScreen() {
               </Text>
             </HStack>
             <Text className="text-neutral-400 text-sm">
-              Explore carros de outros usuários. Seus anúncios aparecem no perfil.
+              Explore cars from other users. Their ads appear on the profile.
             </Text>
           </VStack>
 
           {/* Lista de carros */}
           {cars.length === 0 ? (
             <EmptyState
-              title="Nenhum carro encontrado"
-              message="Seja o primeiro a anunciar um carro!"
+              title="No cars found"
+              message="Be the first to advertise a car!"
               icon="🚗"
             />
           ) : (

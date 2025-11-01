@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { FlatList, RefreshControl } from 'react-native'
 import { VStack } from '@components/ui/vstack'
 import { HStack } from '@components/ui/hstack'
@@ -7,7 +7,7 @@ import { Text } from '@components/ui/text'
 import { Pressable } from '@components/ui/pressable'
 import { Spinner } from '@components/ui/spinner'
 import { ArrowLeft, Heart } from 'phosphor-react-native'
-import { useRouter } from 'expo-router'
+import { useRouter, useFocusEffect } from 'expo-router'
 
 import { useFavoritesQuery } from '@hooks/useFavoritesQuery'
 import CarCard from '@components/ui/CarCard'
@@ -25,6 +25,13 @@ export default function FavoritesScreen() {
     refetch, 
     isRefetching 
   } = useFavoritesQuery()
+
+  // Refetch favorites when screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      refetch()
+    }, [refetch])
+  )
 
   function handleCarPress(carId: string) {
     router.push(`/car/${carId}` as any)
