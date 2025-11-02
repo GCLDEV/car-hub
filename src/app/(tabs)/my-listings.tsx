@@ -156,13 +156,6 @@ function MyListingCard({ car, onPress, onEdit, onDelete, onMarkAsSold, onShare, 
           </Text>
 
           <HStack className="items-center">
-            {/* Compartilhar */}
-            <Pressable 
-              onPress={onShare}
-              className="p-2 mr-2"
-            >
-              <Share size={18} color={colors.neutral[400]} />
-            </Pressable>
 
             {/* Editar (apenas se disponível) */}
             {car.status === 'available' && (

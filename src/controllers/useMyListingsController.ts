@@ -66,9 +66,9 @@ export default function useMyListingsController() {
 
   // Navegar para editar anúncio
   function handleEditCar(car: Car): void {
-    setModal({
-      type: 'info',
-      title: 'Coming Soon',
+    router.push({
+      pathname: '/edit-listing/[id]',
+      params: { id: car.id }
     })
   }
 

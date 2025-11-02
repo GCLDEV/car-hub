@@ -8,7 +8,7 @@ import {
   Image as ImageIcon, 
   X, 
   Plus,
-  Scissors
+  PencilSimple
 } from 'phosphor-react-native'
 
 import { VStack } from '@components/ui/vstack'
@@ -110,6 +110,67 @@ export default function ImageUploader({
     } finally {
       setLoading(false)
     }
+  }
+
+  // Substituir imagem existente
+  const replaceImage = async (index: number) => {
+    try {
+      setLoading(true)
+      
+      const hasPermission = await requestPermissions()
+      if (!hasPermission) return
+
+      // Selecionar nova imagem
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: false,
+        allowsEditing: true,
+        quality: 0.8,
+        aspect: [16, 9],
+      })
+
+      if (!result.canceled) {
+        const newImages = [...images]
+        newImages[index] = result.assets[0].uri
+        onImagesChange(newImages)
+        
+        Toast.show({
+          type: 'success',
+          text1: 'Foto substituída!',
+          text2: 'Imagem foi substituída com sucesso.'
+        })
+      }
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Erro',
+        text2: 'Não foi possível substituir a imagem.'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+
+
+  // Mostrar opções quando clicar em imagem existente
+  const showImageEditOptions = (index: number) => {
+    setModal({
+      type: 'options',
+      title: 'Editar Foto',
+      options: [
+        { 
+          title: 'Substituir Imagem', 
+          action: () => replaceImage(index),
+          variant: 'primary'
+        },
+        { 
+          title: 'Remover', 
+          action: () => removeImage(index),
+          variant: 'danger'
+        }
+      ]
+    })
   }
 
 
@@ -214,11 +275,21 @@ export default function ImageUploader({
           <HStack className="gap-3">
             {images.map((imageUri, index) => (
               <Box key={index} className="relative">
-                <Image
-                  source={{ uri: imageUri }}
-                  className="w-20 h-20 rounded-lg"
-                  alt={`Imagem ${index + 1}`}
-                />
+                {/* Imagem clicável */}
+                <Pressable 
+                  onPress={() => showImageEditOptions(index)}
+                  className="border-2 border-transparent rounded-lg"
+                  style={({ pressed }) => ({
+                    opacity: pressed ? 0.8 : 1,
+                    borderColor: pressed ? colors.accent[500] : 'transparent'
+                  })}
+                >
+                  <Image
+                    source={{ uri: imageUri }}
+                    className="w-20 h-20 rounded-lg"
+                    alt={`Imagem ${index + 1}`}
+                  />
+                </Pressable>
                 
                 {/* Botão remover */}
                 <Pressable
@@ -227,6 +298,18 @@ export default function ImageUploader({
                 >
                   <X size={12} color={colors.neutral[100]} weight="bold" />
                 </Pressable>
+                
+                {/* Indicador visual de que é clicável */}
+                <Box 
+                  className="absolute bottom-1 right-1 w-5 h-5 rounded-full items-center justify-center border"
+                  style={{ 
+                    backgroundColor: colors.neutral[900] + 'E6',
+                    borderColor: colors.neutral[600],
+                    opacity: 0.9 
+                  }}
+                >
+                  <PencilSimple size={10} color={colors.accent[400]} weight="bold" />
+                </Box>
               </Box>
             ))}
           </HStack>
