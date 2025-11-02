@@ -6,14 +6,14 @@ import Toast from 'react-native-toast-message'
 import { useAuthStore } from '@store/authStore'
 import { useModalStore } from '@store/modalStore'
 import { getUserCars, deleteCar, updateCarStatus } from '@/services/api/cars'
-import { useInvalidateCars } from '@hooks/useOptimizedCarQuery'
+import { useQueryInvalidation } from '@hooks/useQueryInvalidation'
 import type { Car } from '@/types/car'
 
 export default function useMyListingsController() {
   const router = useRouter()
   const { user, isAuthenticated } = useAuthStore()
   const { setModal } = useModalStore()
-  const { invalidateAllCars, invalidateUserCars } = useInvalidateCars()
+  const { invalidateByContext } = useQueryInvalidation()
   const queryClient = useQueryClient()
 
   const [refreshing, setRefreshing] = useState(false)
@@ -92,13 +92,8 @@ export default function useMyListingsController() {
     try {
       await deleteCar(selectedCar.id)
       
-      // Update otimizado do cache
-      queryClient.setQueryData(['user-cars', user?.id], (oldData: Car[]) => {
-        return oldData?.filter(car => car.id !== selectedCar.id) || []
-      })
-
-      // Invalidar outros caches relacionados
-      invalidateAllCars()
+      // 🔄 Usar hook global de invalidação
+      await invalidateByContext('car-deleted', { carId: selectedCar.id })
       
       Toast.show({
         type: 'success',
@@ -136,15 +131,8 @@ export default function useMyListingsController() {
       // Atualizar status via API
       const updatedCar = await updateCarStatus(selectedCar.id, 'sold')
       
-      // Update otimizado do cache
-      queryClient.setQueryData(['user-cars', user?.id], (oldData: Car[]) => {
-        return oldData?.map(car => 
-          car.id === selectedCar.id ? updatedCar : car
-        ) || []
-      })
-
-      // Invalidar cache geral
-      invalidateAllCars()
+      // 🔄 Usar hook global de invalidação
+      await invalidateByContext('car-status-changed', { carId: selectedCar.id })
       
       Toast.show({
         type: 'success',

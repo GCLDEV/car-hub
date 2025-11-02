@@ -8,7 +8,7 @@ import Toast from 'react-native-toast-message'
 import { useAuthStore } from '@store/authStore'
 import { useModalStore } from '@store/modalStore'
 import { useUserListingsStore } from '@store/userListingsStore'
-import { useInvalidateCars } from '@hooks/useOptimizedCarQuery'
+import { useMutationInvalidation } from '@hooks/useQueryInvalidation'
 import { createListingSchema, type CreateListingFormData } from '@/utils/validation'
 import { carBrands } from '@/constants/carBrands'
 import { carCategories } from '@/constants/carCategories'
@@ -23,7 +23,7 @@ export default function useEditListingController() {
   const { setModal } = useModalStore()
   const { fetchUserListings } = useUserListingsStore()
   const queryClient = useQueryClient()
-  const { invalidateAllCars } = useInvalidateCars()
+  const { onCarUpdated } = useMutationInvalidation()
   
   // Query para buscar dados do carro
   const { 
@@ -104,19 +104,15 @@ export default function useEditListingController() {
       if (!id) throw new Error('ID do anúncio não encontrado')
       return await updateCar(id, data)
     },
-    onSuccess: () => {
+    onSuccess: (updatedCar) => {
       Toast.show({
         type: 'success',
         text1: 'Anúncio atualizado!',
         text2: 'As alterações foram salvas com sucesso'
       })
       
-      // 🔄 Invalidar cache para buscar dados atualizados
-      invalidateAllCars()
-      queryClient.invalidateQueries({ queryKey: ['car', id] })
-      
-      // 📱 Atualizar listagens do usuário (Profile)
-      fetchUserListings(user?.id || '')
+      // 🔄 Usar hook global de invalidação
+      onCarUpdated(id!)()
       
       // 🏠 Navegar de volta
       router.back()

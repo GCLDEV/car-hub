@@ -12,7 +12,7 @@ import { useAuthStore } from '@store/authStore'
 import { useOptimizedCarQuery } from '@hooks/useOptimizedCarQuery'
 import useNetworkController from './useNetworkController'
 import useAuthGuard from '@hooks/useAuthGuard'
-import { useCarCacheManager } from '@hooks/useCarCacheManager'
+import { useQueryInvalidation } from '@hooks/useQueryInvalidation'
 import { Car } from '@/types/car'
 
 export default function useHomeController() {
@@ -24,7 +24,7 @@ export default function useHomeController() {
   const { addToOfflineQueue } = useOfflineCacheStore()
   const { isOnline, isConnected, hasOfflineQueue } = useNetworkController()
   const { checkAuth } = useAuthGuard()
-  const { invalidateCarListings, prefetchPopularCars } = useCarCacheManager()
+  const { invalidateByContext, queryClient } = useQueryInvalidation()
 
   const [refreshing, setRefreshing] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -97,11 +97,8 @@ export default function useHomeController() {
     
     try {
       // Invalidar dados relacionados para garantir atualização completa
-      await invalidateCarListings()
+      await invalidateByContext('manual-refresh')
       await refetch()
-      
-      // Prefetch dados populares para melhorar navegação
-      prefetchPopularCars()
       
     } catch (error) {
       // Silently handle errors
@@ -228,6 +225,6 @@ export default function useHomeController() {
     hasOfflineQueue,
     
     // 🚀 Cache management
-    invalidateCarListings,
+    refreshAll: () => invalidateByContext('manual-refresh'),
   }
 }

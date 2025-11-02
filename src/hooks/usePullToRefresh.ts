@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import Toast from 'react-native-toast-message'
+import { useQueryInvalidation, type QueryInvalidationContext } from './useQueryInvalidation'
 
 interface RefreshOptions {
   queryKeys?: string[][]
+  context?: QueryInvalidationContext
+  contextPayload?: any
   onRefresh?: () => Promise<void>
   showSuccessToast?: boolean
   successMessage?: string
@@ -13,6 +16,8 @@ interface RefreshOptions {
 export function usePullToRefresh(options: RefreshOptions = {}) {
   const {
     queryKeys = [],
+    context,
+    contextPayload,
     onRefresh,
     showSuccessToast = true,
     successMessage = 'Data refreshed',
@@ -21,6 +26,7 @@ export function usePullToRefresh(options: RefreshOptions = {}) {
 
   const [refreshing, setRefreshing] = useState(false)
   const queryClient = useQueryClient()
+  const { invalidateByContext, invalidateCustom } = useQueryInvalidation()
 
   async function handleRefresh(): Promise<void> {
     setRefreshing(true)
@@ -31,13 +37,14 @@ export function usePullToRefresh(options: RefreshOptions = {}) {
         await onRefresh()
       }
       
-      // Invalidar queries especificadas
-      if (queryKeys.length > 0) {
-        await Promise.all(
-          queryKeys.map(queryKey => 
-            queryClient.invalidateQueries({ queryKey })
-          )
-        )
+      // Usar contexto global se fornecido (PREFERÍVEL)
+      if (context) {
+        await invalidateByContext(context, contextPayload)
+      }
+      
+      // Fallback para queries específicas (LEGACY)
+      else if (queryKeys.length > 0) {
+        await invalidateCustom(queryKeys, { refetchType: 'all' })
       }
       
       // Mostrar toast de sucesso
@@ -71,37 +78,37 @@ export function usePullToRefresh(options: RefreshOptions = {}) {
 }
 
 export const RefreshPresets = {
+  // ✅ Usando contextos globais (RECOMENDADO)
   home: () => usePullToRefresh({
-    queryKeys: [['cars'], ['favorites']],
+    context: 'manual-refresh',
     successMessage: 'Cars updated'
   }),
 
   myListings: (userId?: string) => usePullToRefresh({
-    queryKeys: userId ? [['user-cars', userId]] : [],
+    context: 'manual-refresh',
+    contextPayload: { userId },
     successMessage: 'Your listings updated'
+  }),
+
+  favorites: () => usePullToRefresh({
+    context: 'manual-refresh',
+    successMessage: 'Favorites updated'
+  }),
+
+  profile: (userId?: string) => usePullToRefresh({
+    context: 'manual-refresh',
+    contextPayload: { userId },
+    successMessage: 'Profile updated'
+  }),
+
+  // ❌ Legacy - usando query keys específicas (EVITAR)
+  carDetails: (carId?: string) => usePullToRefresh({
+    queryKeys: carId ? [['car', carId]] : [],
+    successMessage: 'Car details updated'
   }),
 
   search: (searchQuery?: string, filters?: any) => usePullToRefresh({
     queryKeys: searchQuery ? [['search-cars', searchQuery, filters]] : [],
     successMessage: 'Search results updated'
-  }),
-
-  favorites: () => usePullToRefresh({
-    queryKeys: [['favorites']],
-    successMessage: 'Favorites updated'
-  }),
-
-  profile: (userId?: string) => usePullToRefresh({
-    queryKeys: userId ? [
-      ['user-profile'],
-      ['user-cars', userId],
-      ['favorites']
-    ] : [],
-    successMessage: 'Profile updated'
-  }),
-
-  carDetails: (carId?: string) => usePullToRefresh({
-    queryKeys: carId ? [['car', carId]] : [],
-    successMessage: 'Car details updated'
   })
 }

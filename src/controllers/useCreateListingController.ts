@@ -8,7 +8,7 @@ import Toast from 'react-native-toast-message'
 import { useAuthStore } from '@store/authStore'
 import { useModalStore } from '@store/modalStore'
 import { useUserListingsStore } from '@store/userListingsStore'
-import { useInvalidateCars } from '@hooks/useOptimizedCarQuery'
+import { useMutationInvalidation } from '@hooks/useQueryInvalidation'
 import { createListingSchema, type CreateListingFormData } from '@/utils/validation'
 import { carBrands } from '@/constants/carBrands'
 import { carCategories } from '@/constants/carCategories'
@@ -22,7 +22,7 @@ export default function useCreateListingController() {
   const { setModal } = useModalStore()
   const { fetchUserListings } = useUserListingsStore()
   const queryClient = useQueryClient()
-  const { invalidateAllCars, addCarToCache } = useInvalidateCars()
+  const { onCarCreated } = useMutationInvalidation()
   
   // Configuração do React Hook Form com Zod
   const form = useForm({
@@ -54,7 +54,7 @@ export default function useCreateListingController() {
     mutationFn: async (data: CreateListingFormData) => {
       return await createCar(data)
     },
-    onSuccess: () => {
+    onSuccess: (newCar) => {
       Toast.show({
         type: 'success',
         text1: 'Anúncio criado com sucesso!',
@@ -82,11 +82,8 @@ export default function useCreateListingController() {
         images: []
       })
       
-      // 🔄 Invalidar cache para buscar dados atualizados (mais seguro que manipular cache)
-      invalidateAllCars()
-      
-      // 📱 Atualizar listagens do usuário (Profile)
-      fetchUserListings(user?.id || '')
+      // 🔄 Usar hook global de invalidação
+      onCarCreated()()
       
       // 🏠 Navegar para a home (onde o carro já estará visível!)
       router.replace('/(tabs)/home')
