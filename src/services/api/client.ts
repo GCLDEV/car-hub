@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 
 // Configuração centralizada da API
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_ADDRESS || 'http://localhost:1337/api'
+console.log("🚀 ~ API_BASE_URL:", API_BASE_URL)
 export const SERVER_BASE_URL = API_BASE_URL.replace('/api', '') // Para imagens e uploads
 
 // Cliente HTTP para API Strapi real

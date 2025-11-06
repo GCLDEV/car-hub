@@ -27,8 +27,17 @@ function transformStrapiMessage(strapiMessage: any): Message {
   return {
     id: messageId,
     content: strapiMessage.content,
-    senderId: strapiMessage.sender?.id?.toString() || '',
-    receiverId: strapiMessage.receiver?.id?.toString() || '',
+    // Tentar múltiplas formas de pegar senderId/receiverId
+    senderId: (
+      strapiMessage.sender?.id?.toString() || 
+      strapiMessage.senderId?.toString() || 
+      ''
+    ),
+    receiverId: (
+      strapiMessage.receiver?.id?.toString() || 
+      strapiMessage.receiverId?.toString() || 
+      ''
+    ),
     carId: strapiMessage.car?.id?.toString(),
     createdAt: strapiMessage.createdAt,
     isRead: strapiMessage.isRead,
