@@ -11,6 +11,7 @@ import { Image } from '@components/ui/image'
 import { Avatar, AvatarFallbackText } from '@components/ui/avatar'
 
 import LoadingState from '@components/ui/LoadingState'
+import TypingIndicator from '@components/ui/TypingIndicator'
 import { colors } from '@theme/colors'
 import { 
   ArrowLeft, 
@@ -137,7 +138,29 @@ function MessageItem({ message, isOwn, showAvatar, otherUserName }: MessageItemP
   )
 }
 
-function ConversationHeader({ conversation, onGoBack }: { conversation: any, onGoBack: () => void }) {
+function ConversationHeader({ 
+  conversation, 
+  onGoBack, 
+  connected, 
+  isTyping 
+}: { 
+  conversation: any, 
+  onGoBack: () => void,
+  connected: boolean,
+  isTyping: boolean
+}) {
+  const getStatusText = () => {
+    if (isTyping) return 'digitando...'
+    if (connected) return 'Online'
+    return 'Offline'
+  }
+
+  const getStatusColor = () => {
+    if (isTyping) return colors.accent[400]
+    if (connected) return colors.success[500]
+    return colors.neutral[400]
+  }
+
   return (
     <HStack 
       className="justify-between items-center px-4 py-3 border-b"
@@ -163,9 +186,9 @@ function ConversationHeader({ conversation, onGoBack }: { conversation: any, onG
           </Text>
           <Text 
             className="text-xs"
-            style={{ color: colors.neutral[400] }}
+            style={{ color: getStatusColor() }}
           >
-            {conversation?.otherUser?.isOnline ? 'Online' : 'Offline'}
+            {getStatusText()}
           </Text>
         </VStack>
       </HStack>
@@ -279,7 +302,11 @@ export default function ConversationScreen() {
     handleGoBack,
     handleSendMessage,
     handleRefresh,
-    currentUserId
+    currentUserId,
+    // 🆕 WebSocket features
+    connected,
+    isTyping,
+    userTyping
   } = useConversationController()
 
 
@@ -303,6 +330,8 @@ export default function ConversationScreen() {
           <ConversationHeader 
             conversation={conversation}
             onGoBack={handleGoBack}
+            connected={connected ?? false}
+            isTyping={isTyping ?? false}
           />
 
           {/* Car Info Card - TODO: Implementar quando tiver dados da conversa */}
@@ -322,7 +351,7 @@ export default function ConversationScreen() {
           <VStack className="flex-1">
             <FlatList
               data={messages}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item, index) => `${item.id}-${index}`}
               renderItem={({ item, index }) => {
                 // Convert both to strings for comparison
                 const itemSenderId = item.senderId?.toString()
@@ -354,6 +383,12 @@ export default function ConversationScreen() {
               }
               showsVerticalScrollIndicator={false}
               style={{ flex: 1 }}
+              ListFooterComponent={() => (
+                <TypingIndicator 
+                  visible={isTyping ?? false}
+                  userName={conversation?.otherUser?.username}
+                />
+              )}
             />
           </VStack>
 

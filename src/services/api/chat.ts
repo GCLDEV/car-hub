@@ -17,8 +17,15 @@ export async function getConversations(): Promise<Conversation[]> {
 
 // Transform Strapi message format to our Message interface
 function transformStrapiMessage(strapiMessage: any): Message {
+  // Garantir que sempre temos um ID válido
+  const messageId = strapiMessage.id?.toString() || strapiMessage.documentId || `fallback-${Date.now()}-${Math.random()}`
+  
+  if (!strapiMessage.id && !strapiMessage.documentId) {
+    console.warn('⚠️ Mensagem sem ID válido:', strapiMessage)
+  }
+  
   return {
-    id: strapiMessage.id?.toString() || strapiMessage.documentId,
+    id: messageId,
     content: strapiMessage.content,
     senderId: strapiMessage.sender?.id?.toString() || '',
     receiverId: strapiMessage.receiver?.id?.toString() || '',
@@ -33,8 +40,18 @@ export async function getConversationMessages(conversationId: string): Promise<M
   try {
     const response = await api.get(`/messages?conversationId=${conversationId}`)
     
+    console.log(`📥 Mensagens recebidas do servidor para conversa ${conversationId}:`, {
+      total: response.data.data?.length || 0,
+      messageIds: response.data.data?.map((msg: any) => msg.id) || []
+    })
+    
     // Transform messages from Strapi format to our format
     const transformedMessages = (response.data.data || []).map(transformStrapiMessage)
+    
+    console.log(`🔄 Mensagens transformadas para conversa ${conversationId}:`, {
+      total: transformedMessages.length,
+      transformedIds: transformedMessages.map((msg: any) => msg.id)
+    })
     
     return transformedMessages
   } catch (error: any) {
@@ -57,7 +74,13 @@ export async function sendMessage(request: CreateMessageRequest): Promise<Messag
       }
     })
     
-    return response.data.data
+    console.log('📤 Resposta do servidor (sendMessage):', response.data)
+    
+    // Transformar resposta do Strapi para nosso formato
+    const transformedMessage = transformStrapiMessage(response.data.data)
+    console.log('🔄 Mensagem transformada:', transformedMessage)
+    
+    return transformedMessage
   } catch (error: any) {
     console.error('❌ sendMessage - Failed:', {
       status: error.response?.status,
