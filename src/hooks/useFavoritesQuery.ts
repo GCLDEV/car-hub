@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useFavoritesStore } from '@store/favoritesStore'
 import { useAuthStore } from '@store/authStore'
-import { getUserFavorites, type FavoritesResult } from '@/services/api/favorites'
+import { getUserFavorites, addToFavorites, removeFromFavorites, type FavoritesResult } from '@/services/api/favorites'
+import { useMutationInvalidation } from './useQueryInvalidation'
 
 /**
  * Custom hook for managing favorites with React Query integration
@@ -10,13 +11,14 @@ import { getUserFavorites, type FavoritesResult } from '@/services/api/favorites
 export function useFavoritesQuery() {
   const queryClient = useQueryClient()
   const { isAuthenticated } = useAuthStore()
+  const { onFavoriteAdded, onFavoriteRemoved } = useMutationInvalidation()
   const { 
     favorites: localFavorites, 
-    addFavorite, 
-    removeFavorite, 
     isFavorite,
     syncFavorites,
-    loading: localLoading 
+    loading: localLoading,
+    addFavorite: addFavoriteToStore,
+    removeFavorite: removeFavoriteFromStore
   } = useFavoritesStore()
 
   // Query to fetch favorites from API
@@ -31,29 +33,26 @@ export function useFavoritesQuery() {
 
   // Mutation to add favorite
   const addFavoriteMutation = useMutation({
-    mutationFn: addFavorite,
-    onSuccess: () => {
-      // Invalidate and refetch favorites
-      queryClient.invalidateQueries({ queryKey: ['favorites'] })
-    }
+    mutationFn: async (carId: string) => {
+      await addFavoriteToStore(carId)
+      return carId
+    },
+    onSuccess: onFavoriteAdded()
   })
 
   // Mutation to remove favorite
   const removeFavoriteMutation = useMutation({
-    mutationFn: removeFavorite,
-    onSuccess: () => {
-      // Invalidate and refetch favorites
-      queryClient.invalidateQueries({ queryKey: ['favorites'] })
-    }
+    mutationFn: async (carId: string) => {
+      await removeFavoriteFromStore(carId)
+      return carId
+    },
+    onSuccess: onFavoriteRemoved()
   })
 
   // Sync favorites mutation
   const syncFavoritesMutation = useMutation({
     mutationFn: syncFavorites,
-    onSuccess: () => {
-      // Invalidate and refetch favorites
-      queryClient.invalidateQueries({ queryKey: ['favorites'] })
-    }
+    onSuccess: onFavoriteAdded() // Usa a mesma invalidação que adicionar favorito
   })
 
   return {

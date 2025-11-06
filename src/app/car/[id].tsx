@@ -22,6 +22,28 @@ import { colors } from '@theme/colors'
 import { ArrowLeft, Share, Heart } from 'phosphor-react-native'
 import useController from './controller'
 
+// Funções utilitárias para tratamento de dados
+function formatPrice(price: unknown): number {
+  const numPrice = Number(price)
+  return isNaN(numPrice) || numPrice <= 0 ? 0 : numPrice
+}
+
+function formatYear(year: unknown): number {
+  const numYear = Number(year)
+  const currentYear = new Date().getFullYear()
+  return isNaN(numYear) || numYear < 1900 || numYear > currentYear + 1 ? 0 : numYear
+}
+
+function formatKm(km: unknown): number {
+  const numKm = Number(km)
+  return isNaN(numKm) || numKm < 0 ? 0 : numKm
+}
+
+function formatString(value: unknown, fallback = 'Não informado'): string {
+  if (typeof value === 'string' && value.trim()) return value.trim()
+  return fallback
+}
+
 export default function CarDetailsScreen() {
   const {
     car,
@@ -95,21 +117,31 @@ export default function CarDetailsScreen() {
   if (error) return <ErrorState message={error} onRetry={goBack} />
   if (!car) return null
 
-  // Mock de imagens múltiplas (já que a API retorna apenas uma)
-  const carImages = [
-    car.images?.[0] || 'https://via.placeholder.com/1920x1080/333/fff?text=No+Image',
-    car.images?.[0] || 'https://via.placeholder.com/1920x1080/333/fff?text=No+Image',
-    car.images?.[0] || 'https://via.placeholder.com/1920x1080/333/fff?text=No+Image'
-  ]
+  // Dados tratados e formatados
+  const safeCarData = {
+    title: formatString(car.title, 'Veículo sem nome'),
+    description: formatString(car.description, 'Descrição não disponível'),
+    brand: formatString(car.brand, 'Marca não informada'),
+    model: formatString(car.model, 'Modelo não informado'),
+    year: formatYear(car.year),
+    price: formatPrice(car.price),
+    km: formatKm(car.km),
+    fuelType: formatString(car.fuelType, 'Combustível não informado'),
+    transmission: formatString(car.transmission, 'Câmbio não informado'),
+    color: formatString(car.color, 'Cor não informada'),
+    images: Array.isArray(car.images) && car.images.length > 0 
+      ? car.images 
+      : ['https://via.placeholder.com/1920x1080/333/fff?text=Imagem+Indisponível']
+  }
 
-  // Especificações para o grid
+  // Especificações para o grid com dados tratados
   const carSpecsData = {
-    year: car.year || 2020,
-    km: car.km || 45000,
-    fuelType: car.fuelType || 'Gasoline',
-    transmission: car.transmission || 'Manual',
-    engine: 'V6 3.0L',
-    color: car.color || 'Black'
+    year: safeCarData.year,
+    km: safeCarData.km ,
+    fuelType: safeCarData.fuelType,
+    transmission: safeCarData.transmission,
+    engine: formatString(car.specs?.engine, 'engine not informed'),
+    color: safeCarData.color
   }
 
   const handleCall = () => {
@@ -117,14 +149,6 @@ export default function CarDetailsScreen() {
       type: 'info',
       text1: 'Funcionalidade em desenvolvimento',
       text2: 'A ligação direta estará disponível em breve!'
-    })
-  }
-
-  const handleChat = () => {
-    Toast.show({
-      type: 'info',
-      text1: 'Chat em desenvolvimento',
-      text2: 'O chat com vendedores estará disponível em breve!'
     })
   }
 
@@ -145,7 +169,6 @@ export default function CarDetailsScreen() {
         className="justify-between items-center px-4 py-3"
         style={{ 
           backgroundColor: colors.alpha.black[30],
-          
         }}
       >
         <Pressable
@@ -193,21 +216,20 @@ export default function CarDetailsScreen() {
       >
         <VStack className="flex-1">
           {/* Galeria de Imagens */}
-          <CarImageGallery images={car.images || []} />
+          <CarImageGallery images={safeCarData.images} />
           
           {/* Descrição */}
           <CarDescription 
-            title={car.title}
-            description={car.description || ''}
-            brand={car.brand}
-            model={car.model}
-            year={car.year}
+            title={safeCarData.title}
+            description={safeCarData.description}
+            brand={safeCarData.brand}
+            model={safeCarData.model}
+            year={safeCarData.year}
           />
           
           {/* Preço e Rating */}
           <CarPriceRating 
-            price={car.price}
-            rating={4.5} 
+            price={safeCarData.price}
             isFavorite={isFavorite}
             onFavoritePress={toggleFavorite}
           />
@@ -215,20 +237,20 @@ export default function CarDetailsScreen() {
           {/* Especificações */}
           <Box className="px-4">
             <CarSpecsGrid 
-              year={car.year}
-              km={car.km || 0}
-              fuelType={car.fuelType || ''}
-              transmission={car.transmission || ''}
-              engine={car.specs?.engine}
-              color={car.color}
+              year={carSpecsData.year}
+              km={carSpecsData.km}
+              fuelType={carSpecsData.fuelType}
+              transmission={carSpecsData.transmission}
+              engine={carSpecsData.engine}
+              color={carSpecsData.color}
             />
           </Box>
           
           {/* Botões de Ação */}
           <CarActionButtons 
-            onCallPress={handleContact}
+            onCallPress={handleCall}
             onChatPress={handleContact}
-            onTestDrivePress={handleContact}
+            onTestDrivePress={handleTestDrive}
           />
         </VStack>
       </ScrollView>

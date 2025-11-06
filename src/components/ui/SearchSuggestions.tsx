@@ -38,9 +38,9 @@ export default function SearchSuggestions({ onSuggestionPress }: SearchSuggestio
       <VStack space="md">
         <HStack space="xs" className="items-center">
           <TrendUp size={20} color={colors.accent[500]} />
-          <Text className="text-white text-lg font-bold">
-            Buscas Populares
-          </Text>
+            <Text className="text-white text-lg font-bold">
+            Popular Searches
+            </Text>
         </HStack>
         
         <VStack space="sm">
@@ -66,9 +66,9 @@ export default function SearchSuggestions({ onSuggestionPress }: SearchSuggestio
       <VStack space="md">
         <HStack space="xs" className="items-center">
           <Clock size={20} color={colors.neutral[400]} />
-          <Text className="text-white text-lg font-bold">
-            Buscas Recentes
-          </Text>
+            <Text className="text-white text-lg font-bold">
+            Recent Searches
+            </Text>
         </HStack>
         
         <VStack space="sm">
@@ -99,10 +99,10 @@ export default function SearchSuggestions({ onSuggestionPress }: SearchSuggestio
           <Star size={20} color={colors.accent[500]} />
           <VStack className="flex-1" space="xs">
             <Text className="text-white font-semibold">
-              Dica
+              Tip
             </Text>
             <Text className="text-gray-400 text-sm">
-              Use palavras-chave como marca, modelo ou ano para encontrar resultados mais precisos
+              Use keywords like brand, model or year to find more precise results
             </Text>
           </VStack>
         </HStack>

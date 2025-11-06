@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useRouter } from 'expo-router'
+import { useRouter, useLocalSearchParams } from 'expo-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import Toast from 'react-native-toast-message'
 
 import { useAuthStore } from '@store/authStore'
@@ -13,17 +13,30 @@ import { createListingSchema, type CreateListingFormData } from '@/utils/validat
 import { carBrands } from '@/constants/carBrands'
 import { carCategories } from '@/constants/carCategories'
 import { fuelTypes, transmissionTypes, carColors } from '@/constants/fuelTypes'
-import { createCar } from '@/services/api/cars'
+import { getCarById, updateCar } from '@/services/api/cars'
 import type { Car } from '@/types/car'
 
-export default function useCreateListingController() {
+export default function useEditListingController() {
   const router = useRouter()
+  const { id } = useLocalSearchParams<{ id: string }>()
   const { user, isAuthenticated, token } = useAuthStore()
   const { setModal } = useModalStore()
   const { fetchUserListings } = useUserListingsStore()
   const queryClient = useQueryClient()
-  const { onCarCreated } = useMutationInvalidation()
+  const { onCarUpdated } = useMutationInvalidation()
   
+  // Query para buscar dados do carro
+  const { 
+    data: car, 
+    isLoading: loadingCar, 
+    error: carError 
+  } = useQuery({
+    queryKey: ['car', id],
+    queryFn: () => getCarById(id!),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+
   // Configuração do React Hook Form com Zod
   const form = useForm({
     resolver: zodResolver(createListingSchema),
@@ -49,69 +62,84 @@ export default function useCreateListingController() {
     mode: 'onChange'
   })
 
-  // Mutation para criar listagem
-  const createListingMutation = useMutation({
+  // Preencher formulário com dados do carro quando carregado
+  useEffect(() => {
+    if (car) {
+      // Verificar se o usuário é o dono do anúncio
+      if (car.seller?.id !== user?.id) {
+        Toast.show({
+          type: 'error',
+          text1: 'Acesso negado',
+          text2: 'Você só pode editar seus próprios anúncios'
+        })
+        router.back()
+        return
+      }
+
+      form.reset({
+        title: car.title || '',
+        brand: car.brand || '',
+        model: car.model || '',
+        category: car.category || '',
+        year: car.year?.toString() || new Date().getFullYear().toString(),
+        price: car.price?.toString() || '',
+        km: car.km?.toString() || '',
+        fuelType: car.fuelType || '',
+        transmission: car.transmission || '',
+        color: car.color || '',
+        description: car.description || '',
+        location: car.location || '',
+        doors: car.specs?.doors?.toString() || '',
+        seats: car.specs?.seats?.toString() || '',
+        engine: car.specs?.engine || '',
+        features: car.specs?.features || [],
+        images: car.images || []
+      })
+    }
+  }, [car, user, router, form])
+
+  // Mutation para atualizar listagem
+  const updateListingMutation = useMutation({
     mutationFn: async (data: CreateListingFormData) => {
-      return await createCar(data)
+      if (!id) throw new Error('ID do anúncio não encontrado')
+      return await updateCar(id, data)
     },
-    onSuccess: (newCar) => {
+    onSuccess: (updatedCar) => {
       Toast.show({
         type: 'success',
-        text1: 'Anúncio criado com sucesso!',
-        text2: 'Seu veículo e fotos foram listados no marketplace'
-      })
-      
-      // 🧹 Limpar formulário após sucesso
-      form.reset({
-        title: '',
-        brand: '',
-        model: '',
-        category: '',
-        year: new Date().getFullYear().toString(),
-        price: '',
-        km: '',
-        fuelType: '',
-        transmission: '',
-        color: '',
-        description: '',
-        location: '',
-        doors: '',
-        seats: '',
-        engine: '',
-        features: [] as string[],
-        images: []
+        text1: 'Anúncio atualizado!',
+        text2: 'As alterações foram salvas com sucesso'
       })
       
       // 🔄 Usar hook global de invalidação
-      onCarCreated()()
+      onCarUpdated(id!)()
       
-      // 🏠 Navegar para a home (onde o carro já estará visível!)
-      router.replace('/(tabs)/home')
+      // 🏠 Navegar de volta
+      router.back()
     },
     onError: (error: Error) => {
       Toast.show({
         type: 'error',
-        text1: 'Erro ao criar anúncio',
+        text1: 'Erro ao atualizar anúncio',
         text2: error.message || 'Tente novamente'
       })
     }
   })
 
-  const handleCreateListing = form.handleSubmit(async (data) => {
+  const handleUpdateListing = form.handleSubmit(async (data) => {
     try {
-      await createListingMutation.mutateAsync(data as unknown as CreateListingFormData)
+      await updateListingMutation.mutateAsync(data as unknown as CreateListingFormData)
     } catch (error) {
-      console.error('❌ Erro ao criar listagem:', error)
+      console.error('❌ Erro ao atualizar listagem:', error)
     }
   })
 
   // Verificar autenticação ao carregar a tela
   useEffect(() => {
     if (!isAuthenticated) {
-      // Se não estiver logado, mostra modal perguntando se quer fazer login
       setModal({
         type: 'confirm',
-        title: 'Você precisa estar logado para criar um anúncio. Deseja fazer login agora?',
+        title: 'Você precisa estar logado para editar anúncios. Deseja fazer login agora?',
         confirmText: 'Fazer login',
         cancelText: 'Voltar',
         action: () => {
@@ -121,7 +149,17 @@ export default function useCreateListingController() {
     }
   }, [isAuthenticated, setModal, router])
 
-
+  // Verificar se houve erro ao carregar o carro
+  useEffect(() => {
+    if (carError) {
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao carregar anúncio',
+        text2: 'Não foi possível carregar os dados do anúncio'
+      })
+      router.back()
+    }
+  }, [carError, router])
 
   // Gerar título automático baseado nos dados preenchidos
   const generateTitle = () => {
@@ -156,7 +194,9 @@ export default function useCreateListingController() {
     setValue: form.setValue,
     
     // Estados locais
-    loading: createListingMutation.isPending,
+    loading: updateListingMutation.isPending,
+    loadingCar,
+    car,
     
     // Dados para selects
     carBrands,
@@ -166,7 +206,7 @@ export default function useCreateListingController() {
     carColors,
     
     // Ações
-    onSubmit: handleCreateListing,
+    onSubmit: handleUpdateListing,
     generateTitle,
     
     // Utilitários
@@ -178,6 +218,6 @@ export default function useCreateListingController() {
     isFieldInvalid: (fieldName: keyof CreateListingFormData) => {
       return !!form.formState.errors[fieldName]
     },
-    canSubmit: form.formState.isValid && !createListingMutation.isPending
+    canSubmit: form.formState.isValid && !updateListingMutation.isPending
   }
 }

@@ -56,7 +56,6 @@ export default function useLoginController() {
 
 
   const handleLogin = form.handleSubmit(async (data) => {
-    console.log('🚀 handleLogin chamado com dados:', data)
     try {
       // Transformar dados do formulário para o formato da API
       const loginData: LoginRequest = {
@@ -64,7 +63,6 @@ export default function useLoginController() {
         password: data.password
       }
       
-      console.log('📤 Enviando dados para API:', loginData)
       await loginMutation.mutateAsync(loginData)
     } catch (error) {
       // Erro já tratado no onError da mutation
@@ -100,10 +98,6 @@ export default function useLoginController() {
     
     // Ações
     onSubmit: () => {
-      console.log('🔥 onSubmit chamado!')
-      console.log('📋 Valores do formulário:', form.getValues())
-      console.log('❌ Erros de validação:', form.formState.errors)
-      console.log('✅ Formulário válido:', form.formState.isValid)
       handleLogin()
     },
     handleLogin,

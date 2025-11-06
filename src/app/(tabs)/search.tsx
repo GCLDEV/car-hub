@@ -124,9 +124,9 @@ export default function SearchScreen() {
           <SearchSuggestions onSuggestionPress={handleSuggestionPress} />
         ) : searchResults.length === 0 ? (
           <EmptyState
-            title="Nenhum carro encontrado"
-            message="Tente ajustar sua busca ou filtros"
-            icon="�"
+            title="No cars found"
+            message="Try adjusting your search or filters"
+            icon="🔍"
           />
         ) : (
           <FlatList
@@ -137,9 +137,9 @@ export default function SearchScreen() {
             onEndReachedThreshold={0.1}
             refreshControl={
               <RefreshControl
-                refreshing={refreshing}
-                onRefresh={handleRefresh}
-                tintColor={colors.accent[500]}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor={colors.accent[500]}
               />
             }
             className="flex-1 px-4"

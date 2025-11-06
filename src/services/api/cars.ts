@@ -1,5 +1,5 @@
 import { Car, CarFilters, CarSearchResult } from '@/types/car'
-import api from './client'
+import api, { SERVER_BASE_URL } from './client'
 import type { CreateListingFormData } from '@/utils/validation'
 import { uploadMultipleImages } from './upload'
 import { useNetworkStore } from '@store/networkStore'
@@ -11,13 +11,6 @@ import { useOfflineCacheStore } from '@store/offlineCacheStore'
 
 // Transform Strapi car response to app Car format
 function transformStrapiCar(strapiCar: any): Car {
-  console.log('🔄 Transform Strapi Car - Raw seller data:', { 
-    sellerId: strapiCar.seller?.id, 
-    sellerUsername: strapiCar.seller?.username,
-    sellerName: strapiCar.seller?.name,
-    fullSeller: strapiCar.seller 
-  })
-  
   return {
     id: strapiCar.id.toString(),
     title: strapiCar.title,
@@ -40,7 +33,7 @@ function transformStrapiCar(strapiCar: any): Car {
       }
       // Se é URL relativa do Strapi, construir URL completa
       if (img.url) {
-        return `http://192.168.0.8:1337${img.url}`;
+        return `${SERVER_BASE_URL}${img.url}`;
       }
       // Fallback para placeholder apenas se não houver imagem
       return null;
@@ -360,8 +353,6 @@ export async function searchCars(query: string, filters?: CarFilters): Promise<C
         params['pagination[pageSize]'] = 10
       }
       
-      // Debug log to check what's being sent
-      console.log('Search params being sent:', params)
     }
 
     const response = await api.get('/cars/search', { params })
@@ -490,6 +481,77 @@ export async function updateCarStatus(id: string, status: 'available' | 'sold' |
     return transformStrapiCar(response.data.data)
   } catch (error: any) {
     throw new Error(error.response?.data?.error?.message || 'Erro ao atualizar status')
+  }
+}
+
+// Atualizar carro existente no Strapi
+export async function updateCar(id: string, data: CreateListingFormData): Promise<Car> {
+  try {
+    // Passo 1: Fazer upload das novas imagens se existirem
+    let imageIds: number[] = []
+    if (data.images && data.images.length > 0) {
+      // Separar imagens existentes (que já são URLs) de novas imagens (que são URIs locais)
+      const existingImages = data.images.filter(img => typeof img === 'string' && img.startsWith('http'))
+      const newImages = data.images.filter(img => typeof img === 'string' && !img.startsWith('http'))
+      
+      // Upload apenas das novas imagens
+      if (newImages.length > 0) {
+        const newImageResults = await uploadMultipleImages(newImages)
+        imageIds = [...imageIds, ...newImageResults.map(img => img.id)]
+      }
+      
+      // Para imagens existentes, precisamos manter as IDs (não implementado neste exemplo)
+      // Por simplicidade, vamos re-enviar todas as imagens novas
+      if (newImages.length > 0) {
+        const allNewImages = await uploadMultipleImages(data.images)
+        imageIds = allNewImages.map(img => img.id)
+      }
+    }
+
+    // Passo 2: Transformar dados do form para o formato do Strapi
+    const carData = {
+      data: {
+        title: data.title,
+        brand: data.brand,
+        model: data.model,
+        category: data.category,
+        year: Number(data.year),
+        price: Number(data.price.toString().replace(/\D/g, '')),
+        location: data.location,
+        cityState: data.location,
+        features: data.features || [],
+        
+        // Só atualizar imagens se houver novas
+        ...(imageIds.length > 0 && { images: imageIds }),
+        
+        // Campos opcionais - só enviar se existirem e não forem vazios
+        ...(data.km && data.km.trim() !== '' && { km: Number(data.km.toString().replace(/\D/g, '')) }),
+        ...(data.fuelType && data.fuelType.trim() !== '' && { fuelType: data.fuelType }),
+        ...(data.transmission && data.transmission.trim() !== '' && { transmission: data.transmission }),
+        ...(data.color && data.color.trim() !== '' && { color: data.color }),
+        ...(data.description && data.description.trim() !== '' && { description: data.description }),
+        ...(data.engine && data.engine.trim() !== '' && { engine: data.engine }),
+        ...(data.doors && data.doors.trim() !== '' && { doors: Number(data.doors) }),
+        ...(data.seats && data.seats.trim() !== '' && { seats: Number(data.seats) })
+      }
+    }
+
+    const response = await api.put(`/cars/${id}`, carData)
+
+    // Usar a função transformStrapiCar para consistência
+    const car = transformStrapiCar(response.data.data)
+    return car
+  } catch (error: any) {
+    // Extrair erros específicos do Strapi
+    const strapiError = error.response?.data?.error
+    if (strapiError?.details?.errors) {
+      const errorMessages = strapiError.details.errors.map((err: any) => 
+        `${err.path?.join('.')}: ${err.message}`
+      ).join(', ')
+      throw new Error(`Erro de validação: ${errorMessages}`)
+    }
+    
+    throw new Error(error.response?.data?.error?.message || 'Erro ao atualizar anúncio')
   }
 }
 

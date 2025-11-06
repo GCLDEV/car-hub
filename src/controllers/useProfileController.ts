@@ -8,6 +8,7 @@ import { useFavoritesStore } from '@store/favoritesStore'
 import { useUserListingsStore } from '@store/userListingsStore'
 import { useModalStore } from '@store/modalStore'
 import useAuthGuard from '@hooks/useAuthGuard'
+import { useQueryInvalidation } from '@hooks/useQueryInvalidation'
 
 export default function useProfileController() {
   const router = useRouter()
@@ -18,6 +19,7 @@ export default function useProfileController() {
   const { listings: userListings, fetchUserListings, loading } = useUserListingsStore()
   const { setModal } = useModalStore()
   const { checkAuth } = useAuthGuard()
+  const { invalidateByContext } = useQueryInvalidation()
   
   const [refreshing, setRefreshing] = useState(false)
 
@@ -125,12 +127,8 @@ export default function useProfileController() {
     setRefreshing(true)
     
     try {
-      // Invalidar todas as queries relacionadas ao usuário
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['user-cars', user.id] }),
-        queryClient.invalidateQueries({ queryKey: ['favorites'] }),
-        queryClient.invalidateQueries({ queryKey: ['user-profile'] })
-      ])
+      // 🔄 Usar hook global de invalidação para refresh manual
+      await invalidateByContext('manual-refresh')
       
       // Recarregar listings do usuário através do store
       await fetchUserListings(user.id)

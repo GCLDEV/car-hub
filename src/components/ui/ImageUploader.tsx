@@ -1,11 +1,14 @@
 import React, { useState } from 'react'
-import { Alert, Platform } from 'react-native'
+import { Platform } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
+import * as ImageManipulator from 'expo-image-manipulator'
+import Toast from 'react-native-toast-message'
 import { 
   Camera, 
   Image as ImageIcon, 
   X, 
-  Plus 
+  Plus,
+  PencilSimple
 } from 'phosphor-react-native'
 
 import { VStack } from '@components/ui/vstack'
@@ -15,6 +18,7 @@ import { Text } from '@components/ui/text'
 import { Pressable } from '@components/ui/pressable'
 import { Image } from '@components/ui/image'
 import { ScrollView } from '@components/ui/scroll-view'
+import { useModalStore } from '@store/modalStore'
 
 import { colors } from '@theme/colors'
 
@@ -40,65 +44,136 @@ export default function ImageUploader({
   error
 }: ImageUploaderProps) {
   const [loading, setLoading] = useState(false)
+  const { setModal } = useModalStore()
 
   // Solicitar permissões
   const requestPermissions = async () => {
     if (Platform.OS !== 'web') {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
       if (status !== 'granted') {
-        Alert.alert(
-          'Permissão necessária',
-          'É preciso permitir acesso à galeria para adicionar fotos.'
-        )
+        Toast.show({
+          type: 'error',
+          text1: 'Permissão necessária',
+          text2: 'É preciso permitir acesso à galeria para adicionar fotos.'
+        })
         return false
       }
     }
     return true
   }
 
-  // Abrir seletor de imagem
-  const pickImage = async () => {
+
+
+  // Escolher uma foto e cortar diretamente
+  const pickAndCropSingle = async () => {
     try {
       setLoading(true)
       
       const hasPermission = await requestPermissions()
       if (!hasPermission) return
 
+      // Verificar limite
+      if (images.length >= maxImages) {
+        Toast.show({
+          type: 'error',
+          text1: 'Limite excedido',
+          text2: `Você pode adicionar no máximo ${maxImages} fotos.`
+        })
+        return
+      }
+
+      // Selecionar uma imagem com corte direto
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: multiple,
+        allowsMultipleSelection: false,
+        allowsEditing: true,
         quality: 0.8,
         aspect: [16, 9],
-        allowsEditing: !multiple, // Só permite edição se For imagem única
       })
 
       if (!result.canceled) {
-        if (multiple) {
-          // Múltiplas imagens
-          const newImages = result.assets.map(asset => asset.uri)
-          const allImages = [...images, ...newImages]
-          
-          // Limitar ao máximo de imagens
-          if (allImages.length > maxImages) {
-            Alert.alert(
-              'Limite excedido', 
-              `Você pode adicionar no máximo ${maxImages} fotos.`
-            )
-            onImagesChange(allImages.slice(0, maxImages))
-          } else {
-            onImagesChange(allImages)
-          }
-        } else {
-          // Imagem única
-          onImagesChange([result.assets[0].uri])
-        }
+        const allImages = [...images, result.assets[0].uri]
+        onImagesChange(allImages)
+        
+        Toast.show({
+          type: 'success',
+          text1: 'Foto adicionada!',
+          text2: 'Imagem cortada e adicionada com sucesso.'
+        })
       }
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível selecionar a imagem.')
+      Toast.show({
+        type: 'error',
+        text1: 'Erro',
+        text2: 'Não foi possível selecionar e cortar a imagem.'
+      })
     } finally {
       setLoading(false)
     }
   }
+
+  // Substituir imagem existente
+  const replaceImage = async (index: number) => {
+    try {
+      setLoading(true)
+      
+      const hasPermission = await requestPermissions()
+      if (!hasPermission) return
+
+      // Selecionar nova imagem
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: false,
+        allowsEditing: true,
+        quality: 0.8,
+        aspect: [16, 9],
+      })
+
+      if (!result.canceled) {
+        const newImages = [...images]
+        newImages[index] = result.assets[0].uri
+        onImagesChange(newImages)
+        
+        Toast.show({
+          type: 'success',
+          text1: 'Foto substituída!',
+          text2: 'Imagem foi substituída com sucesso.'
+        })
+      }
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Erro',
+        text2: 'Não foi possível substituir a imagem.'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+
+
+  // Mostrar opções quando clicar em imagem existente
+  const showImageEditOptions = (index: number) => {
+    setModal({
+      type: 'options',
+      title: 'Editar Foto',
+      options: [
+        { 
+          title: 'Substituir Imagem', 
+          action: () => replaceImage(index),
+          variant: 'primary'
+        },
+        { 
+          title: 'Remover', 
+          action: () => removeImage(index),
+          variant: 'danger'
+        }
+      ]
+    })
+  }
+
+
 
   // Tirar foto com câmera
   const takePhoto = async () => {
@@ -107,40 +182,46 @@ export default function ImageUploader({
       
       const { status } = await ImagePicker.requestCameraPermissionsAsync()
       if (status !== 'granted') {
-        Alert.alert(
-          'Permissão necessária',
-          'É preciso permitir acesso à câmera para tirar fotos.'
-        )
+        Toast.show({
+          type: 'error',
+          text1: 'Permissão necessária',
+          text2: 'É preciso permitir acesso à câmera para tirar fotos.'
+        })
+        return
+      }
+
+      // Verificar limite antes de tirar foto
+      if (images.length >= maxImages) {
+        Toast.show({
+          type: 'error',
+          text1: 'Limite excedido',
+          text2: `Você pode adicionar no máximo ${maxImages} fotos.`
+        })
         return
       }
 
       const result = await ImagePicker.launchCameraAsync({
         quality: 0.8,
         aspect: [16, 9],
-        allowsEditing: true,
+        allowsEditing: true, // Sempre permite edição para fotos da câmera
       })
 
       if (!result.canceled) {
-        if (multiple) {
-          const allImages = [...images, result.assets[0].uri]
-          if (allImages.length > maxImages) {
-            Alert.alert(
-              'Limite excedido', 
-              `Você pode adicionar no máximo ${maxImages} fotos.`
-            )
-            return
-          }
-          onImagesChange(allImages)
-        } else {
-          onImagesChange([result.assets[0].uri])
-        }
+        const allImages = [...images, result.assets[0].uri]
+        onImagesChange(allImages)
       }
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível tirar a foto.')
+      Toast.show({
+        type: 'error',
+        text1: 'Erro',
+        text2: 'Não foi possível tirar a foto.'
+      })
     } finally {
       setLoading(false)
     }
   }
+
+
 
   // Remover imagem
   const removeImage = (index: number) => {
@@ -150,18 +231,25 @@ export default function ImageUploader({
 
   // Mostrar opções de adicionar imagem
   const showImageOptions = () => {
-    Alert.alert(
-      'Adicionar Foto',
-      'Escolha uma opção:',
-      [
-        { text: 'Galeria', onPress: pickImage },
-        { text: 'Câmera', onPress: takePhoto },
-        { text: 'Cancelar', style: 'cancel' }
+    setModal({
+      type: 'options',
+      title: 'Adicionar Foto',
+      options: [
+        { 
+          title: 'Escolher da Galeria', 
+          action: () => pickAndCropSingle(),
+          variant: 'primary'
+        },
+        { 
+          title: 'Tirar Foto', 
+          action: () => takePhoto(),
+          variant: 'secondary'
+        }
       ]
-    )
+    })
   }
 
-  const canAddMore = multiple ? images.length < maxImages : images.length === 0
+  const canAddMore = images.length < maxImages
 
   return (
     <VStack className="w-full">
@@ -187,11 +275,21 @@ export default function ImageUploader({
           <HStack className="gap-3">
             {images.map((imageUri, index) => (
               <Box key={index} className="relative">
-                <Image
-                  source={{ uri: imageUri }}
-                  className="w-20 h-20 rounded-lg"
-                  alt={`Imagem ${index + 1}`}
-                />
+                {/* Imagem clicável */}
+                <Pressable 
+                  onPress={() => showImageEditOptions(index)}
+                  className="border-2 border-transparent rounded-lg"
+                  style={({ pressed }) => ({
+                    opacity: pressed ? 0.8 : 1,
+                    borderColor: pressed ? colors.accent[500] : 'transparent'
+                  })}
+                >
+                  <Image
+                    source={{ uri: imageUri }}
+                    className="w-20 h-20 rounded-lg"
+                    alt={`Imagem ${index + 1}`}
+                  />
+                </Pressable>
                 
                 {/* Botão remover */}
                 <Pressable
@@ -200,6 +298,18 @@ export default function ImageUploader({
                 >
                   <X size={12} color={colors.neutral[100]} weight="bold" />
                 </Pressable>
+                
+                {/* Indicador visual de que é clicável */}
+                <Box 
+                  className="absolute bottom-1 right-1 w-5 h-5 rounded-full items-center justify-center border"
+                  style={{ 
+                    backgroundColor: colors.neutral[900] + 'E6',
+                    borderColor: colors.neutral[600],
+                    opacity: 0.9 
+                  }}
+                >
+                  <PencilSimple size={10} color={colors.accent[400]} weight="bold" />
+                </Box>
               </Box>
             ))}
           </HStack>
@@ -223,8 +333,8 @@ export default function ImageUploader({
         >
           <VStack className="items-center gap-2">
             {loading ? (
-              <Text className="text-neutral-400">
-                Carregando...
+              <Text className="text-neutral-400 font-medium">
+                Processando foto...
               </Text>
             ) : (
               <>
@@ -238,14 +348,12 @@ export default function ImageUploader({
                 
                 <VStack className="items-center">
                   <Text className="text-neutral-100 font-medium">
-                    {images.length === 0 ? placeholder : 'Adicionar mais'}
+                    {images.length === 0 ? 'Adicionar foto' : 'Adicionar mais uma'}
                   </Text>
                   
-                  {multiple && (
-                    <Text className="text-neutral-400 text-sm">
-                      {images.length}/{maxImages} fotos
-                    </Text>
-                  )}
+                  <Text className="text-neutral-400 text-sm">
+                    {images.length}/{maxImages} fotos • Uma por vez
+                  </Text>
                   
                   <HStack className="gap-2 mt-1">
                     <HStack className="items-center gap-1">
@@ -272,7 +380,7 @@ export default function ImageUploader({
       )}
 
       {/* Limite atingido */}
-      {multiple && images.length >= maxImages && (
+      {images.length >= maxImages && (
         <Text className="text-neutral-400 text-sm mt-2 text-center">
           Limite de {maxImages} fotos atingido
         </Text>

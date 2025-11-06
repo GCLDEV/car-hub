@@ -61,7 +61,6 @@ export default function useRegisterController() {
   })
 
   const handleRegister = form.handleSubmit(async (data) => {
-    console.log('🚀 handleRegister chamado com dados:', data)
     try {
       // Transformar dados do formulário para o formato da API
       const registerData: RegisterRequest = {
@@ -73,11 +72,9 @@ export default function useRegisterController() {
         isDealer: data.isDealer || false
       }
       
-      console.log('📤 Enviando dados para API:', registerData)
       await registerMutation.mutateAsync(registerData)
     } catch (error) {
       // Erro já tratado no onError da mutation
-      console.error('❌ Erro no registro:', error)
     }
   })
 
@@ -119,10 +116,6 @@ export default function useRegisterController() {
     
     // Ações
     onSubmit: () => {
-      console.log('🔥 onSubmit chamado!')
-      console.log('📋 Valores do formulário:', form.getValues())
-      console.log('❌ Erros de validação:', form.formState.errors)
-      console.log('✅ Formulário válido:', form.formState.isValid)
       handleRegister()
     },
     handleLogin,

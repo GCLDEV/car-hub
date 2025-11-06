@@ -10,21 +10,20 @@ import {
   Bell,
   MagnifyingGlass,
   Plus,
-  MapPin,
   User,
   Gear,
   Funnel
 } from 'phosphor-react-native'
 
 import { colors } from '@theme/colors'
+import { useRouter } from 'expo-router'
 
 interface HomeHeaderProps {
   userName: string
-  userLocation: string
+  userAvatar?: string
   notificationCount?: number
   activeFiltersCount?: number
   onNotificationPress: () => void
-  onLocationPress: () => void
   onSearchPress: () => void
   onFiltersPress: () => void
   onClearFiltersPress?: () => void
@@ -33,29 +32,40 @@ interface HomeHeaderProps {
 
 export default function HomeHeader({
   userName,
-  userLocation,
+  userAvatar,
   notificationCount = 0,
   activeFiltersCount = 0,
   onNotificationPress,
-  onLocationPress,
   onSearchPress,
   onFiltersPress,
   onClearFiltersPress,
   onSettingsPress
 }: HomeHeaderProps) {
+
+    const router = useRouter()
+
+    function handleProfilePress() {
+      router.push('/profile')
+    }
+
   return (
     <VStack space="lg" className="px-4 pt-4 pb-6" style={{ backgroundColor: colors.neutral[900] }}>
       {/* Top bar */}
       <HStack className="justify-between items-center">
-        {/* Location */}
-        <Pressable
-          onPress={onLocationPress}
-          className="flex-row items-center flex-1"
-        >
-          <MapPin size={16} color={colors.neutral[400]} weight="fill" />
-          <Text className="text-gray-400 text-sm font-medium ml-2">
-            {userLocation}
-          </Text>
+        {/* User Profile */}
+        <Pressable onPress={handleProfilePress}>
+          <HStack space="md">
+            <Avatar size="md">
+              {userAvatar ? (
+                <AvatarImage source={{ uri: userAvatar }} alt={userName} />
+              ) : (
+                <AvatarFallbackText>{userName.charAt(0).toUpperCase()}</AvatarFallbackText>
+              )}
+            </Avatar>
+            <Text className="text-gray-300 text-sm font-medium">
+              Hello, {userName}
+            </Text>
+          </HStack>
         </Pressable>
 
         <HStack space='md'>
@@ -98,10 +108,7 @@ export default function HomeHeader({
 
       {/* Greeting */}
       <VStack space="xs">
-        <Text className="text-white text-base">
-          Hello, <Text className="font-semibold">{userName}</Text>
-        </Text>
-        <Text style={{ color: colors.accent[500] }} className="text-lg font-bold">
+        <Text style={{ color: colors.accent[500] }} className="text-lg pt-2 font-bold">
           Get Your Dream Car Today!
         </Text>
       </VStack>

@@ -23,19 +23,6 @@ export default function CarActionButtons({
   return (
     <Box className="px-4 pb-6 pt-4">
       <HStack space="md" className="mb-4">
-        {/* Botão Ligar */}
-        <Pressable 
-          onPress={onCallPress}
-          className="flex-1 h-14 rounded-2xl justify-center items-center"
-          style={{ backgroundColor: colors.neutral[800] }}
-        >
-          <HStack space="sm" className="items-center">
-            <Phone size={20} color={colors.neutral[300]} />
-            <Text className="text-neutral-300 font-semibold">
-              Call
-            </Text>
-          </HStack>
-        </Pressable>
         
         {/* Botão Chat */}
         <Pressable 
@@ -52,19 +39,6 @@ export default function CarActionButtons({
         </Pressable>
       </HStack>
       
-      {/* Botão Test Drive */}
-      <Pressable 
-        onPress={onTestDrivePress}
-        className="w-full h-14 rounded-2xl justify-center items-center"
-        style={{ backgroundColor: colors.accent[500] }}
-      >
-        <Text 
-          style={{ color: colors.neutral[900] }}
-          className="font-bold text-lg"
-        >
-          Book Test Drive
-        </Text>
-      </Pressable>
     </Box>
   )
 }

@@ -44,10 +44,21 @@ function ConversationItem({ conversation, onPress }: ConversationItemProps) {
   }
 
   const getOtherParticipant = () => {
-    // Por ora, usando dados mock - depois será integrado com API
+    // Log para debug - ver estrutura real da conversa
+    
+    // Usar dados reais da conversa (casting temporário)
+    const conv = conversation as any
+    if (conv.otherUser) {
+      return {
+        name: conv.otherUser.username || 'Usuário',
+        avatar: undefined // Sem avatar por enquanto
+      }
+    }
+    
+    // Fallback se não tiver otherUser
     return {
-      name: 'João Silva',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
+      name: 'Usuário', 
+      avatar: undefined
     }
   }
 
@@ -63,8 +74,11 @@ function ConversationItem({ conversation, onPress }: ConversationItemProps) {
         {/* Avatar */}
         <Box className="relative">
           <Avatar size="lg">
-            <AvatarImage source={{ uri: otherUser.avatar }} />
-            <AvatarFallbackText>{otherUser.name}</AvatarFallbackText>
+            {otherUser.avatar ? (
+              <AvatarImage source={{ uri: otherUser.avatar }} />
+            ) : (
+              <AvatarFallbackText>{otherUser.name}</AvatarFallbackText>
+            )}
           </Avatar>
           
           {/* Status online */}
@@ -107,16 +121,18 @@ function ConversationItem({ conversation, onPress }: ConversationItemProps) {
               className="text-neutral-300 text-sm flex-1"
               numberOfLines={1}
             >
-              {conversation.lastMessage.content}
+              {conversation.lastMessage?.content || 'Conversa iniciada'}
             </Text>
             
             <HStack space="xs" className="items-center">
-              {/* Status de leitura */}
-              <CheckCircle 
-                size={16} 
-                color={conversation.lastMessage.isRead ? colors.accent[500] : colors.neutral[500]}
-                weight={conversation.lastMessage.isRead ? 'fill' : 'regular'}
-              />
+              {/* Status de leitura - só mostrar se há última mensagem */}
+              {conversation.lastMessage && (
+                <CheckCircle 
+                  size={16} 
+                  color={conversation.lastMessage.isRead ? colors.accent[500] : colors.neutral[500]}
+                  weight={conversation.lastMessage.isRead ? 'fill' : 'regular'}
+                />
+              )}
               
               {/* Badge de não lidas */}
               {conversation.unreadCount > 0 && (

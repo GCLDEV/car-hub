@@ -1,9 +1,13 @@
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
+// Configuração centralizada da API
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_ADDRESS || 'http://localhost:1337/api'
+export const SERVER_BASE_URL = API_BASE_URL.replace('/api', '') // Para imagens e uploads
+
 // Cliente HTTP para API Strapi real
 const api = axios.create({
-  baseURL: 'http://192.168.0.8:1337/api',
+  baseURL: API_BASE_URL,
   timeout: 30000, // Aumentado para 30 segundos
   headers: {
     'Content-Type': 'application/json'

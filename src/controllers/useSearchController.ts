@@ -34,7 +34,9 @@ export default function useSearchController() {
     error,
     fetchNextPage,
     hasNextPage,
-    refetch
+    refetch,
+    isFetchingNextPage,
+    isRefetching
   } = useInfiniteQuery({
     queryKey: ['search-cars', debouncedSearchQuery, filters],
     queryFn: async ({ pageParam = 1 }) => {
@@ -52,7 +54,36 @@ export default function useSearchController() {
     getNextPageParam: (lastPage: any, pages) => {
       return lastPage.hasMore ? pages.length + 1 : undefined
     },
-    enabled: !!debouncedSearchQuery.trim() // Busca automaticamente quando tem texto
+    enabled: !!debouncedSearchQuery.trim(), // Busca automaticamente quando tem texto
+    
+    // ✨ Configurações otimizadas para busca em tempo real
+    staleTime: 1 * 60 * 1000,             // 1 minuto - dados de busca ficam obsoletos mais rápido
+    gcTime: 5 * 60 * 1000,                // 5 minutos em memória
+    refetchOnWindowFocus: true,           // Atualiza quando volta ao app
+    refetchOnReconnect: true,             // Atualiza quando reconecta
+    
+    // 🚀 Polling apenas se tem resultados e está em horário ativo
+    refetchInterval: (query) => {
+      const hour = new Date().getHours()
+      const isBusinessHours = hour >= 8 && hour <= 20
+      const hasResults = query.state.data?.pages.some((page: any) => page.results.length > 0)
+      
+      // Só faz polling se tem resultados e está em horário comercial
+      if (hasResults && isBusinessHours) {
+        return 3 * 60 * 1000  // 3 minutos
+      }
+      return false  // Não faz polling fora do horário ou sem resultados
+    },
+    
+    refetchIntervalInBackground: false,
+    
+    // Retry inteligente
+    retry: (failureCount, error: any) => {
+      if (error?.response?.status === 404) return false
+      return failureCount < 2  // Menos retries para busca
+    },
+    
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 15000),
   })
 
   // Controlar estado hasSearched
