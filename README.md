@@ -6,6 +6,31 @@
 
 Car Hub é uma plataforma profissional para o mercado automotivo brasileiro, oferecendo uma experiência completa tanto para compradores quanto vendedores de veículos. O app combina **design moderno**, **performance otimizada**, **arquitetura offline-first** e **integração 100% real com API Strapi**.
 
+## ⚠️ Pré-requisitos Importantes
+
+Este aplicativo **requer a API backend** para funcionar corretamente. Você deve executar os dois projetos simultaneamente:
+
+### 📦 Projetos Necessários
+1. **🚗 car-hub** (este repositório) - Frontend React Native
+2. **🚀 [car-hub-api](https://github.com/GCLDEV/car-hub-api)** - Backend Strapi v5 + MySQL
+
+### 🔧 Como Executar
+```bash
+# Terminal 1 - Backend API (obrigatório)
+git clone https://github.com/GCLDEV/car-hub-api
+cd car-hub-api
+yarn install
+yarn develop
+
+# Terminal 2 - Frontend App (este repo)
+git clone https://github.com/GCLDEV/car-hub
+cd car-hub
+yarn install
+yarn start
+```
+
+⚡ **O app não funcionará sem a API rodando!** Certifique-se de que ambos os projetos estejam executando.
+
 ### 🏆 **Destaques do Projeto**
 - ✅ **API 100% Real** - Integração completa com Strapi v5 + MySQL
 - ✅ **Upload de Avatar** - Sistema real de upload de fotos de perfil  
@@ -446,6 +471,10 @@ http://localhost:1337/admin
 # Edite src/services/api/client.ts e upload.ts
 # Substitua 192.168.0.8 pelo IP da sua máquina local
 ```
+
+> **⚠️ IMPORTANTE**: O aplicativo **NÃO FUNCIONARÁ** sem a API rodando simultaneamente. Sempre execute os dois comandos em terminais separados:
+> - Terminal 1: `cd car-hub-api && yarn develop` (API backend)
+> - Terminal 2: `cd car-hub && yarn start` (App mobile)
 
 ## 🌐 Sistema de API Real
 
