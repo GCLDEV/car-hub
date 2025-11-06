@@ -3,9 +3,23 @@ import { io, Socket } from 'socket.io-client'
 import { useAuthStore } from '@store/authStore'
 import { useQueryInvalidation } from '@hooks/useQueryInvalidation'
 
-// Configuração do servidor WebSocket (usa mesma base da API)
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_ADDRESS || 'http://localhost:1337/api'
-const SOCKET_URL = API_BASE_URL.replace('/api', '') // Remove /api para ficar só o servidor base
+// Configuração dinâmica do servidor WebSocket
+function getSocketURL() {
+  // 1. Prioridade: variável específica para WebSocket
+  if (process.env.EXPO_PUBLIC_WEBSOCKET_URL) {
+    console.log('🔌 Usando WEBSOCKET_URL específica:', process.env.EXPO_PUBLIC_WEBSOCKET_URL)
+    return process.env.EXPO_PUBLIC_WEBSOCKET_URL
+  }
+  
+  // 2. Usar mesma base da API (remove /api)
+  const apiUrl = process.env.EXPO_PUBLIC_API_ADDRESS || 'http://localhost:1337/api'
+  console.log('🚀 API_BASE_URL:', apiUrl)
+  return apiUrl.replace('/api', '')
+}
+
+const SOCKET_URL = getSocketURL()
+
+console.log('🔌 WebSocket URL configurada:', SOCKET_URL)
 
 // Classe para gerenciar conexão WebSocket
 class WebSocketService {
@@ -16,22 +30,26 @@ class WebSocketService {
   private invalidateQueries: any = null
 
   // Inicializar conexão
-  connect(token: string) {
+  connect(token: string, customUrl?: string) {
     if (this.socket?.connected) {
       console.log('🔌 WebSocket já conectado')
       return
     }
 
-    console.log('🔌 Conectando ao WebSocket...')
+    // Usar URL customizada se fornecida, senão usar a configurada
+    const socketUrl = customUrl || getSocketURL()
+    
+    console.log('🔌 Conectando ao WebSocket:', socketUrl)
 
-    this.socket = io(SOCKET_URL, {
+    this.socket = io(socketUrl, {
       auth: { token },
       transports: ['websocket', 'polling'],
-      timeout: 10000,
+      timeout: 20000, // Aumentado para ngrok
       reconnection: true,
       reconnectionAttempts: this.maxReconnectAttempts,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
+      reconnectionDelay: 2000, // Aumentado para ngrok
+      reconnectionDelayMax: 10000, // Aumentado para ngrok
+      forceNew: true, // Força nova conexão se URL mudou
     })
 
     this.setupEventListeners()
@@ -45,6 +63,13 @@ class WebSocketService {
       this.socket = null
       this.isConnected = false
     }
+  }
+
+  // Reconectar com nova URL (útil quando ngrok muda)
+  reconnectWithNewUrl(token: string, newUrl: string) {
+    console.log('🔄 Reconectando WebSocket com nova URL:', newUrl)
+    this.disconnect()
+    this.connect(token, newUrl)
   }
 
   // Configurar listeners de eventos
@@ -207,7 +232,7 @@ class WebSocketService {
 export const websocketService = new WebSocketService()
 
 // Hook para usar WebSocket em componentes React
-export function useWebSocket() {
+export function useWebSocket(customUrl?: string) {
   const { token, isAuthenticated } = useAuthStore()
   const { invalidateByContext } = useQueryInvalidation()
 
@@ -219,7 +244,7 @@ export function useWebSocket() {
   // Conectar/desconectar baseado na autenticação
   React.useEffect(() => {
     if (isAuthenticated && token) {
-      websocketService.connect(token)
+      websocketService.connect(token, customUrl)
     } else {
       websocketService.disconnect()
     }
@@ -228,7 +253,7 @@ export function useWebSocket() {
       // Cleanup na desmontagem do componente
       websocketService.disconnect()
     }
-  }, [isAuthenticated, token])
+  }, [isAuthenticated, token, customUrl])
 
   return {
     connected: websocketService.connected,
@@ -237,7 +262,10 @@ export function useWebSocket() {
     leaveConversation: websocketService.leaveConversation.bind(websocketService),
     startTyping: websocketService.startTyping.bind(websocketService),
     stopTyping: websocketService.stopTyping.bind(websocketService),
-    markMessagesAsRead: websocketService.markMessagesAsRead.bind(websocketService)
+    markMessagesAsRead: websocketService.markMessagesAsRead.bind(websocketService),
+    reconnectWithNewUrl: (newUrl: string) => {
+      if (token) websocketService.reconnectWithNewUrl(token, newUrl)
+    }
   }
 }
 

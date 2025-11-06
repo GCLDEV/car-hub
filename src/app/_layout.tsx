@@ -9,6 +9,7 @@ import Toast from 'react-native-toast-message'
 import GlobalHeader from '@components/ui/GlobalHeader'
 import { useAuthStore } from '@store/authStore'
 import { useFavoritesStore } from '@store/favoritesStore'
+import WebSocketInitializer from '@components/WebSocketInitializer'
 import { colors } from '@theme/colors'
 
 import '../../global.css'
@@ -63,6 +64,9 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <GluestackUIProvider>
         <QueryClientProvider client={queryClient}>
+          {/* 🔌 Inicializar WebSocket dentro do QueryClientProvider */}
+          <WebSocketInitializer />
+          
           <StatusBar backgroundColor="transparent" style='light' translucent />
           <View className='flex-1'
             style={{ backgroundColor: colors.neutral[900] }}>
