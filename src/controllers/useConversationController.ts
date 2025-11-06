@@ -15,19 +15,29 @@ export default function useConversationController() {
   const [inputMessage, setInputMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [otherUserTyping, setOtherUserTyping] = useState(false)
+  const [otherUserOnline, setOtherUserOnline] = useState(false)
+  const [otherUserInConversation, setOtherUserInConversation] = useState(false)
 
   // 🔌 WebSocket hooks
-  const { connected, joinConversation, leaveConversation, startTyping, stopTyping, markMessagesAsRead } = useWebSocket()
+  const { 
+    connected, 
+    joinConversation, 
+    leaveConversation, 
+    startTyping, 
+    stopTyping, 
+    markMessagesAsRead,
+    checkUserOnlineStatus,
+    enterConversation
+  } = useWebSocket()
 
   // 🎧 WebSocket event listeners
   useWebSocketEvent('newMessage', (messageData: any) => {
-    console.log('🎧 Nova mensagem recebida via WebSocket:', messageData)
+    
     
     // Add message to current conversation if it matches
     if (messageData.conversationId === conversationId) {
       // Não adicionar mensagens do próprio usuário (já temos optimistic update)
       if (messageData.senderId === user?.id) {
-        console.log('⏭️ Mensagem do próprio usuário, ignorando (optimistic update já aplicado)')
         return
       }
       
@@ -41,17 +51,17 @@ export default function useConversationController() {
         )
         
         if (exists) {
-          console.log('🔄 Mensagem já existe no cache, ignorando duplicata:', messageId)
+          
           return oldMessages
         }
         
         // Adicionar nova mensagem no final (mais recente)
         const newMessages = [...oldMessages, messageData]
-        console.log('✅ Mensagem de outro usuário adicionada ao cache:', messageId)
+        
         return newMessages
       })
       
-      console.log('✅ Mensagem de outro usuário adicionada ao cache via WebSocket')
+      
     }
   })
 
@@ -71,6 +81,47 @@ export default function useConversationController() {
     if (readConversationId === conversationId) {
       // Refresh conversation to update unread count
       queryClient.invalidateQueries({ queryKey: ['conversation', conversationId] })
+    }
+  })
+
+  // 🟢 PRESENÇA - Usuário online/offline
+  useWebSocketEvent('userOnline', ({ userId, conversationId: eventConversationId }: any) => {
+    if (eventConversationId === conversationId && userId !== user?.id) {
+      setOtherUserOnline(true)
+      
+    }
+  })
+
+  useWebSocketEvent('userOffline', ({ userId, conversationId: eventConversationId }: any) => {
+    if (eventConversationId === conversationId && userId !== user?.id) {
+      setOtherUserOnline(false)
+      setOtherUserInConversation(false)
+      
+    }
+  })
+
+  useWebSocketEvent('userOnlineStatus', ({ userId, isOnline, conversationId: eventConversationId }: any) => {
+    if (eventConversationId === conversationId && userId !== user?.id?.toString()) {
+      setOtherUserOnline(isOnline)
+      
+    }
+  })
+
+  // 👁️ VISUALIZAÇÃO - Usuário entrou na conversa
+  useWebSocketEvent('userEnteredConversation', ({ userId, conversationId: eventConversationId }: any) => {
+    if (eventConversationId === conversationId && userId !== user?.id) {
+      setOtherUserInConversation(true)
+      
+      // Auto-marcar minhas mensagens como lidas após 2 segundos
+      setTimeout(() => {
+        const unreadMessages = messages?.filter(msg => 
+          msg.senderId === user?.id?.toString() && !msg.isRead
+        ).map(msg => msg.id) || []
+        
+        if (unreadMessages.length > 0) {
+          markMessagesAsRead(conversationId!, unreadMessages)
+        }
+      }, 2000)
     }
   })
 
@@ -145,12 +196,12 @@ export default function useConversationController() {
       queryClient.setQueryData(['messages', conversationId], (oldMessages: any) => {
         if (!oldMessages) return [newMessage]
         
-        console.log('🔄 Atualizando cache. Mensagens antigas:', oldMessages.length)
+        
         
         // Remover mensagem temporária 
         const withoutTemp = oldMessages.filter((msg: any) => {
           if (!msg.id) {
-            console.log('⚠️ Mensagem sem ID encontrada:', msg)
+            
             return true
           }
           return typeof msg.id === 'string' ? !msg.id.startsWith('temp-') : true
@@ -163,12 +214,12 @@ export default function useConversationController() {
         )
         
         if (realMessageExists) {
-          console.log('🔄 Mensagem real já existe, não adicionando duplicata:', messageId)
+          
           return withoutTemp
         }
         
         const newCache = [...withoutTemp, newMessage]
-        console.log('✅ Cache atualizado com', newCache.length, 'mensagens')
+        
         return newCache
       })
       
@@ -198,18 +249,28 @@ export default function useConversationController() {
   // 🏠 WebSocket: Entrar/sair da sala da conversa
   useEffect(() => {
     if (conversationId && connected) {
-      console.log('🏠 Entrando na sala da conversa:', conversationId)
+      
       joinConversation(conversationId)
       
+      // Notificar que entrei na conversa (para visualização)
+      setTimeout(() => {
+        enterConversation(conversationId)
+      }, 1000)
+      
+      // Verificar se outro usuário está online
+      if (conversation?.otherUser?.id) {
+        checkUserOnlineStatus(conversation.otherUser.id.toString(), conversationId)
+      }
+      
       return () => {
-        console.log('🚪 Saindo da sala da conversa:', conversationId)
+        
         leaveConversation(conversationId)
+        setOtherUserInConversation(false)
       }
     } else {
-      console.log('⚠️ Não pode entrar na sala:', { conversationId, connected })
+      
     }
-    // Removido joinConversation e leaveConversation das dependências para evitar re-renders
-  }, [conversationId, connected])
+  }, [conversationId, connected, conversation?.otherUser?.id])
 
   // ⌨️ Gerenciar indicador de digitação
   const typingTimeoutRef = useRef<number | undefined>(undefined)
@@ -267,7 +328,7 @@ export default function useConversationController() {
 
   // Atualizar mensagens (pull-to-refresh)
   const handleRefresh = useCallback(async () => {
-    console.log('🔄 Iniciando refresh das mensagens...')
+    
     
     // Invalidar e refetch as mensagens
     await queryClient.invalidateQueries({ 
@@ -275,7 +336,7 @@ export default function useConversationController() {
       refetchType: 'active' 
     })
     
-    console.log('✅ Refresh das mensagens concluído')
+    
   }, [queryClient, conversationId])
 
   return {
@@ -296,5 +357,8 @@ export default function useConversationController() {
     userTyping: isTyping, // Se EU estou digitando
     currentUserId: user?.id,
     conversation: conversation || null,
+    // 🆕 Presença e visualização
+    otherUserOnline,
+    otherUserInConversation,
   }
 }

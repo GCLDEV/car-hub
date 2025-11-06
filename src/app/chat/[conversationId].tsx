@@ -142,23 +142,36 @@ function ConversationHeader({
   conversation, 
   onGoBack, 
   connected, 
-  isTyping 
+  isTyping,
+  otherUserOnline,
+  otherUserInConversation
 }: { 
   conversation: any, 
   onGoBack: () => void,
   connected: boolean,
-  isTyping: boolean
+  isTyping: boolean,
+  otherUserOnline?: boolean,
+  otherUserInConversation?: boolean
 }) {
   const getStatusText = () => {
     if (isTyping) return 'digitando...'
-    if (connected) return 'Online'
-    return 'Offline'
+    if (otherUserInConversation) return 'visualizando'
+    if (otherUserOnline) return 'online'
+    return 'offline'
   }
 
   const getStatusColor = () => {
     if (isTyping) return colors.accent[400]
-    if (connected) return colors.success[500]
+    if (otherUserInConversation) return colors.primary[500]
+    if (otherUserOnline) return colors.success[500]
     return colors.neutral[400]
+  }
+
+  const getStatusIcon = () => {
+    if (isTyping) return '⌨️'
+    if (otherUserInConversation) return '👁️'
+    if (otherUserOnline) return '🟢'
+    return '⚪'
   }
 
   return (
@@ -188,7 +201,7 @@ function ConversationHeader({
             className="text-xs"
             style={{ color: getStatusColor() }}
           >
-            {getStatusText()}
+            {getStatusIcon()} {getStatusText()}
           </Text>
         </VStack>
       </HStack>
@@ -306,7 +319,10 @@ export default function ConversationScreen() {
     // 🆕 WebSocket features
     connected,
     isTyping,
-    userTyping
+    userTyping,
+    // 🆕 Presença e visualização
+    otherUserOnline,
+    otherUserInConversation
   } = useConversationController()
 
 
@@ -332,6 +348,8 @@ export default function ConversationScreen() {
             onGoBack={handleGoBack}
             connected={connected ?? false}
             isTyping={isTyping ?? false}
+            otherUserOnline={otherUserOnline}
+            otherUserInConversation={otherUserInConversation}
           />
 
           {/* Car Info Card - TODO: Implementar quando tiver dados da conversa */}

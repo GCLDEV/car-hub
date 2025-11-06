@@ -7,19 +7,15 @@ import { useQueryInvalidation } from '@hooks/useQueryInvalidation'
 function getSocketURL() {
   // 1. Prioridade: variável específica para WebSocket
   if (process.env.EXPO_PUBLIC_WEBSOCKET_URL) {
-    console.log('🔌 Usando WEBSOCKET_URL específica:', process.env.EXPO_PUBLIC_WEBSOCKET_URL)
     return process.env.EXPO_PUBLIC_WEBSOCKET_URL
   }
   
   // 2. Usar mesma base da API (remove /api)
   const apiUrl = process.env.EXPO_PUBLIC_API_ADDRESS || 'http://localhost:1337/api'
-  console.log('🚀 API_BASE_URL:', apiUrl)
   return apiUrl.replace('/api', '')
 }
 
 const SOCKET_URL = getSocketURL()
-
-console.log('🔌 WebSocket URL configurada:', SOCKET_URL)
 
 // Classe para gerenciar conexão WebSocket
 class WebSocketService {
@@ -32,14 +28,11 @@ class WebSocketService {
   // Inicializar conexão
   connect(token: string, customUrl?: string) {
     if (this.socket?.connected) {
-      console.log('🔌 WebSocket já conectado')
       return
     }
 
     // Usar URL customizada se fornecida, senão usar a configurada
     const socketUrl = customUrl || getSocketURL()
-    
-    console.log('🔌 Conectando ao WebSocket:', socketUrl)
 
     this.socket = io(socketUrl, {
       auth: { token },
@@ -58,7 +51,6 @@ class WebSocketService {
   // Desconectar
   disconnect() {
     if (this.socket) {
-      console.log('🔌 Desconectando WebSocket...')
       this.socket.disconnect()
       this.socket = null
       this.isConnected = false
@@ -67,7 +59,6 @@ class WebSocketService {
 
   // Reconectar com nova URL (útil quando ngrok muda)
   reconnectWithNewUrl(token: string, newUrl: string) {
-    console.log('🔄 Reconectando WebSocket com nova URL:', newUrl)
     this.disconnect()
     this.connect(token, newUrl)
   }
@@ -78,63 +69,47 @@ class WebSocketService {
 
     // Conexão estabelecida
     this.socket.on('connect', () => {
-      console.log('✅ WebSocket conectado:', this.socket?.id)
       this.isConnected = true
       this.reconnectAttempts = 0
     })
 
     // Erro de conexão
     this.socket.on('connect_error', (error) => {
-      console.error('❌ Erro de conexão WebSocket:', error.message)
       this.isConnected = false
       this.reconnectAttempts++
     })
 
     // Desconectado
     this.socket.on('disconnect', (reason) => {
-      console.log('🔌 WebSocket desconectado:', reason)
       this.isConnected = false
     })
 
     // 💬 NOVA MENSAGEM EM TEMPO REAL
     this.socket.on('newMessage', (messageData) => {
-      console.log('📩 Nova mensagem recebida via WebSocket:', { 
-        id: messageData.id, 
-        content: messageData.content?.substring(0, 20) + '...',
-        senderId: messageData.senderId 
-      })
-      
-      // Emitir evento personalizado para componentes (sem invalidation redundante)
       this.emit('newMessage', messageData)
     })
 
     // 👀 USUÁRIO DIGITANDO
     this.socket.on('userTyping', (typingData) => {
-      console.log('⌨️ Usuário digitando:', typingData)
       this.emit('userTyping', typingData)
     })
 
     this.socket.on('userStoppedTyping', (typingData) => {
-      console.log('⌨️ Usuário parou de digitar:', typingData)
       this.emit('userStoppedTyping', typingData)
     })
 
     // ✅ MENSAGENS LIDAS
     this.socket.on('messagesRead', (readData) => {
-      console.log('✅ Mensagens marcadas como lidas:', readData)
       this.emit('messagesRead', readData)
     })
 
     // 🔔 NOTIFICAÇÃO DE NOVA MENSAGEM
     this.socket.on('new_message_notification', (notification) => {
-      console.log('🔔 Notificação de mensagem:', notification)
       this.emit('messageNotification', notification)
     })
 
     // 📝 CONVERSA ATUALIZADA
     this.socket.on('conversation_updated', (updateData) => {
-      console.log('📝 Conversa atualizada:', updateData)
-      
       if (this.invalidateQueries) {
         this.invalidateQueries('conversation-updated', { 
           conversationId: updateData.conversationId 
@@ -144,18 +119,36 @@ class WebSocketService {
 
     // 🔔 NOTIFICAÇÃO GERAL
     this.socket.on('notification', (notification) => {
-      console.log('🔔 Notificação recebida:', notification)
       this.emit('notification', notification)
+    })
+
+    // 🟢 USUÁRIO ONLINE/OFFLINE
+    this.socket.on('userOnline', (data) => {
+      this.emit('userOnline', data)
+    })
+
+    this.socket.on('userOffline', (data) => {
+      this.emit('userOffline', data)
+    })
+
+    this.socket.on('userOnlineStatus', (data) => {
+      this.emit('userOnlineStatus', data)
+    })
+
+    this.socket.on('userWentOffline', (data) => {
+      this.emit('userWentOffline', data)
+    })
+
+    // 👁️ VISUALIZAÇÃO DE CONVERSA
+    this.socket.on('userEnteredConversation', (data) => {
+      this.emit('userEnteredConversation', data)
     })
   }
 
   // Entrar em uma conversa específica
   joinConversation(conversationId: string) {
     if (this.socket?.connected) {
-      console.log(`📝 Entrando na conversa: ${conversationId}`)
-      this.socket.emit('joinConversation', conversationId)
-    } else {
-      console.log('⚠️ Socket não conectado, não pode entrar na conversa')
+      this.socket.emit('joinConversation', { conversationId })
     }
   }
 
@@ -170,7 +163,6 @@ class WebSocketService {
   // Indicar que está digitando
   startTyping(conversationId: string) {
     if (this.socket?.connected) {
-      console.log(`⌨️ Iniciando digitação na conversa: ${conversationId}`)
       this.socket.emit('startTyping', conversationId)
     }
   }
@@ -178,16 +170,28 @@ class WebSocketService {
   // Parar de indicar que está digitando
   stopTyping(conversationId: string) {
     if (this.socket?.connected) {
-      console.log(`⌨️ Parando digitação na conversa: ${conversationId}`)
       this.socket.emit('stopTyping', conversationId)
     }
   }
 
   // Marcar mensagens como lidas
-  markMessagesAsRead(conversationId: string) {
+  markMessagesAsRead(conversationId: string, messageIds?: string[]) {
     if (this.socket?.connected) {
-      console.log(`✅ Marcando mensagens como lidas na conversa: ${conversationId}`)
-      this.socket.emit('markMessagesAsRead', conversationId)
+      this.socket.emit('markMessagesAsRead', { conversationId, messageIds })
+    }
+  }
+
+  // Verificar se usuário está online
+  checkUserOnlineStatus(userId: string, conversationId: string) {
+    if (this.socket?.connected) {
+      this.socket.emit('checkUserOnlineStatus', { userId, conversationId })
+    }
+  }
+
+  // Notificar que entrou na conversa
+  enterConversation(conversationId: string) {
+    if (this.socket?.connected) {
+      this.socket.emit('enterConversation', { conversationId })
     }
   }
 
@@ -263,6 +267,8 @@ export function useWebSocket(customUrl?: string) {
     startTyping: websocketService.startTyping.bind(websocketService),
     stopTyping: websocketService.stopTyping.bind(websocketService),
     markMessagesAsRead: websocketService.markMessagesAsRead.bind(websocketService),
+    checkUserOnlineStatus: websocketService.checkUserOnlineStatus.bind(websocketService),
+    enterConversation: websocketService.enterConversation.bind(websocketService),
     reconnectWithNewUrl: (newUrl: string) => {
       if (token) websocketService.reconnectWithNewUrl(token, newUrl)
     }
