@@ -166,13 +166,13 @@ export async function uploadImagesAndGetUrls(imageUris: string[]): Promise<strin
     // Tentar upload real primeiro
     const imageIds = await uploadMultipleImages(imageUris)
     
-    // Se sucesso, construir URLs reais das imagens do S3
+    // Construir URLs das imagens baseado no provider usado
     const urls = imageIds.map((imageData: any) => {
-      // Se a imagem já tem URL completa (S3), usar diretamente
+      // Cloudinary, S3, ImageKit etc. já retornam URL completa
       if (imageData?.url?.startsWith('http')) {
         return imageData.url;
       }
-      // Se é URL relativa, construir URL completa do Strapi
+      // Upload local do Strapi - construir URL completa
       if (imageData?.url) {
         return `${SERVER_BASE_URL}${imageData.url}`;
       }
