@@ -36,3 +36,6 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+google-services.json
+car-hub-f363c-firebase-adminsdk-fbsvc-dd71c1098b.json
