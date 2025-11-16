@@ -10,7 +10,6 @@ import GlobalHeader from '@components/ui/GlobalHeader'
 import { useAuthStore } from '@store/authStore'
 import { useFavoritesStore } from '@store/favoritesStore'
 import WebSocketInitializer from '@components/WebSocketInitializer'
-import PushNotificationInitializer from '@components/PushNotificationInitializer'
 import { colors } from '@theme/colors'
 
 import '../../global.css'
@@ -110,7 +109,6 @@ export default function RootLayout() {
           </View>
 
           <ModalController />
-          <PushNotificationInitializer />
 
           <Toast />
         </QueryClientProvider>
