@@ -11,7 +11,8 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000, // Aumentado para 30 segundos
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true' // Para funcionar com ngrok gratuito
   }
 })
 
@@ -27,11 +28,19 @@ api.interceptors.request.use(async (config) => {
       token = parsedAuth.state?.token
     }
     
+    console.log('🔑 API Request Auth Check:', { 
+      url: config.url, 
+      hasToken: !!token, 
+      tokenPreview: token ? token.substring(0, 20) + '...' : null 
+    });
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+    } else {
+      console.log('⚠️ No token found for API request');
     }
   } catch (error) {
-    // Silently ignore errors when retrieving token
+    console.log('❌ Error getting token for API request:', error);
   }
   return config
 })

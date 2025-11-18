@@ -11,6 +11,7 @@
       "@types/*": ["src/types/*"],
       "@theme/*": ["src/theme/*"],
       "@constants/*": ["src/constants/*"],
+      "@context/*": ["src/context/*"],
       "@hooks/*": ["src/hooks/*"],
       "@utils/*": ["src/utils/*"],
       "@controllers/*": ["src/controllers/*"],

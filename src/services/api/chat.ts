@@ -24,20 +24,36 @@ function transformStrapiMessage(strapiMessage: any): Message {
     console.warn('⚠️ Mensagem sem ID válido:', strapiMessage)
   }
   
+  // Extrair senderId e receiverId de forma robusta
+  // Primeiro tentar dados populados, depois campos diretos
+  const senderId = (
+    strapiMessage.sender?.id?.toString() || 
+    strapiMessage.senderId?.toString() ||
+    // Se não temos dados populados, usar dados diretos da estrutura Strapi
+    (strapiMessage.data && strapiMessage.data.sender?.toString()) ||
+    ''
+  )
+  
+  const receiverId = (
+    strapiMessage.receiver?.id?.toString() || 
+    strapiMessage.receiverId?.toString() ||
+    // Se não temos dados populados, usar dados diretos da estrutura Strapi
+    (strapiMessage.data && strapiMessage.data.receiver?.toString()) ||
+    ''
+  )
+  
+  // Debug: Log essencial para posicionamento das mensagens
+  console.log('🔍 Mensagem:', {
+    id: strapiMessage.id,
+    senderId,
+    receiverId
+  })
+  
   return {
     id: messageId,
     content: strapiMessage.content,
-    // Tentar múltiplas formas de pegar senderId/receiverId
-    senderId: (
-      strapiMessage.sender?.id?.toString() || 
-      strapiMessage.senderId?.toString() || 
-      ''
-    ),
-    receiverId: (
-      strapiMessage.receiver?.id?.toString() || 
-      strapiMessage.receiverId?.toString() || 
-      ''
-    ),
+    senderId,
+    receiverId,
     carId: strapiMessage.car?.id?.toString(),
     createdAt: strapiMessage.createdAt,
     isRead: strapiMessage.isRead,
@@ -49,18 +65,8 @@ export async function getConversationMessages(conversationId: string): Promise<M
   try {
     const response = await api.get(`/messages?conversationId=${conversationId}`)
     
-    console.log(`📥 Mensagens recebidas do servidor para conversa ${conversationId}:`, {
-      total: response.data.data?.length || 0,
-      messageIds: response.data.data?.map((msg: any) => msg.id) || []
-    })
-    
     // Transform messages from Strapi format to our format
     const transformedMessages = (response.data.data || []).map(transformStrapiMessage)
-    
-    console.log(`🔄 Mensagens transformadas para conversa ${conversationId}:`, {
-      total: transformedMessages.length,
-      transformedIds: transformedMessages.map((msg: any) => msg.id)
-    })
     
     return transformedMessages
   } catch (error: any) {
@@ -73,21 +79,39 @@ export async function getConversationMessages(conversationId: string): Promise<M
   }
 }
 
-export async function sendMessage(request: CreateMessageRequest): Promise<Message> {
+export async function sendMessage(request: CreateMessageRequest, currentUserId?: string): Promise<Message> {
   try {
     const response = await api.post('/messages', {
       data: {
         content: request.content,
         conversation: request.conversationId,
-        type: request.type || 'text'
+        type: request.type || 'text',
+        ...(request.carId && { car: request.carId }),
+        ...(request.receiverId && { receiver: request.receiverId })
       }
     })
     
-    console.log('📤 Resposta do servidor (sendMessage):', response.data)
+    console.log('📤 Resposta do servidor:', { messageId: response.data.data?.id, hasSender: !!response.data.data?.sender })
+    
+    // Se não temos sender na resposta, aplicar fallback com dados que conhecemos
+    let messageToTransform = response.data.data
+    if (currentUserId && (!messageToTransform.sender || !messageToTransform.senderId)) {
+      console.log('🔧 Fallback aplicado: senderId definido')
+      messageToTransform = {
+        ...messageToTransform,
+        senderId: currentUserId,
+        sender: { id: currentUserId },
+        // receiverId será determinado pelo backend baseado na conversa
+        ...(request.receiverId && { 
+          receiverId: request.receiverId,
+          receiver: { id: request.receiverId }
+        })
+      }
+    }
     
     // Transformar resposta do Strapi para nosso formato
-    const transformedMessage = transformStrapiMessage(response.data.data)
-    console.log('🔄 Mensagem transformada:', transformedMessage)
+    const transformedMessage = transformStrapiMessage(messageToTransform)
+    console.log('🔄 Transformada:', { id: transformedMessage.id, senderId: transformedMessage.senderId })
     
     return transformedMessage
   } catch (error: any) {

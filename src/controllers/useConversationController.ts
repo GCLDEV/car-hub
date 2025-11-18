@@ -32,17 +32,29 @@ export default function useConversationController() {
 
   // 🎧 WebSocket event listeners
   useWebSocketEvent('newMessage', (messageData: any) => {
-    
+    console.log('📨 Mensagem recebida via WebSocket:', {
+      messageId: messageData.id,
+      senderId: messageData.senderId,
+      currentUserId: user?.id,
+      conversationId: messageData.conversationId,
+      targetConversationId: conversationId,
+      content: messageData.content?.substring(0, 20) + '...'
+    })
     
     // Add message to current conversation if it matches
     if (messageData.conversationId === conversationId) {
       // Não adicionar mensagens do próprio usuário (já temos optimistic update)
-      if (messageData.senderId === user?.id) {
+      // Converter para string para comparação correta
+      if (messageData.senderId?.toString() === user?.id?.toString()) {
+        // Ignoring own message
         return
       }
       
       queryClient.setQueryData(['messages', conversationId], (oldMessages: any[]) => {
-        if (!oldMessages) return [messageData]
+        if (!oldMessages) {
+          // First WebSocket message
+          return [messageData]
+        }
         
         // Verificar se a mensagem já existe (evitar duplicatas)
         const messageId = messageData.id?.toString()
@@ -51,12 +63,18 @@ export default function useConversationController() {
         )
         
         if (exists) {
-          
+          // Duplicate message ignored
           return oldMessages
         }
         
         // Adicionar nova mensagem no final (mais recente)
         const newMessages = [...oldMessages, messageData]
+        console.log('📥 Nova mensagem via WebSocket adicionada:', {
+          messageId,
+          content: messageData.content.substring(0, 20) + '...',
+          totalMessages: newMessages.length,
+          senderId: messageData.senderId
+        })
         
         return newMessages
       })
@@ -156,7 +174,7 @@ export default function useConversationController() {
 
   // Mutation para enviar mensagem com optimistic updates
   const sendMessageMutation = useMutation({
-    mutationFn: sendMessage,
+    mutationFn: (request: any) => sendMessage(request, user?.id?.toString()),
     onMutate: async (newMessageData) => {
       // ✨ OPTIMISTIC UPDATE: Adicionar mensagem imediatamente na tela      
       // Cancelar queries em andamento para evitar conflitos
@@ -177,11 +195,19 @@ export default function useConversationController() {
         carId: undefined
       }
       
+      console.log('⚡ Adicionando mensagem otimista:', {
+        tempId: optimisticMessage.id,
+        content: optimisticMessage.content,
+        senderId: optimisticMessage.senderId,
+        currentUserId: user?.id
+      })
+      
       // Adicionar mensagem otimista ao cache
-      queryClient.setQueryData(['messages', conversationId], (oldMessages: any) => [
-        ...(oldMessages || []),
-        optimisticMessage
-      ])
+      queryClient.setQueryData(['messages', conversationId], (oldMessages: any) => {
+        const newMessages = [...(oldMessages || []), optimisticMessage]
+        // Cache updated with optimistic message
+        return newMessages
+      })
             
       // Retornar contexto para rollback se necessário
       return { previousMessages }

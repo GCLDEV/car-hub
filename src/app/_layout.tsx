@@ -15,6 +15,7 @@ import { colors } from '@theme/colors'
 import '../../global.css'
 import ModalController from '@components/Modal/Controller'
 import { View } from 'react-native'
+import { NotificationProvider } from '@/context/NotificationContext'
 
 // Criar query client com configuração offline-first
 const queryClient = new QueryClient({
@@ -64,20 +65,21 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <GluestackUIProvider>
         <QueryClientProvider client={queryClient}>
-          {/* 🔌 Inicializar WebSocket dentro do QueryClientProvider */}
-          <WebSocketInitializer />
-          
-          <StatusBar backgroundColor="transparent" style='light' translucent />
-          <View className='flex-1'
-            style={{ backgroundColor: colors.neutral[900] }}>
-            <Stack
-              screenOptions={{                
-                contentStyle: {
-                  backgroundColor: colors.neutral[900],
-                },
-                headerShown: false,
-              }}
-            >
+          <NotificationProvider>
+            {/* 🔌 Inicializar WebSocket dentro do QueryClientProvider */}
+            <WebSocketInitializer />
+            
+            <StatusBar backgroundColor="transparent" style='light' translucent />
+            <View className='flex-1'
+              style={{ backgroundColor: colors.neutral[900] }}>
+              <Stack
+                screenOptions={{                
+                  contentStyle: {
+                    backgroundColor: colors.neutral[900],
+                  },
+                  headerShown: false,
+                }}
+              >
               <Stack.Screen
                 name="(tabs)"
               />
@@ -111,6 +113,7 @@ export default function RootLayout() {
           <ModalController />
 
           <Toast />
+        </NotificationProvider>
         </QueryClientProvider>
       </GluestackUIProvider>
     </GestureHandlerRootView>

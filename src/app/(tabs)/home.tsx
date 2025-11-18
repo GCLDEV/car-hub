@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { FlatList, RefreshControl } from 'react-native'
 import { SafeAreaView } from '@components/ui/safe-area-view'
 import { useRouter } from 'expo-router'
@@ -40,10 +40,50 @@ export default function HomeScreen() {
 
     isOnline,
     isConnected,
-    hasOfflineQueue
+    hasOfflineQueue,
+
+    // Notification data
+    expoPushToken,
+    notification,
+    notificationError
   } = useHomeController()
 
   const { user } = useAuthStore()
+
+  // Monitor notifications received
+  useEffect(() => {
+    if (notification) {
+      console.log('📱 Notification received on Home:', notification.request.content)
+      
+      // Show toast for new notification
+      Toast.show({
+        type: 'info',
+        text1: notification.request.content.title || 'Nova notificação',
+        text2: notification.request.content.body,
+        position: 'top',
+      })
+    }
+  }, [notification])
+
+  // Monitor push token
+  useEffect(() => {
+    if (expoPushToken) {
+      console.log('🔔 Push token obtained:', expoPushToken)
+    }
+  }, [expoPushToken])
+
+  // Monitor notification errors
+  useEffect(() => {
+    if (notificationError) {
+      console.error('❌ Notification error:', notificationError)
+      Toast.show({
+        type: 'error',
+        text1: 'Erro nas notificações',
+        text2: 'Não foi possível configurar as notificações push',
+        position: 'top',
+      })
+    }
+  }, [notificationError])
 
   function renderCarItem({ item }: { item: Car }) {
     return (

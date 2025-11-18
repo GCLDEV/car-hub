@@ -28,11 +28,18 @@ class WebSocketService {
   // Inicializar conexão
   connect(token: string, customUrl?: string) {
     if (this.socket?.connected) {
+      console.log('⚡ WebSocket já conectado, ignorando nova conexão')
       return
     }
 
     // Usar URL customizada se fornecida, senão usar a configurada
     const socketUrl = customUrl || getSocketURL()
+    
+    console.log('🔌 Iniciando conexão WebSocket:', {
+      url: socketUrl,
+      hasToken: !!token,
+      tokenPreview: token ? token.substring(0, 10) + '...' : 'N/A'
+    })
 
     this.socket = io(socketUrl, {
       auth: { token },
@@ -71,31 +78,49 @@ class WebSocketService {
     this.socket.on('connect', () => {
       this.isConnected = true
       this.reconnectAttempts = 0
+      console.log('✅ WebSocket conectado com sucesso!', {
+        socketId: this.socket?.id,
+        url: this.socket?.io.uri
+      })
     })
 
     // Erro de conexão
     this.socket.on('connect_error', (error) => {
       this.isConnected = false
       this.reconnectAttempts++
+      console.error('❌ Erro de conexão WebSocket:', {
+        error: error.message,
+        attempt: this.reconnectAttempts,
+        maxAttempts: this.maxReconnectAttempts,
+        url: this.socket?.io.uri
+      })
     })
 
     // Desconectado
     this.socket.on('disconnect', (reason) => {
       this.isConnected = false
+      console.log('🔌 WebSocket desconectado:', {
+        reason,
+        url: this.socket?.io.uri
+      })
     })
 
     // 💬 NOVA MENSAGEM EM TEMPO REAL
-    this.socket.on('newMessage', (messageData) => {
+    this.socket.on('new_message', (messageData) => {
+      console.log('📨 Nova mensagem recebida via WebSocket:', messageData)
       this.emit('newMessage', messageData)
     })
 
     // 👀 USUÁRIO DIGITANDO
-    this.socket.on('userTyping', (typingData) => {
+    this.socket.on('user_typing', (typingData) => {
+      console.log('⌨️ Usuário digitando:', typingData)
       this.emit('userTyping', typingData)
     })
 
-    this.socket.on('userStoppedTyping', (typingData) => {
-      this.emit('userStoppedTyping', typingData)
+    // 📖 MENSAGENS LIDAS
+    this.socket.on('messages_read', (readData) => {
+      console.log('👀 Mensagens marcadas como lidas:', readData)
+      this.emit('messagesRead', readData)
     })
 
     // ✅ MENSAGENS LIDAS
@@ -145,10 +170,13 @@ class WebSocketService {
     })
   }
 
-  // Entrar em uma conversa específica
+  // Entrar em uma conversa
   joinConversation(conversationId: string) {
     if (this.socket?.connected) {
-      this.socket.emit('joinConversation', { conversationId })
+      console.log('📱 Entrando na conversa WebSocket:', conversationId)
+      this.socket.emit('join_conversation', conversationId)
+    } else {
+      console.log('⚠️ WebSocket não conectado para entrar na conversa')
     }
   }
 
@@ -156,42 +184,43 @@ class WebSocketService {
   leaveConversation(conversationId: string) {
     if (this.socket?.connected) {
       console.log(`📝 Saindo da conversa: ${conversationId}`)
-      this.socket.emit('leaveConversation', conversationId)
+      this.socket.emit('leave_conversation', conversationId)
     }
   }
 
   // Indicar que está digitando
   startTyping(conversationId: string) {
     if (this.socket?.connected) {
-      this.socket.emit('startTyping', conversationId)
+      this.socket.emit('typing_start', { conversationId })
     }
   }
 
   // Parar de indicar que está digitando
   stopTyping(conversationId: string) {
     if (this.socket?.connected) {
-      this.socket.emit('stopTyping', conversationId)
+      this.socket.emit('typing_stop', { conversationId })
     }
   }
 
   // Marcar mensagens como lidas
-  markMessagesAsRead(conversationId: string, messageIds?: string[]) {
+  markMessagesAsRead(conversationId: string, messageIds: string[]) {
     if (this.socket?.connected) {
-      this.socket.emit('markMessagesAsRead', { conversationId, messageIds })
+      this.socket.emit('mark_messages_read', { conversationId })
     }
   }
 
   // Verificar se usuário está online
   checkUserOnlineStatus(userId: string, conversationId: string) {
     if (this.socket?.connected) {
-      this.socket.emit('checkUserOnlineStatus', { userId, conversationId })
+      this.socket.emit('check_user_online', { userId, conversationId })
     }
   }
 
   // Notificar que entrou na conversa
   enterConversation(conversationId: string) {
     if (this.socket?.connected) {
-      this.socket.emit('enterConversation', { conversationId })
+      console.log('👁️ Notificando entrada na conversa:', conversationId)
+      this.socket.emit('enter_conversation', { conversationId })
     }
   }
 

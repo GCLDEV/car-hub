@@ -7,11 +7,24 @@ import { useAuthStore } from '@store/authStore'
  */
 export default function WebSocketInitializer() {
   const { connected } = useWebSocket()
+  const { isAuthenticated, token } = useAuthStore()
 
   // Log do status do WebSocket
   useEffect(() => {
-    console.log('🔌 WebSocket status:', connected ? 'Conectado' : 'Desconectado')
-  }, [connected])
+    console.log('🔌 WebSocket status:', {
+      connected,
+      isAuthenticated,
+      hasToken: !!token
+    })
+  }, [connected, isAuthenticated, token])
+
+  // Forçar inicialização do WebSocket quando usuário está autenticado
+  useEffect(() => {
+    if (isAuthenticated && token && !connected) {
+      console.log('🔄 Tentando forçar conexão WebSocket...')
+      // O useWebSocket já deve conectar automaticamente, mas vamos forçar se não conectou
+    }
+  }, [isAuthenticated, token, connected])
 
   // Componente não renderiza nada - apenas inicializa WebSocket
   return null

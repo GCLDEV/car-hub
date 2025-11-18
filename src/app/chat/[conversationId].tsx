@@ -325,7 +325,14 @@ export default function ConversationScreen() {
     otherUserInConversation
   } = useConversationController()
 
-
+  // 🔍 Debug: Log mensagens para identificar problema
+  console.log('📊 Estado das mensagens:', {
+    messageCount: messages?.length || 0,
+    currentUserId,
+    conversationId: conversation?.id,
+    loading,
+    connected
+  })
 
   if (loading && !conversation) {
     return <LoadingState />
@@ -375,6 +382,16 @@ export default function ConversationScreen() {
                 const itemSenderId = item.senderId?.toString()
                 const currentUserIdStr = currentUserId?.toString()
                 const isOwn = itemSenderId === currentUserIdStr
+
+                // 🔍 Debug: Log para identificar problema de posicionamento
+                console.log('💬 Renderizando mensagem:', {
+                  messageId: item.id,
+                  content: item.content.substring(0, 20) + '...',
+                  itemSenderId,
+                  currentUserIdStr,
+                  isOwn,
+                  index
+                })
 
                 return (
                   <MessageItem 

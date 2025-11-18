@@ -13,11 +13,13 @@ import { useOptimizedCarQuery } from '@hooks/useOptimizedCarQuery'
 import useNetworkController from './useNetworkController'
 import useAuthGuard from '@hooks/useAuthGuard'
 import { useQueryInvalidation } from '@hooks/useQueryInvalidation'
+import { useNotification } from '@context/NotificationContext'
 import { Car } from '@/types/car'
 
 export default function useHomeController() {
   const router = useRouter()
   const { user } = useAuthStore()
+  const { expoPushToken, notiofication, error: notificationError } = useNotification()
   // Favorites are now handled directly by the FavoriteButton component
   const { filters, setFilter, clearFilters, activeFiltersCount } = useFiltersStore()
   const { setModal } = useModalStore()
@@ -226,5 +228,10 @@ export default function useHomeController() {
     
     // 🚀 Cache management
     refreshAll: () => invalidateByContext('manual-refresh'),
+    
+    // 🔔 Notification state
+    expoPushToken,
+    notification: notiofication,
+    notificationError,
   }
 }
