@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "starterkitexpo",
+    "scheme": "carhub",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -23,8 +23,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "gcl.dev.carhub",
-      "edgeToEdgeEnabled": true,
-      "googleServicesFile": "./google-services.json"
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "bundler": "metro",
