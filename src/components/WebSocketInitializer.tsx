@@ -10,7 +10,7 @@ export default function WebSocketInitializer() {
 
   // Log do status do WebSocket
   useEffect(() => {
-    console.log('🔌 WebSocket status:', connected ? 'Conectado' : 'Desconectado')
+
   }, [connected])
 
   // Componente não renderiza nada - apenas inicializa WebSocket

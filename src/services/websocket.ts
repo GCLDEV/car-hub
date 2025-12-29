@@ -24,19 +24,24 @@ class WebSocketService {
   private reconnectAttempts = 0
   private maxReconnectAttempts = 5
   private invalidateQueries: any = null
+  private authToken: string | null = null // Para HTTP fallback
 
   // Inicializar conexão
   connect(token: string, customUrl?: string) {
-    if (this.socket?.connected) {
-      return
-    }
+
+    // Salvar token para HTTP fallback
+    this.authToken = token
 
     // Usar URL customizada se fornecida, senão usar a configurada
     const socketUrl = customUrl || getSocketURL()
+    
+    // Detectar se é ngrok e ajustar transports
+    const isNgrok = socketUrl.includes('ngrok')
+    const transports = isNgrok ? ['polling', 'websocket'] : ['websocket', 'polling']
 
     this.socket = io(socketUrl, {
       auth: { token },
-      transports: ['websocket', 'polling'],
+      transports, // Usar polling primeiro para ngrok
       timeout: 20000, // Aumentado para ngrok
       reconnection: true,
       reconnectionAttempts: this.maxReconnectAttempts,
@@ -75,6 +80,12 @@ class WebSocketService {
 
     // Erro de conexão
     this.socket.on('connect_error', (error) => {
+      console.error('❌ [DEBUG] Erro de conexão WebSocket:', {
+        error: error.message,
+        type: (error as any).type,
+        description: (error as any).description,
+        attempts: this.reconnectAttempts
+      })
       this.isConnected = false
       this.reconnectAttempts++
     })
@@ -85,8 +96,9 @@ class WebSocketService {
     })
 
     // 💬 NOVA MENSAGEM EM TEMPO REAL
-    this.socket.on('newMessage', (messageData) => {
-      this.emit('newMessage', messageData)
+    this.socket.on('new_message', (messageData) => {
+    
+      this.emit('newMessage', messageData) // Emite como newMessage para manter compatibilidade
     })
 
     // 👀 USUÁRIO DIGITANDO
@@ -147,16 +159,21 @@ class WebSocketService {
 
   // Entrar em uma conversa específica
   joinConversation(conversationId: string) {
+    
     if (this.socket?.connected) {
-      this.socket.emit('joinConversation', { conversationId })
+      this.socket.emit('join_conversation', conversationId) // Corrigido para join_conversation
+      
+      // Fallback HTTP se ngrok
+      this.tryHttpFallback('join-conversation', { conversationId })
+    } else {
+      console.warn('⚠️ [DEBUG] Socket não conectado para entrar na conversa')
     }
   }
 
   // Sair de uma conversa
-  leaveConversation(conversationId: string) {
+  leaveConversation(conversationId: string) {    
     if (this.socket?.connected) {
-      console.log(`📝 Saindo da conversa: ${conversationId}`)
-      this.socket.emit('leaveConversation', conversationId)
+      this.socket.emit('leave_conversation', conversationId) // Corrigido para leave_conversation
     }
   }
 
@@ -197,6 +214,25 @@ class WebSocketService {
 
   // Sistema de eventos customizado para componentes React
   private eventListeners: { [key: string]: Function[] } = {}
+  
+  // HTTP Fallback para ngrok (quando WebSocket falha)
+  private async tryHttpFallback(endpoint: string, data: any) {
+    try {
+      const apiUrl = process.env.EXPO_PUBLIC_API_ADDRESS || 'http://localhost:1337/api'
+      const baseUrl = apiUrl.replace('/api', '')
+      
+      const response = await fetch(`${baseUrl}/api/websocket/${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.authToken}`,
+        },
+        body: JSON.stringify(data)
+      })
+    } catch (error) {
+      console.warn('⚠️ [DEBUG] Erro no HTTP fallback:', error)
+    }
+  }
 
   on(event: string, callback: Function) {
     if (!this.eventListeners[event]) {

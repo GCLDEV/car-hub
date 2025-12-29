@@ -187,10 +187,7 @@ export default function useConversationController() {
       return { previousMessages }
     },
     onSuccess: (newMessage, variables, context) => {
-      console.log('✅ Mensagem enviada com sucesso:', { 
-        id: newMessage?.id, 
-        content: newMessage?.content?.substring(0, 30) + '...' 
-      })
+
       
       // Substituir mensagem otimista pela real do servidor
       queryClient.setQueryData(['messages', conversationId], (oldMessages: any) => {

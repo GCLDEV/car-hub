@@ -24,20 +24,27 @@ function transformStrapiMessage(strapiMessage: any): Message {
     console.warn('⚠️ Mensagem sem ID válido:', strapiMessage)
   }
   
+  // Extrair senderId de múltiplas formas possíveis
+  const senderId = (
+    strapiMessage.sender?.id?.toString() || 
+    strapiMessage.senderId?.toString() || 
+    strapiMessage.data?.sender?.toString() ||
+    ''
+  )
+  
+  // Extrair receiverId de múltiplas formas possíveis  
+  const receiverId = (
+    strapiMessage.receiver?.id?.toString() || 
+    strapiMessage.receiverId?.toString() || 
+    strapiMessage.data?.receiver?.toString() ||
+    ''
+  )
+  
   return {
     id: messageId,
     content: strapiMessage.content,
-    // Tentar múltiplas formas de pegar senderId/receiverId
-    senderId: (
-      strapiMessage.sender?.id?.toString() || 
-      strapiMessage.senderId?.toString() || 
-      ''
-    ),
-    receiverId: (
-      strapiMessage.receiver?.id?.toString() || 
-      strapiMessage.receiverId?.toString() || 
-      ''
-    ),
+    senderId,
+    receiverId,
     carId: strapiMessage.car?.id?.toString(),
     createdAt: strapiMessage.createdAt,
     isRead: strapiMessage.isRead,
@@ -49,18 +56,8 @@ export async function getConversationMessages(conversationId: string): Promise<M
   try {
     const response = await api.get(`/messages?conversationId=${conversationId}`)
     
-    console.log(`📥 Mensagens recebidas do servidor para conversa ${conversationId}:`, {
-      total: response.data.data?.length || 0,
-      messageIds: response.data.data?.map((msg: any) => msg.id) || []
-    })
-    
     // Transform messages from Strapi format to our format
     const transformedMessages = (response.data.data || []).map(transformStrapiMessage)
-    
-    console.log(`🔄 Mensagens transformadas para conversa ${conversationId}:`, {
-      total: transformedMessages.length,
-      transformedIds: transformedMessages.map((msg: any) => msg.id)
-    })
     
     return transformedMessages
   } catch (error: any) {
@@ -83,11 +80,8 @@ export async function sendMessage(request: CreateMessageRequest): Promise<Messag
       }
     })
     
-    console.log('📤 Resposta do servidor (sendMessage):', response.data)
-    
     // Transformar resposta do Strapi para nosso formato
     const transformedMessage = transformStrapiMessage(response.data.data)
-    console.log('🔄 Mensagem transformada:', transformedMessage)
     
     return transformedMessage
   } catch (error: any) {

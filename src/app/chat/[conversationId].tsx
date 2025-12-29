@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef, useEffect } from 'react'
 import { FlatList, RefreshControl, KeyboardAvoidingView, Platform, TextInput } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -58,58 +58,73 @@ function MessageItem({ message, isOwn, showAvatar, otherUserName }: MessageItemP
     })
   }
 
+  // Para mensagens próprias (lado direito)
+  if (isOwn) {
+    return (
+      <VStack className="mb-3 px-4 items-end">
+        <VStack className="items-end" style={{ maxWidth: '75%' }}>
+          <Box
+            className="px-4 py-3 rounded-xl"
+            style={{ 
+              backgroundColor: colors.accent[500],
+              borderBottomRightRadius: 8,
+            }}
+          >
+            <Text 
+              className="text-sm leading-5 font-medium text-neutral-900"
+              style={{ 
+                flexShrink: 1,
+                flexWrap: 'wrap',
+              }}
+              numberOfLines={undefined}
+            >
+              {message.content}
+            </Text>
+          </Box>
+          
+          <HStack className="mt-1 items-center" space="xs">
+            <Text className="text-xs text-neutral-500">
+              {formatTime(message.createdAt)}
+            </Text>
+            
+            <CheckCircle 
+              size={12} 
+              color={message.isRead ? colors.accent[500] : colors.neutral[500]}
+              weight="fill"
+            />
+          </HStack>
+        </VStack>
+      </VStack>
+    )
+  }
+
+  // Para mensagens recebidas (lado esquerdo)
   return (
-    <HStack 
-      className="mb-3 px-4"
-      space="sm"
-      style={{ 
-        width: '100%',
-        justifyContent: isOwn ? 'flex-end' : 'flex-start' // Usar style inline
-      }}
-    >
-      {!isOwn && showAvatar && (
+    <HStack className="mb-3 px-4 items-start" space="sm">
+      {showAvatar ? (
         <Avatar size="sm" className="border-2 border-accent-500">
           <AvatarFallbackText 
-            className="text-white font-bold text-xs"
-            style={{ backgroundColor: colors.accent[600] }}
+            className="text-white font-bold text-xs bg-accent-600"
           >
             {otherUserName?.charAt(0).toUpperCase() || 'U'}
           </AvatarFallbackText>
         </Avatar>
-      )}
-      
-      {!isOwn && !showAvatar && (
+      ) : (
         <Box className="w-8" />
       )}
 
-      <VStack 
-        className="flex-1 max-w-[75%]"
-        style={{
-          alignItems: isOwn ? 'flex-end' : 'flex-start' // Usar style inline
-        }}
-      >
+      <VStack className="items-start" style={{ maxWidth: '75%' }}>
         <Box
-          className="px-4 py-3"
+          className="px-4 py-3 bg-neutral-800 rounded-xl"
           style={{ 
-            maxWidth: '100%',
-            backgroundColor: isOwn ? colors.accent[500] : colors.neutral[800], // Accent para próprias, neutro para outras
-            borderRadius: 20,
-            borderBottomRightRadius: isOwn ? 8 : 20,
-            borderBottomLeftRadius: isOwn ? 20 : 8,
-            // Sombra sutil para dar profundidade
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.1,
-            shadowRadius: 2,
-            elevation: 2,
+            borderBottomLeftRadius: 8,
           }}
         >
           <Text 
-            className="text-sm leading-5 font-medium"
+            className="text-sm leading-5 font-medium text-neutral-100"
             style={{ 
               flexShrink: 1,
               flexWrap: 'wrap',
-              color: isOwn ? colors.neutral[900] : colors.neutral[100]
             }}
             numberOfLines={undefined}
           >
@@ -117,22 +132,9 @@ function MessageItem({ message, isOwn, showAvatar, otherUserName }: MessageItemP
           </Text>
         </Box>
         
-        <HStack className="mt-1 items-center" space="xs">
-          <Text 
-            className="text-xs" 
-            style={{ color: colors.neutral[500] }}
-          >
-            {formatTime(message.createdAt)}
-          </Text>
-          
-          {isOwn && (
-            <CheckCircle 
-              size={12} 
-              color={message.isRead ? colors.accent[500] : colors.neutral[500]}
-              weight="fill"
-            />
-          )}
-        </HStack>
+        <Text className="text-xs mt-1 text-neutral-500">
+          {formatTime(message.createdAt)}
+        </Text>
       </VStack>
     </HStack>
   )
@@ -176,9 +178,8 @@ function ConversationHeader({
 
   return (
     <HStack 
-      className="justify-between items-center px-4 py-3 border-b"
+      className="justify-between items-center px-4 py-3 border-b bg-neutral-900"
       style={{ 
-        backgroundColor: colors.neutral[900],
         borderBottomColor: colors.neutral[800]
       }}
     >
@@ -213,12 +214,14 @@ function MessageInput({
   inputMessage, 
   setInputMessage, 
   onSendMessage, 
-  loading 
+  loading,
+  onFocus 
 }: { 
   inputMessage: string,
   setInputMessage: (text: string) => void,
   onSendMessage: () => void, 
-  loading: boolean 
+  loading: boolean,
+  onFocus?: () => void
 }) {
   const handleSend = () => {
     if (inputMessage.trim() && !loading) {
@@ -228,9 +231,8 @@ function MessageInput({
 
   return (
     <HStack 
-      className="px-4 py-4 items-end"
+      className="px-4 py-4 items-end bg-neutral-900"
       style={{ 
-        backgroundColor: colors.neutral[900],
         borderTopWidth: 1,
         borderTopColor: colors.neutral[800],
         // Sombra para separar visualmente
@@ -247,10 +249,11 @@ function MessageInput({
           placeholder="Digite sua mensagem..."
           value={inputMessage}
           onChangeText={setInputMessage}
+          onFocus={onFocus}
           multiline
           maxLength={500}
+          className="bg-neutral-800"
           style={{
-            backgroundColor: colors.neutral[800],
             borderColor: inputMessage.trim() ? colors.accent[500] : colors.neutral[700],
             borderRadius: 22,
             paddingHorizontal: 18,
@@ -277,20 +280,9 @@ function MessageInput({
       <Pressable
         onPress={handleSend}
         disabled={!inputMessage.trim() || loading}
+        className="w-11 h-11 rounded-full justify-center items-center"
         style={{
-          width: 44,
-          height: 44,
-          borderRadius: 22,
-          justifyContent: 'center',
-          alignItems: 'center',
           backgroundColor: inputMessage.trim() && !loading ? colors.accent[500] : colors.neutral[700],
-          // Sombra para dar destaque
-          shadowColor: inputMessage.trim() ? colors.accent[500] : 'transparent',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.3,
-          shadowRadius: 4,
-          elevation: inputMessage.trim() ? 4 : 0,
-          // Transição suave (será animada)
           transform: [{ scale: inputMessage.trim() ? 1 : 0.9 }],
         }}
       >
@@ -305,6 +297,8 @@ function MessageInput({
 }
 
 export default function ConversationScreen() {
+  const flatListRef = useRef<FlatList>(null)
+  
   const {
     conversation,
     messages,
@@ -325,6 +319,22 @@ export default function ConversationScreen() {
     otherUserInConversation
   } = useConversationController()
 
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true })
+      }, 100)
+    }
+  }, [messages.length, messages])
+
+  // Scroll to bottom when keyboard opens
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: true })
+    }, 100)
+  }
+
 
 
   if (loading && !conversation) {
@@ -333,11 +343,12 @@ export default function ConversationScreen() {
 
   return (
     <SafeAreaView 
-      style={{ flex: 1, backgroundColor: colors.neutral[900] }}
+      className="flex-1"
+      style={{ backgroundColor: colors.neutral[900] }}
       edges={['top']}
     >
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
@@ -366,10 +377,20 @@ export default function ConversationScreen() {
           )}
 
           {/* Messages List */}
-          <VStack className="flex-1">
+          <Box className="flex-1">
             <FlatList
+              ref={flatListRef}
               data={messages}
-              keyExtractor={(item, index) => `${item.id}-${index}`}
+              keyExtractor={(item, index) => {
+                // Usar ID único e estável para evitar re-renders
+                if (item.id && !item.id.toString().startsWith('temp-')) {
+                  // Usar ID real do servidor
+                  return item.id.toString()
+                } else {
+                  // Para mensagens temporárias, usar conteúdo + timestamp para chave única
+                  return `msg-${index}-${item.content?.slice(0, 10)}-${item.createdAt}`
+                }
+              }}
               renderItem={({ item, index }) => {
                 // Convert both to strings for comparison
                 const itemSenderId = item.senderId?.toString()
@@ -389,8 +410,10 @@ export default function ConversationScreen() {
                 )
               }}
               contentContainerStyle={{
-                paddingVertical: 16,
+                paddingTop: 16,
+                paddingBottom: 16,
                 flexGrow: 1,
+                justifyContent: messages.length > 0 ? 'flex-end' : 'center',
               }}
               refreshControl={
                 <RefreshControl
@@ -399,16 +422,33 @@ export default function ConversationScreen() {
                   tintColor={colors.accent[500]}
                 />
               }
-              showsVerticalScrollIndicator={false}
-              style={{ flex: 1 }}
+              showsVerticalScrollIndicator={true}
+              style={{ 
+                backgroundColor: 'transparent'
+              }}
+              className="flex-1"
               ListFooterComponent={() => (
                 <TypingIndicator 
                   visible={isTyping ?? false}
                   userName={conversation?.otherUser?.username}
                 />
               )}
+              ListEmptyComponent={() => (
+                <Box className="flex-1 justify-center items-center p-8">
+                  <Text className="text-neutral-400 text-center">
+                    Inicie uma conversa enviando uma mensagem
+                  </Text>
+                </Box>
+              )}
+              onContentSizeChange={scrollToBottom}
+              onLayout={scrollToBottom}
+              removeClippedSubviews={false}
+              windowSize={50}
+              maxToRenderPerBatch={20}
+              updateCellsBatchingPeriod={50}
+              initialNumToRender={20}
             />
-          </VStack>
+          </Box>
 
           {/* Message Input */}
           <MessageInput 
@@ -416,6 +456,7 @@ export default function ConversationScreen() {
             setInputMessage={setInputMessage}
             onSendMessage={handleSendMessage}
             loading={sending}
+            onFocus={scrollToBottom}
           />
         </VStack>
       </KeyboardAvoidingView>
