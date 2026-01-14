@@ -9,10 +9,9 @@ export const SERVER_BASE_URL = API_BASE_URL.replace('/api', '') // Para imagens 
 // Cliente HTTP para API Strapi real
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000, // Aumentado para 30 segundos
+  timeout: 30000,
   headers: {
-    'Content-Type': 'application/json',
-    'ngrok-skip-browser-warning': 'true' // Para funcionar com ngrok gratuito
+    'Content-Type': 'application/json'
   }
 })
 

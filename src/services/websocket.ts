@@ -44,11 +44,11 @@ class WebSocketService {
     this.socket = io(socketUrl, {
       auth: { token },
       transports: ['websocket', 'polling'],
-      timeout: 20000, // Aumentado para ngrok
+      timeout: 20000,
       reconnection: true,
       reconnectionAttempts: this.maxReconnectAttempts,
-      reconnectionDelay: 2000, // Aumentado para ngrok
-      reconnectionDelayMax: 10000, // Aumentado para ngrok
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 10000,
       forceNew: true, // Força nova conexão se URL mudou
     })
 
@@ -64,7 +64,7 @@ class WebSocketService {
     }
   }
 
-  // Reconectar com nova URL (útil quando ngrok muda)
+  // Reconectar com nova URL
   reconnectWithNewUrl(token: string, newUrl: string) {
     this.disconnect()
     this.connect(token, newUrl)
