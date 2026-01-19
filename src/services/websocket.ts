@@ -2,17 +2,50 @@ import React from 'react'
 import { io, Socket } from 'socket.io-client'
 import { useAuthStore } from '@store/authStore'
 import { useQueryInvalidation } from '@hooks/useQueryInvalidation'
+import { api } from '@services/api/client'
+
+// Função para verificar se o token é válido
+async function verifyToken(token: string): Promise<boolean> {
+  try {
+    console.log('🔍 Verificando validade do token...')
+    
+    // Criar uma instância direta do axios para evitar problemas de timing
+    const axios = require('axios')
+    const apiUrl = getApiUrl()
+    
+    const response = await axios.get(`${apiUrl}/users/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+      timeout: 10000
+    })
+    
+    console.log('✅ Token válido para usuário:', response.data.username)
+    return true
+  } catch (error: any) {
+    console.error('❌ Token inválido:', error.response?.data?.error?.message || error.message)
+    return false
+  }
+}
+
+// Função para obter URL da API
+function getApiUrl() {
+  const environment = process.env.EXPO_PUBLIC_ENVIRONMENT || 'dev'
+  
+  if (environment === 'prod') {
+    return process.env.EXPO_PUBLIC_API_ADDRESS_PROD
+  }
+  
+  return process.env.EXPO_PUBLIC_API_ADDRESS_DEV 
+}
 
 // Configuração dinâmica do servidor WebSocket
 function getSocketURL() {
-  // 1. Prioridade: variável específica para WebSocket
-  if (process.env.EXPO_PUBLIC_WEBSOCKET_URL) {
-    return process.env.EXPO_PUBLIC_WEBSOCKET_URL
+  const environment = process.env.EXPO_PUBLIC_ENVIRONMENT || 'dev'
+  
+  if (environment === 'prod') {
+    return process.env.EXPO_PUBLIC_WEBSOCKET_URL_PROD
   }
   
-  // 2. Usar mesma base da API (remove /api)
-  const apiUrl = process.env.EXPO_PUBLIC_API_ADDRESS || 'http://localhost:1337/api'
-  return apiUrl.replace('/api', '')
+  return process.env.EXPO_PUBLIC_WEBSOCKET_URL_DEV 
 }
 
 const SOCKET_URL = getSocketURL()
@@ -27,7 +60,21 @@ class WebSocketService {
   private authToken: string | null = null // Para HTTP fallback
 
   // Inicializar conexão
-  connect(token: string, customUrl?: string) {
+  async connect(token: string, customUrl?: string) {
+    // Validar token antes de conectar
+    if (!token || token.trim() === '') {
+      console.warn('🔐 Token inválido ou ausente - não conectando WebSocket')
+      return
+    }
+
+    // Comentado temporariamente para evitar problemas de timing
+    // const isValidToken = await verifyToken(token)
+    // if (!isValidToken) {
+    //   console.warn('🔐 Token JWT inválido - não conectando WebSocket')
+    //   const { useAuthStore } = await import('@store/authStore')
+    //   useAuthStore.getState().logout()
+    //   return
+    // }
 
     // Salvar token para HTTP fallback
     this.authToken = token
@@ -35,19 +82,40 @@ class WebSocketService {
     // Usar URL customizada se fornecida, senão usar a configurada
     const socketUrl = customUrl || getSocketURL()
     
+    console.log('🔗 Tentando conectar WebSocket:', {
+      url: socketUrl,
+      hasToken: !!token,
+      tokenLength: token.length
+    })
+    
     // Detectar se é ngrok e ajustar transports
     const isNgrok = socketUrl.includes('ngrok')
-    const transports = isNgrok ? ['polling', 'websocket'] : ['websocket', 'polling']
+    const isLocal = socketUrl.includes('192.168') || socketUrl.includes('localhost')
+    
+    // Para desenvolvimento local, usar polling primeiro (mais confiável)
+    const transports = isLocal ? ['polling', 'websocket'] : ['websocket', 'polling']
 
     this.socket = io(socketUrl, {
       auth: { token },
-      transports, // Usar polling primeiro para ngrok
-      timeout: 20000, // Aumentado para ngrok
+      transports,
+      timeout: 30000,
       reconnection: true,
       reconnectionAttempts: this.maxReconnectAttempts,
-      reconnectionDelay: 2000, // Aumentado para ngrok
-      reconnectionDelayMax: 10000, // Aumentado para ngrok
-      forceNew: true, // Força nova conexão se URL mudou
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 10000,
+      // Remover forceNew que pode causar conflitos
+      // forceNew: true,
+      // Configurações otimizadas para React Native 
+      upgrade: true,
+      rememberUpgrade: true, // Mudado para true
+      rejectUnauthorized: false,
+      // Configurações para manter conexão estável
+      pingTimeout: 60000,
+      pingInterval: 25000,
+      autoConnect: true,
+      closeOnBeforeunload: false,
+      // Específico para debugging
+      withCredentials: true
     })
 
     this.setupEventListeners()
@@ -74,25 +142,70 @@ class WebSocketService {
 
     // Conexão estabelecida
     this.socket.on('connect', () => {
+      console.log('✅ WebSocket conectado com sucesso')
+      console.log('🔗 Socket ID:', this.socket?.id)
+      console.log('📊 Estado interno:', { 
+        socketConnected: this.socket?.connected,
+        internalConnected: this.isConnected 
+      })
       this.isConnected = true
       this.reconnectAttempts = 0
+      
+      // Força atualização do estado para garantir
+      setTimeout(() => {
+        console.log('🔄 Verificação pós-conexão:', {
+          socketConnected: this.socket?.connected,
+          internalConnected: this.isConnected,
+          connected: this.connected
+        })
+      }, 1000)
     })
 
     // Erro de conexão
     this.socket.on('connect_error', (error) => {
+      const errorMessage = error.message
+      const isTokenError = errorMessage.includes('Invalid token') || 
+                          errorMessage.includes('Authentication failed') ||
+                          errorMessage.includes('User not found') ||
+                          errorMessage.includes('invalid signature')
+      
       console.error('❌ [DEBUG] Erro de conexão WebSocket:', {
-        error: error.message,
+        error: errorMessage,
         type: (error as any).type,
         description: (error as any).description,
-        attempts: this.reconnectAttempts
+        attempts: this.reconnectAttempts,
+        isTokenError,
+        authToken: this.authToken ? 'Present' : 'Missing',
+        socketUrl: SOCKET_URL,
+        tokenPreview: this.authToken ? `${this.authToken.substring(0, 30)}...` : 'No token'
       })
+      
+      // Se for erro de token/JWT, não tentar reconectar
+      if (isTokenError) {
+        console.warn('🔐 Erro de autenticação JWT - token inválido ou assinatura incorreta')
+        console.warn('💡 Possíveis causas:')
+        console.warn('   - JWT_SECRET diferente no servidor')
+        console.warn('   - Token expirado')
+        console.warn('   - Usuário foi removido/desabilitado')
+        this.isConnected = false
+        this.socket?.disconnect()
+        return
+      }
+      
       this.isConnected = false
       this.reconnectAttempts++
     })
 
     // Desconectado
     this.socket.on('disconnect', (reason) => {
+      console.log(`🔴 WebSocket desconectado: ${reason}`)
       this.isConnected = false
+      
+      // Se foi desconexão por transport close, tentar reconectar
+      if (reason === 'transport close' || reason === 'transport error') {
+        console.log('🔄 Tentando reconectar devido a problema de transport...')
+        // Socket.io vai tentar reconectar automaticamente
+      }
     })
 
     // 💬 NOVA MENSAGEM EM TEMPO REAL
@@ -163,8 +276,6 @@ class WebSocketService {
     if (this.socket?.connected) {
       this.socket.emit('join_conversation', conversationId) // Corrigido para join_conversation
       
-      // Fallback HTTP se ngrok
-      this.tryHttpFallback('join-conversation', { conversationId })
     } else {
       console.warn('⚠️ [DEBUG] Socket não conectado para entrar na conversa')
     }
@@ -214,25 +325,6 @@ class WebSocketService {
 
   // Sistema de eventos customizado para componentes React
   private eventListeners: { [key: string]: Function[] } = {}
-  
-  // HTTP Fallback para ngrok (quando WebSocket falha)
-  private async tryHttpFallback(endpoint: string, data: any) {
-    try {
-      const apiUrl = process.env.EXPO_PUBLIC_API_ADDRESS || 'http://localhost:1337/api'
-      const baseUrl = apiUrl.replace('/api', '')
-      
-      const response = await fetch(`${baseUrl}/api/websocket/${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.authToken}`,
-        },
-        body: JSON.stringify(data)
-      })
-    } catch (error) {
-      console.warn('⚠️ [DEBUG] Erro no HTTP fallback:', error)
-    }
-  }
 
   on(event: string, callback: Function) {
     if (!this.eventListeners[event]) {
@@ -273,8 +365,35 @@ export const websocketService = new WebSocketService()
 
 // Hook para usar WebSocket em componentes React
 export function useWebSocket(customUrl?: string) {
-  const { token, isAuthenticated } = useAuthStore()
+  const { token, isAuthenticated, _hasHydrated } = useAuthStore()
   const { invalidateByContext } = useQueryInvalidation()
+  const [connectionState, setConnectionState] = React.useState({
+    connected: false,
+    socketConnected: false,
+    internalConnected: false
+  })
+
+  // Atualizar estado local quando WebSocket muda
+  React.useEffect(() => {
+    const updateConnectionState = () => {
+      const newState = {
+        connected: websocketService.connected,
+        socketConnected: websocketService.socket?.connected || false,
+        internalConnected: websocketService.isConnected || false
+      }
+      setConnectionState(newState)
+    }
+
+    // Atualizar imediatamente
+    updateConnectionState()
+
+    // Configurar listeners para mudanças de estado
+    const intervalId = setInterval(updateConnectionState, 500) // Check a cada 500ms
+
+    return () => {
+      clearInterval(intervalId)
+    }
+  }, [])
 
   // Configurar invalidação de queries
   React.useEffect(() => {
@@ -283,20 +402,44 @@ export function useWebSocket(customUrl?: string) {
 
   // Conectar/desconectar baseado na autenticação
   React.useEffect(() => {
-    if (isAuthenticated && token) {
-      websocketService.connect(token, customUrl)
+    // Não fazer nada até que o store tenha sido hidratado
+    if (!_hasHydrated) {
+      console.log('⏳ Aguardando hidratação do auth store...')
+      return
+    }
+    
+    // Log para debug
+    console.log('🔐 Auth state changed:', {
+      isAuthenticated,
+      hasToken: !!token,
+      tokenPreview: token ? `${token.substring(0, 20)}...` : 'No token',
+      socketUrl: getSocketURL(),
+      hydrated: _hasHydrated
+    })
+    
+    if (isAuthenticated && token && token.trim() !== '') {
+      // Função assíncrona para conectar
+      const connectWebSocket = async () => {
+        try {
+          console.log('🚀 Iniciando conexão WebSocket...')
+          await websocketService.connect(token, customUrl)
+        } catch (error) {
+          console.error('❌ Erro ao conectar WebSocket:', error)
+        }
+      }
+      
+      // Delay para dar tempo da API estar pronta
+      const timer = setTimeout(connectWebSocket, 1000)
+      
+      return () => clearTimeout(timer)
     } else {
+      console.log('❌ Desconectando WebSocket - não autenticado ou sem token')
       websocketService.disconnect()
     }
-
-    return () => {
-      // Cleanup na desmontagem do componente
-      websocketService.disconnect()
-    }
-  }, [isAuthenticated, token, customUrl])
+  }, [isAuthenticated, token, customUrl, _hasHydrated])
 
   return {
-    connected: websocketService.connected,
+    connected: connectionState.connected,
     socket: websocketService,
     joinConversation: websocketService.joinConversation.bind(websocketService),
     leaveConversation: websocketService.leaveConversation.bind(websocketService),
@@ -307,7 +450,9 @@ export function useWebSocket(customUrl?: string) {
     enterConversation: websocketService.enterConversation.bind(websocketService),
     reconnectWithNewUrl: (newUrl: string) => {
       if (token) websocketService.reconnectWithNewUrl(token, newUrl)
-    }
+    },
+    // Estado detalhado para debug
+    connectionState
   }
 }
 
