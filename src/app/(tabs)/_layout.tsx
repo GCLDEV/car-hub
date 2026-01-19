@@ -7,6 +7,7 @@ import { colors } from '@theme/colors'
 export default function TabsLayout() {
   return (
     <Tabs
+      initialRouteName="home"
       screenOptions={{
         tabBarActiveTintColor: colors.accent[500], // Dourado para ativo
         tabBarInactiveTintColor: colors.neutral[400], // Cinza para inativo
