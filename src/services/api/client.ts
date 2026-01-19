@@ -1,10 +1,21 @@
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
-// Configuração centralizada da API
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_ADDRESS || 'http://localhost:1337/api'
+// Configuração dinâmica da API
+function getApiUrl() {
+  const environment = process.env.EXPO_PUBLIC_ENVIRONMENT || 'dev'
+  
+  if (environment === 'prod') {
+    return process.env.EXPO_PUBLIC_API_ADDRESS_PROD
+  }
+  
+  return process.env.EXPO_PUBLIC_API_ADDRESS_DEV
+}
+
+export const API_BASE_URL = getApiUrl()
 
 export const SERVER_BASE_URL = API_BASE_URL.replace('/api', '') // Para imagens e uploads
+console.log("🚀 ~ SERVER_BASE_URL:", SERVER_BASE_URL)
 
 // Cliente HTTP para API Strapi real
 const api = axios.create({
