@@ -209,32 +209,44 @@ class WebSocketService {
     })
 
     // 💬 NOVA MENSAGEM EM TEMPO REAL
-    this.socket.on('new_message', (messageData) => {
-    
+    this.socket.on('newMessage', (messageData) => {
+      console.log('📨 Nova mensagem recebida via WebSocket (newMessage):', messageData)
       this.emit('newMessage', messageData) // Emite como newMessage para manter compatibilidade
+    })
+
+    // Listener adicional para o evento do controller (se existir)
+    this.socket.on('new_message', (messageData) => {
+      console.log('📨 Nova mensagem recebida via WebSocket (new_message):', messageData)
+      this.emit('newMessage', messageData) // Converter para o formato esperado
+      this.emit('new_message', messageData) // Manter evento original também
     })
 
     // 👀 USUÁRIO DIGITANDO
     this.socket.on('userTyping', (typingData) => {
+      console.log('⌨️ Evento userTyping recebido:', typingData)
       this.emit('userTyping', typingData)
     })
 
     this.socket.on('userStoppedTyping', (typingData) => {
+      console.log('⌨️ Evento userStoppedTyping recebido:', typingData)
       this.emit('userStoppedTyping', typingData)
     })
 
     // ✅ MENSAGENS LIDAS
     this.socket.on('messagesRead', (readData) => {
+      console.log('✅ Evento messagesRead recebido:', readData)
       this.emit('messagesRead', readData)
     })
 
     // 🔔 NOTIFICAÇÃO DE NOVA MENSAGEM
     this.socket.on('new_message_notification', (notification) => {
+      console.log('🔔 Evento new_message_notification recebido:', notification)
       this.emit('messageNotification', notification)
     })
 
     // 📝 CONVERSA ATUALIZADA
     this.socket.on('conversation_updated', (updateData) => {
+      console.log('📝 Evento conversation_updated recebido:', updateData)
       if (this.invalidateQueries) {
         this.invalidateQueries('conversation-updated', { 
           conversationId: updateData.conversationId 
@@ -244,38 +256,49 @@ class WebSocketService {
 
     // 🔔 NOTIFICAÇÃO GERAL
     this.socket.on('notification', (notification) => {
+      console.log('🔔 Evento notification recebido:', notification)
       this.emit('notification', notification)
     })
 
     // 🟢 USUÁRIO ONLINE/OFFLINE
     this.socket.on('userOnline', (data) => {
+      console.log('🟢 Evento userOnline recebido:', data)
       this.emit('userOnline', data)
     })
 
     this.socket.on('userOffline', (data) => {
+      console.log('🔴 Evento userOffline recebido:', data)
       this.emit('userOffline', data)
     })
 
     this.socket.on('userOnlineStatus', (data) => {
+      console.log('📊 Evento userOnlineStatus recebido:', data)
       this.emit('userOnlineStatus', data)
     })
 
     this.socket.on('userWentOffline', (data) => {
+      console.log('🔴 Evento userWentOffline recebido:', data)
       this.emit('userWentOffline', data)
     })
 
     // 👁️ VISUALIZAÇÃO DE CONVERSA
     this.socket.on('userEnteredConversation', (data) => {
+      console.log('👁️ Evento userEnteredConversation recebido:', data)
       this.emit('userEnteredConversation', data)
+    })
+    
+    // 🔧 Listener genérico para debug
+    this.socket.onAny((eventName, ...args) => {
+      console.log(`🎧 [DEBUG] Evento recebido: ${eventName}`, args)
     })
   }
 
   // Entrar em uma conversa específica
   joinConversation(conversationId: string) {
-    
+    console.log(`🏠 Entrando na conversa: ${conversationId}`)
     if (this.socket?.connected) {
-      this.socket.emit('join_conversation', conversationId) // Corrigido para join_conversation
-      
+      this.socket.emit('joinConversation', { conversationId }) // Corrigido para formato correto
+      console.log(`✅ Evento joinConversation enviado para conversa ${conversationId}`)
     } else {
       console.warn('⚠️ [DEBUG] Socket não conectado para entrar na conversa')
     }
@@ -284,21 +307,23 @@ class WebSocketService {
   // Sair de uma conversa
   leaveConversation(conversationId: string) {    
     if (this.socket?.connected) {
-      this.socket.emit('leave_conversation', conversationId) // Corrigido para leave_conversation
+      this.socket.emit('leaveConversation', { conversationId }) // Corrigido para formato correto
     }
   }
 
   // Indicar que está digitando
   startTyping(conversationId: string) {
     if (this.socket?.connected) {
-      this.socket.emit('startTyping', conversationId)
+      this.socket.emit('startTyping', { conversationId })
+      console.log('⌨️ Início de digitação enviado para conversa:', conversationId)
     }
   }
 
   // Parar de indicar que está digitando
   stopTyping(conversationId: string) {
     if (this.socket?.connected) {
-      this.socket.emit('stopTyping', conversationId)
+      this.socket.emit('stopTyping', { conversationId })
+      console.log('⏸️ Fim de digitação enviado para conversa:', conversationId)
     }
   }
 

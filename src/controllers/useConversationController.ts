@@ -32,17 +32,26 @@ export default function useConversationController() {
 
   // 🎧 WebSocket event listeners
   useWebSocketEvent('newMessage', (messageData: any) => {
-    
+    // console.log('📨 [Controller] Nova mensagem recebida:', messageData)
+    // console.log('🎯 [Controller] Conversa atual:', conversationId)
     
     // Add message to current conversation if it matches
     if (messageData.conversationId === conversationId) {
+      // // console.log('✅ [Controller] Mensagem é para esta conversa')
+      
       // Não adicionar mensagens do próprio usuário (já temos optimistic update)
       if (messageData.senderId === user?.id) {
+        // console.log('⚠️ [Controller] Ignorando mensagem do próprio usuário')
         return
       }
       
+      // // console.log('🔄 [Controller] Atualizando cache com nova mensagem')
+      
       queryClient.setQueryData(['messages', conversationId], (oldMessages: any[]) => {
-        if (!oldMessages) return [messageData]
+        if (!oldMessages) {
+          // console.log('📝 [Controller] Primeira mensagem na conversa')
+          return [messageData]
+        }
         
         // Verificar se a mensagem já existe (evitar duplicatas)
         const messageId = messageData.id?.toString()
@@ -51,29 +60,54 @@ export default function useConversationController() {
         )
         
         if (exists) {
-          
+          // console.log('⚠️ [Controller] Mensagem já existe, ignorando duplicata')
           return oldMessages
         }
         
         // Adicionar nova mensagem no final (mais recente)
         const newMessages = [...oldMessages, messageData]
+        // console.log('✅ [Controller] Cache atualizado, total de mensagens:', newMessages.length)
         
         return newMessages
       })
-      
-      
+    } else {
+      // // console.log('❌ [Controller] Mensagem não é para esta conversa')
     }
   })
 
-  useWebSocketEvent('userTyping', ({ userId, conversationId: typingConversationId }: any) => {
+  useWebSocketEvent('userStartedTyping', ({ userId, conversationId: typingConversationId }: any) => {
+    // // console.log('⌨️ [Controller] Usuário começou a digitar:', { userId, typingConversationId, currentConversation: conversationId })
     if (typingConversationId === conversationId && userId !== user?.id) {
       setOtherUserTyping(true)
+      // console.log('✅ [Controller] Exibindo indicador de digitação')
     }
   })
 
   useWebSocketEvent('userStoppedTyping', ({ userId, conversationId: typingConversationId }: any) => {
+    // console.log('⏸️ [Controller] Usuário parou de digitar:', { userId, typingConversationId, currentConversation: conversationId })
     if (typingConversationId === conversationId && userId !== user?.id) {
       setOtherUserTyping(false)
+      // console.log('✅ [Controller] Ocultando indicador de digitação')
+    }
+  })
+
+  // Fallback listener para evento original do servidor
+  useWebSocketEvent('new_message', (messageData: any) => {
+    // console.log('📨 [Controller] Nova mensagem recebida (evento original):', messageData)
+    
+    if (messageData.conversationId === conversationId && messageData.senderId !== user?.id) {
+      // console.log('🔄 [Controller] Processando via evento original')
+      
+      queryClient.setQueryData(['messages', conversationId], (oldMessages: any[]) => {
+        if (!oldMessages) return [messageData]
+        
+        const messageId = messageData.id?.toString()
+        const exists = oldMessages.some(msg => msg.id?.toString() === messageId)
+        
+        if (exists) return oldMessages
+        
+        return [...oldMessages, messageData]
+      })
     }
   })
 
@@ -246,26 +280,28 @@ export default function useConversationController() {
   // 🏠 WebSocket: Entrar/sair da sala da conversa
   useEffect(() => {
     if (conversationId && connected) {
-      
+      // console.log('🏠 [Controller] Entrando na conversa:', { conversationId, connected })
       joinConversation(conversationId)
       
       // Notificar que entrei na conversa (para visualização)
       setTimeout(() => {
+        // console.log('👁️ [Controller] Notificando entrada na conversa')
         enterConversation(conversationId)
       }, 1000)
       
       // Verificar se outro usuário está online
       if (conversation?.otherUser?.id) {
+        // console.log('👤 [Controller] Verificando status online do usuário:', conversation.otherUser.id)
         checkUserOnlineStatus(conversation.otherUser.id.toString(), conversationId)
       }
       
       return () => {
-        
+        // console.log('🚪 [Controller] Saindo da conversa:', conversationId)
         leaveConversation(conversationId)
         setOtherUserInConversation(false)
       }
     } else {
-      
+      // console.log('❌ [Controller] WebSocket não conectado ou sem conversationId:', { conversationId, connected })
     }
   }, [conversationId, connected, conversation?.otherUser?.id])
 
@@ -273,10 +309,12 @@ export default function useConversationController() {
   const typingTimeoutRef = useRef<number | undefined>(undefined)
   
   const handleInputChange = useCallback((text: string) => {
+    // console.log('⌨️ [Controller] Input mudou:', { text: text.length > 20 ? `${text.substring(0, 20)}...` : text, isCurrentlyTyping: isTyping, hasConversationId: !!conversationId })
     setInputMessage(text)
     
     // Indicar que está digitando
     if (!isTyping && text.trim() && conversationId) {
+      // console.log('🟢 [Controller] Iniciando indicador de digitação')
       setIsTyping(true)
       startTyping(conversationId)
     }
@@ -288,6 +326,7 @@ export default function useConversationController() {
     
     typingTimeoutRef.current = setTimeout(() => {
       if (isTyping && conversationId) {
+        // console.log('🔴 [Controller] Parando indicador de digitação (timeout)')
         setIsTyping(false)
         stopTyping(conversationId)
       }
