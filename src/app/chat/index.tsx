@@ -107,7 +107,7 @@ function ConversationItem({ conversation, onPress }: ConversationItemProps) {
             <HStack space="xs" className="items-center mb-1">
               <CarProfile size={14} color={colors.accent[500]} />
               <Text 
-                className="text-accent-500 text-sm font-medium" 
+                className="text-accent-500 text-white text-sm font-medium" 
                 numberOfLines={1}
               >
                 {conversation.car.title}
